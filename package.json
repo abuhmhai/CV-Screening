@@ -1,0 +1,17 @@
+{
+  "name": "cv-screening-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w apps/web & npm run dev -w apps/api",
+    "dev:local": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-local.ps1",
+    "db:local": "node apps/api/scripts/embedded-db.mjs",
+    "build": "npm run build -w apps/web && npm run build -w apps/api && npm run build -w packages/ui && npm run build -w packages/types",
+    "test": "npm run test -w apps/api",
+    "test:e2e": "npm run test:e2e -w apps/web"
+  }
+}

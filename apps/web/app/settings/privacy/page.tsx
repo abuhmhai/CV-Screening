@@ -39,7 +39,7 @@ function PrivacySettingsContent() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Privacy settings"
+        title="Quyền riêng tư"
         description="Kiểm soát hiển thị hồ sơ, hoạt động và quyền nhắn tin của bạn."
       />
       <Card>
@@ -47,30 +47,31 @@ function PrivacySettingsContent() {
           {[
             {
               key: "profilePublic",
-              label: "Public profile visibility",
+              label: "Hiển thị hồ sơ công khai",
               checked: settings.profilePublic
             },
             {
               key: "showActivity",
-              label: "Show my activity to network",
+              label: "Hiển thị hoạt động với mạng lưới",
               checked: settings.showActivity
             },
             {
               key: "allowMessagesFromNonConnections",
-              label: "Allow messages from non-connections",
+              label: "Cho phép người chưa kết nối nhắn tin",
               checked: settings.allowMessagesFromNonConnections
             },
             {
               key: "showOnlinePresence",
-              label: "Show online presence",
+              label: "Hiển thị trạng thái online",
               checked: settings.showOnlinePresence
             }
           ].map((item) => (
-            <label key={item.key} className="flex items-center justify-between rounded-lg bg-canvas-soft p-4">
+            <label key={item.key} className="flex cursor-pointer items-center justify-between gap-4 rounded-lg bg-canvas-soft p-4 transition hover:bg-primary-pale">
               <span className="text-sm font-semibold">{item.label}</span>
               <input
                 type="checkbox"
                 checked={item.checked}
+                className="h-5 w-5 accent-[var(--colors-primary)]"
                 onChange={(e) =>
                   setSettings((prev) => ({
                     ...prev,
@@ -83,7 +84,7 @@ function PrivacySettingsContent() {
         </div>
         <div className="mt-5">
           <Button onClick={save} disabled={saving}>
-            {saving ? "Saving..." : "Save settings"}
+            {saving ? "Đang lưu..." : "Lưu cài đặt"}
           </Button>
         </div>
       </Card>

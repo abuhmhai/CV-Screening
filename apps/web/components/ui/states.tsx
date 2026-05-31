@@ -17,7 +17,10 @@ export function EmptyState({
   actionHref?: string;
 }) {
   return (
-    <div className="rounded-xl border border-dashed border-ink/15 bg-canvas p-10 text-center">
+    <div className="rounded-xl border border-dashed border-ink/15 bg-canvas p-8 text-center sm:p-10">
+      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary-pale text-lg font-black text-ink-deep">
+        TF
+      </div>
       <h3 className="text-lg font-semibold text-ink">{title}</h3>
       {description ? <p className="mt-2 text-sm text-body">{description}</p> : null}
       {actionLabel && actionHref ? (
@@ -33,7 +36,7 @@ export function EmptyState({
 
 export function LoadingBlock({ label = "Đang tải..." }: { label?: string }) {
   return (
-    <div className="flex items-center justify-center rounded-xl bg-canvas p-12 text-body">
+    <div className="flex items-center justify-center rounded-xl bg-canvas p-10 text-body sm:p-12" role="status" aria-live="polite">
       <div className="flex items-center gap-3">
         <span className="h-5 w-5 animate-spin rounded-full border-2 border-ink/20 border-t-ink" />
         {label}
@@ -44,9 +47,9 @@ export function LoadingBlock({ label = "Đang tải..." }: { label?: string }) {
 
 export function ErrorBlock({ message }: { message: string }) {
   return (
-    <div className="rounded-xl bg-negative/10 p-6 text-negative">
+    <div className="rounded-xl bg-negative-bg p-6 text-white" role="alert">
       <p className="font-semibold">Có lỗi xảy ra</p>
-      <p className="mt-1 text-sm">{message}</p>
+      <p className="mt-1 text-sm text-white/80">{message}</p>
     </div>
   );
 }
@@ -65,10 +68,10 @@ export function ScoreBar({
   return (
     <div>
       <div className="mb-1 flex justify-between text-sm">
-        <span className="text-body">{label}</span>
+        {label ? <span className="text-body">{label}</span> : <span className="sr-only">Score</span>}
         <span className="font-semibold text-ink">{value.toFixed(1)}</span>
       </div>
-      <div className="h-2 overflow-hidden rounded-pill bg-canvas-soft">
+      <div className="h-2 overflow-hidden rounded-pill bg-canvas-soft" aria-hidden="true">
         <motion.div
           initial={prefersReducedMotion ? undefined : { width: 0 }}
           animate={{ width: `${pct}%` }}

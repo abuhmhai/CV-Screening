@@ -12,7 +12,7 @@ import { Button } from "./ui/button";
 const publicNav = [
   { href: "/", label: "Trang chủ" },
   { href: "/jobs", label: "Việc làm" },
-  { href: "/search", label: "Search" }
+  { href: "/search", label: "Tìm kiếm" }
 ];
 
 const candidateNav = [
@@ -23,7 +23,7 @@ const candidateNav = [
   { href: "/messages", label: "Tin nhắn" },
   { href: "/notifications", label: "Thông báo" },
   { href: "/profile", label: "Hồ sơ" },
-  { href: "/settings/privacy", label: "Privacy" }
+  { href: "/settings/privacy", label: "Quyền riêng tư" }
 ];
 
 const recruiterNav = [
@@ -33,7 +33,7 @@ const recruiterNav = [
   { href: "/feed", label: "Bảng tin" },
   { href: "/messages", label: "Tin nhắn" },
   { href: "/notifications", label: "Thông báo" },
-  { href: "/settings/privacy", label: "Privacy" }
+  { href: "/settings/privacy", label: "Quyền riêng tư" }
 ];
 
 function NavLink({ href, label }: { href: string; label: string }) {
@@ -42,9 +42,10 @@ function NavLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className={`rounded-pill px-3 py-2 text-sm font-semibold transition ${
+      className={`whitespace-nowrap rounded-pill px-3 py-2 text-sm font-semibold transition focus-visible:ring-2 focus-visible:ring-primary/80 ${
         active ? "bg-primary text-ink" : "text-ink hover:bg-primary-pale"
       }`}
+      aria-current={active ? "page" : undefined}
     >
       {label}
     </Link>
@@ -94,9 +95,9 @@ export function AppShellClient({ children }: { children: ReactNode }) {
         Skip to content
       </a>
       <header className="sticky top-0 z-30 border-b border-ink/10 bg-canvas/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-4">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-sm font-black">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-sm font-black">
               AI
             </span>
             <div>
@@ -122,17 +123,19 @@ export function AppShellClient({ children }: { children: ReactNode }) {
                 <button
                   type="button"
                   onClick={() => setMenuOpen((v) => !v)}
-                  className="flex items-center gap-2 rounded-xl border border-ink/10 bg-canvas px-3 py-2 transition hover:bg-canvas-soft"
+                  className="flex max-w-[72vw] items-center gap-2 rounded-xl border border-ink/10 bg-canvas px-3 py-2 transition hover:bg-canvas-soft"
+                  aria-expanded={menuOpen}
+                  aria-haspopup="menu"
                 >
                   <Avatar name={user.email.split("@")[0]} email={user.email} size="sm" />
-                  <span className="hidden text-sm font-semibold sm:inline">{user.email}</span>
+                  <span className="hidden truncate text-sm font-semibold sm:inline">{user.email}</span>
                   {unread > 0 ? <Badge tone="negative">{unread}</Badge> : null}
                   {typeof onboardingCompletion === "number" && onboardingCompletion < 100 ? (
                     <Badge tone="warning">{onboardingCompletion}%</Badge>
                   ) : null}
                 </button>
                 {menuOpen ? (
-                  <div className="absolute right-0 mt-2 w-56 rounded-xl border border-ink/10 bg-canvas p-2 shadow-lg">
+                  <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-ink/10 bg-canvas p-2 shadow-lg" role="menu">
                     <p className="px-3 py-2 text-xs text-mute">{user.role}</p>
                     <Link
                       href="/profile"
@@ -171,7 +174,7 @@ export function AppShellClient({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <div className="border-t border-ink/5 px-6 py-2 lg:hidden">
+        <div className="border-t border-ink/5 px-4 py-2 sm:px-6 lg:hidden">
           <div className="flex gap-1 overflow-x-auto pb-1">
             {[...publicNav, ...(user ? roleNav : [])].map((item) => (
               <NavLink key={item.href} {...item} />
@@ -180,12 +183,12 @@ export function AppShellClient({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main id="main-content" className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
+      <main id="main-content" className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
         {children}
       </main>
 
       <footer className="mt-auto border-t border-ink/10 bg-ink text-white">
-        <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 md:grid-cols-4">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-4">
           <div>
             <p className="text-lg font-black">TalentFlow</p>
             <p className="mt-2 text-sm text-white/70">
@@ -215,7 +218,7 @@ export function AppShellClient({ children }: { children: ReactNode }) {
           </div>
         </div>
         <div className="border-t border-white/10 px-6 py-4 text-center text-xs text-white/50">
-          © 2026 TalentFlow — AI Recruitment Platform
+          © 2026 TalentFlow - AI Recruitment Platform
         </div>
       </footer>
     </div>

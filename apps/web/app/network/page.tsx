@@ -63,20 +63,20 @@ function NetworkContent() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <h2 className="text-lg font-semibold">People you may know</h2>
+          <h2 className="text-lg font-semibold">Gợi ý kết nối</h2>
           <div className="mt-4 space-y-3">
             {suggestions.slice(0, 8).map((person) => (
               <div
                 key={person.id}
-                className="flex items-center justify-between rounded-lg bg-canvas-soft p-3"
+                className="flex flex-col gap-3 rounded-lg bg-canvas-soft p-3 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 items-center gap-3">
                   <Avatar
                     name={person.profile?.fullName}
                     email={person.email}
                     src={person.profile?.avatarUrl}
                   />
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-semibold">{person.profile?.fullName ?? person.email}</p>
                     <p className="text-xs text-mute">{person.profile?.headline ?? "Professional"}</p>
                   </div>
@@ -93,45 +93,45 @@ function NetworkContent() {
         </Card>
 
         <Card>
-          <h2 className="text-lg font-semibold">My connections</h2>
+          <h2 className="text-lg font-semibold">Kết nối của tôi</h2>
           {connections.length === 0 ? (
             <EmptyState
               title="Chưa có kết nối"
               description="Kết nối sẽ hiển thị khi bạn gửi hoặc nhận lời mời."
             />
           ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {connections.map((conn) => {
-            const isRequester = conn.requesterId === user?.id;
-            const person = isRequester ? conn.addressee : conn.requester;
-            return (
-              <Card key={conn.id} className="flex items-center gap-4">
-                <Avatar name={person?.profile?.fullName} />
-                <div className="flex-1">
-                  <p className="font-semibold">{person?.profile?.fullName ?? "Member"}</p>
-                  <Badge tone={conn.status === "ACCEPTED" ? "positive" : "warning"}>{conn.status}</Badge>
-                </div>
-                {!isRequester && conn.status === "PENDING" ? (
-                  <div className="flex gap-1">
-                    <Button
-                      className="px-3 py-1 text-xs"
-                      onClick={() => updateConnection(conn.id, "ACCEPTED")}
-                    >
-                      Accept
-                    </Button>
-                    <Button
-                      variant="tertiary"
-                      className="px-3 py-1 text-xs"
-                      onClick={() => updateConnection(conn.id, "BLOCKED")}
-                    >
-                      Block
-                    </Button>
-                  </div>
-                ) : null}
-              </Card>
-            );
-          })}
-        </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {connections.map((conn) => {
+                const isRequester = conn.requesterId === user?.id;
+                const person = isRequester ? conn.addressee : conn.requester;
+                return (
+                  <Card key={conn.id} className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                    <Avatar name={person?.profile?.fullName} />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold">{person?.profile?.fullName ?? "Member"}</p>
+                      <Badge tone={conn.status === "ACCEPTED" ? "positive" : "warning"}>{conn.status}</Badge>
+                    </div>
+                    {!isRequester && conn.status === "PENDING" ? (
+                      <div className="flex gap-1">
+                        <Button
+                          className="px-3 py-1 text-xs"
+                          onClick={() => updateConnection(conn.id, "ACCEPTED")}
+                        >
+                          Accept
+                        </Button>
+                        <Button
+                          variant="tertiary"
+                          className="px-3 py-1 text-xs"
+                          onClick={() => updateConnection(conn.id, "BLOCKED")}
+                        >
+                          Block
+                        </Button>
+                      </div>
+                    ) : null}
+                  </Card>
+                );
+              })}
+            </div>
           )}
         </Card>
       </div>

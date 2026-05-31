@@ -37,14 +37,14 @@ export function ApplicationCard({ application }: { application: Application }) {
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-2">
-        <Link href={`/applications/${application.id}`}>
+      <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <Link href={`/applications/${application.id}`} className="w-full sm:w-auto">
           <Button variant="secondary" className="px-4 py-2 text-sm">
             Chi tiết
           </Button>
         </Link>
         {application.aiResult ? (
-          <Link href={`/ai-score/${application.id}`}>
+          <Link href={`/ai-score/${application.id}`} className="w-full sm:w-auto">
             <Button className="px-4 py-2 text-sm">Xem AI Score</Button>
           </Link>
         ) : null}

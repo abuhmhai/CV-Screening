@@ -22,7 +22,7 @@ export class RateLimitGuard implements CanActivate {
   private redisAvailable = true;
 
   private readonly windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS ?? "60000");
-  private readonly maxRequests = Number(process.env.RATE_LIMIT_MAX ?? "120");
+  private readonly maxRequests = Number(process.env.RATE_LIMIT_MAX ?? "600");
 
   constructor() {
     const redisUrl = process.env.REDIS_URL;

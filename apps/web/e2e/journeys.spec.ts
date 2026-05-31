@@ -9,7 +9,7 @@ test.describe("Public pages", () => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: /Tuyển dụng thông minh/i })).toBeVisible();
     await expect(headerNav(page).getByRole("link", { name: "Việc làm", exact: true })).toBeVisible();
-    await expect(headerNav(page).getByRole("link", { name: "Search", exact: true })).toBeVisible();
+    await expect(headerNav(page).getByRole("link", { name: "Tìm kiếm", exact: true })).toBeVisible();
   });
 
   test("jobs page lists openings", async ({ page }) => {

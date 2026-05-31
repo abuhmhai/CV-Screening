@@ -41,20 +41,20 @@ function AiScoreContent() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="AI Score Detail"
+        title="Chi tiết AI Score"
         description={`${application.job?.title} · ${application.job?.company?.name}`}
         actions={<StatusBadge status={application.status} />}
       />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
         <Card className="text-center">
-          <p className="text-sm font-semibold text-mute">Overall Match Score</p>
-          <p className="mt-2 font-display text-display-xl font-black text-ink">{formatScore(overall)}</p>
+          <p className="text-sm font-semibold text-mute">Điểm matching tổng thể</p>
+          <p className="mt-2 font-display text-5xl font-black leading-none text-ink sm:text-display-xl">{formatScore(overall)}</p>
           <Badge tone="positive" className="mt-3">
             Grade {ai.grade ?? "—"}
           </Badge>
           {ai.processingTimeMs ? (
-            <p className="mt-4 text-xs text-mute">Processed in {ai.processingTimeMs}ms</p>
+            <p className="mt-4 text-xs text-mute">Xử lý trong {ai.processingTimeMs}ms</p>
           ) : null}
           {ai.explanation ? (
             <p className="mt-6 text-left text-sm text-body">{ai.explanation}</p>
@@ -62,7 +62,7 @@ function AiScoreContent() {
         </Card>
 
         <Card className="space-y-5">
-          <h2 className="text-lg font-semibold">Score breakdown</h2>
+          <h2 className="text-lg font-semibold">Chi tiết điểm</h2>
           <ScoreBar label="Skills (40%)" value={parseFloat(String(ai.skillScore ?? 0))} />
           <ScoreBar label="Experience (30%)" value={parseFloat(String(ai.experienceScore ?? 0))} />
           <ScoreBar label="Education (20%)" value={parseFloat(String(ai.educationScore ?? 0))} />
@@ -72,7 +72,7 @@ function AiScoreContent() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <h2 className="text-lg font-semibold text-positive">Matched skills</h2>
+          <h2 className="text-lg font-semibold text-ink-deep">Kỹ năng phù hợp</h2>
           <div className="mt-4 flex flex-wrap gap-2">
             {(ai.matchedSkills ?? []).map((skill) => (
               <Badge key={skill} tone="positive">
@@ -80,7 +80,7 @@ function AiScoreContent() {
               </Badge>
             ))}
           </div>
-          <h3 className="mt-6 text-lg font-semibold text-negative">Missing skills</h3>
+          <h3 className="mt-6 text-lg font-semibold text-negative">Kỹ năng còn thiếu</h3>
           <div className="mt-4 flex flex-wrap gap-2">
             {(ai.missingSkills ?? []).length > 0 ? (
               ai.missingSkills!.map((skill) => (
@@ -95,10 +95,10 @@ function AiScoreContent() {
         </Card>
 
         <Card>
-          <h2 className="text-lg font-semibold">Insights</h2>
+          <h2 className="text-lg font-semibold">Nhận xét</h2>
           <div className="mt-4 space-y-4">
             <div>
-              <p className="text-sm font-semibold text-ink-deep">Strengths</p>
+              <p className="text-sm font-semibold text-ink-deep">Điểm mạnh</p>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-body">
                 {(ai.strengths ?? []).map((s) => (
                   <li key={s}>{s}</li>
@@ -107,7 +107,7 @@ function AiScoreContent() {
             </div>
             {(ai.concerns ?? []).length > 0 ? (
               <div>
-                <p className="text-sm font-semibold text-negative">Concerns</p>
+                <p className="text-sm font-semibold text-negative">Lưu ý</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-body">
                   {ai.concerns!.map((c) => (
                     <li key={c}>{c}</li>
@@ -121,9 +121,9 @@ function AiScoreContent() {
             <input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} />
             <span>Tôi đã xem xét kết quả AI và hiểu đây là gợi ý hỗ trợ, không thay thế quyết định của con người.</span>
           </label>
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <Button disabled={!reviewed} className="px-4 py-2 text-sm">
-              Move to Interview
+              Chuyển sang phỏng vấn
             </Button>
             <Link href={`/applications/${application.id}`}>
               <Button variant="secondary" className="px-4 py-2 text-sm">

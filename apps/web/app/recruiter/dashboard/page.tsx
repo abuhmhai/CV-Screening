@@ -190,7 +190,7 @@ function RecruiterDashboardContent() {
             <option value="date">Mới nhất</option>
           </Select>
         </FieldLabel>
-        <div className="md:col-span-4 flex justify-end">
+        <div className="flex justify-end md:col-span-4">
           <Button
             variant="secondary"
             className="px-4 py-2 text-sm"
@@ -207,9 +207,10 @@ function RecruiterDashboardContent() {
         <LoadingBlock />
       ) : (
         <>
-          <Card className="overflow-x-auto p-0">
-            <table className="min-w-full text-sm">
-            <thead className="border-b border-ink/10 bg-canvas-soft text-left">
+          <Card className="overflow-hidden p-0">
+            <div className="overflow-x-auto">
+            <table className="min-w-[760px] text-sm">
+            <thead className="border-b border-ink/10 bg-canvas-soft text-left text-xs uppercase tracking-wide text-body">
               <tr>
                 <th className="px-4 py-3">Ứng viên</th>
                 <th className="px-4 py-3">Status</th>
@@ -222,16 +223,16 @@ function RecruiterDashboardContent() {
               {filtered.map((app) => {
                 const score = parseFloat(String(app.aiResult?.overallScore ?? 0));
                 return (
-                  <tr key={app.id} className="border-b border-ink/5">
+                  <tr key={app.id} className="border-b border-ink/5 transition hover:bg-canvas-soft/60">
                     <td className="px-4 py-4">
-                      <p className="font-semibold">{app.candidate?.profile?.fullName ?? app.candidate?.email}</p>
+                      <p className="font-semibold text-ink">{app.candidate?.profile?.fullName ?? app.candidate?.email}</p>
                       <p className="text-xs text-mute">{app.candidate?.email}</p>
                     </td>
                     <td className="px-4 py-4">
                       <StatusBadge status={app.status} />
                     </td>
                     <td className="px-4 py-4 font-black">{formatScore(score)}</td>
-                    <td className="px-4 py-4 w-48">
+                    <td className="w-48 px-4 py-4">
                       <ScoreBar label="" value={score} />
                     </td>
                     <td className="px-4 py-4">
@@ -242,7 +243,7 @@ function RecruiterDashboardContent() {
                           </Button>
                         </Link>
                         <Select
-                          className="mt-0 w-auto py-1 text-xs"
+                          className="!mt-0 !w-auto !py-1 text-xs"
                           value={app.status}
                           disabled={updatingId === app.id}
                           onChange={(e) => updateStatus(app.id, e.target.value)}
@@ -260,23 +261,24 @@ function RecruiterDashboardContent() {
               })}
             </tbody>
             </table>
+            </div>
             {filtered.length === 0 ? (
               <p className="p-8 text-center text-body">Không có ứng viên phù hợp bộ lọc.</p>
             ) : null}
           </Card>
 
           <Card>
-            <h2 className="text-lg font-semibold">Pipeline board (kanban)</h2>
+            <h2 className="text-lg font-semibold">Pipeline board</h2>
             <div className="mt-4 grid gap-4 lg:grid-cols-3">
               {kanbanColumns.map((column) => (
-                <div key={column.status} className="rounded-lg bg-canvas-soft p-3">
+                <div key={column.status} className="rounded-xl bg-canvas-soft p-3">
                   <div className="mb-3 flex items-center justify-between">
                     <span className="text-sm font-semibold">{statusLabel(column.status)}</span>
                     <StatusBadge status={column.status} />
                   </div>
                   <div className="space-y-2">
                     {column.items.slice(0, 6).map((app) => (
-                      <div key={app.id} className="rounded-md bg-canvas p-3">
+                      <div key={app.id} className="rounded-lg bg-canvas p-3 shadow-[0_1px_0_rgba(14,15,12,0.04)]">
                         <p className="text-sm font-semibold">
                           {app.candidate?.profile?.fullName ?? app.candidate?.email}
                         </p>
@@ -285,7 +287,7 @@ function RecruiterDashboardContent() {
                         </p>
                         <div className="mt-2">
                           <Select
-                            className="mt-0 py-1 text-xs"
+                            className="!mt-0 !py-1 text-xs"
                             value={app.status}
                             onChange={(e) => updateStatus(app.id, e.target.value)}
                             disabled={updatingId === app.id}
@@ -300,7 +302,7 @@ function RecruiterDashboardContent() {
                       </div>
                     ))}
                     {column.items.length === 0 ? (
-                      <p className="rounded-md bg-canvas px-3 py-2 text-xs text-mute">No candidate</p>
+                      <p className="rounded-md bg-canvas px-3 py-2 text-xs text-mute">Chưa có ứng viên</p>
                     ) : null}
                   </div>
                 </div>

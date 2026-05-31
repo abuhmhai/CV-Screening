@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "../../lib/auth-context";
 import { apiFetch } from "../../lib/api-client";
-import { ConnectionItem, FeedPost, UserProfile } from "../../lib/types";
+import { FeedPost, UserProfile } from "../../lib/types";
 import { formatDateTime } from "../../lib/format";
 import { AuthGate } from "../../components/auth-gate";
 import { PageHeader, Card } from "../../components/ui/card";
@@ -147,21 +147,21 @@ function FeedContent() {
         ) : (
           posts.map((post) => (
             <Card key={post.id}>
-              <div className="flex gap-3">
+                <div className="flex gap-3">
                 <Avatar
                   name={post.author?.profile?.fullName}
                   src={post.author?.profile?.avatarUrl}
                 />
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                   <p className="font-semibold text-ink">
                     {post.author?.profile?.fullName ?? "Member"}
                   </p>
                   <p className="text-xs text-mute">{formatDateTime(post.createdAt)}</p>
                   <p className="mt-3 text-body-md text-body">{post.content}</p>
-                  <div className="mt-3 flex items-center gap-2">
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Badge tone="primary">Score {post.feedScore?.toFixed(1) ?? "0"}</Badge>
-                    <Badge tone="default">👍 {post.likeCount}</Badge>
-                    <Badge tone="default">💬 {post.commentCount}</Badge>
+                    <Badge tone="default">Like {post.likeCount}</Badge>
+                    <Badge tone="default">Bình luận {post.commentCount}</Badge>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Button
@@ -188,9 +188,9 @@ function FeedContent() {
                         </p>
                       </div>
                     ))}
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Input
-                        className="mt-0"
+                        className="!mt-0"
                         placeholder="Viết bình luận..."
                         value={commentDraftByPost[post.id] ?? ""}
                         onChange={(e) =>
@@ -200,8 +200,8 @@ function FeedContent() {
                           }))
                         }
                       />
-                      <Button className="px-3 py-2 text-xs" onClick={() => addComment(post.id)}>
-                        Send
+                      <Button className="px-3 py-2 text-xs" onClick={() => addComment(post.id)} disabled={!commentDraftByPost[post.id]?.trim()}>
+                        Gửi
                       </Button>
                     </div>
                   </div>

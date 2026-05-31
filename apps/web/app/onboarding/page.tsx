@@ -58,13 +58,13 @@ function OnboardingContent() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Onboarding Checklist"
+        title="Hoàn thiện hồ sơ"
         description="Hoàn thiện hồ sơ để tăng matching score, hiển thị tốt hơn trong network và recommendation."
       />
 
       <Card>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Progress</h2>
+          <h2 className="text-lg font-semibold">Tiến độ</h2>
           <div className="text-sm font-semibold">{checklist?.completion ?? 0}%</div>
         </div>
         <div className="h-3 overflow-hidden rounded-pill bg-canvas-soft">
@@ -77,7 +77,7 @@ function OnboardingContent() {
           {(checklist?.items ?? []).map((item) => (
             <li
               key={item.key}
-              className={`rounded-lg px-4 py-3 text-sm ${
+              className={`rounded-lg px-4 py-3 text-sm font-medium ${
                 item.done ? "bg-primary-pale text-ink-deep" : "bg-canvas-soft text-body"
               }`}
             >
@@ -89,18 +89,18 @@ function OnboardingContent() {
 
       {pendingItems.length > 0 ? (
         <Card>
-          <h2 className="text-lg font-semibold">Quick profile setup</h2>
+          <h2 className="text-lg font-semibold">Thiết lập hồ sơ nhanh</h2>
           <p className="mt-1 text-sm text-body">
             Cập nhật nhanh các trường cơ bản để hoàn tất onboarding.
           </p>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <FieldLabel label="Full name">
+            <FieldLabel label="Họ tên">
               <Input
                 value={form.fullName}
                 onChange={(e) => setForm({ ...form, fullName: e.target.value })}
               />
             </FieldLabel>
-            <FieldLabel label="Location">
+            <FieldLabel label="Địa điểm">
               <Input
                 value={form.location}
                 onChange={(e) => setForm({ ...form, location: e.target.value })}
@@ -112,7 +112,7 @@ function OnboardingContent() {
                 onChange={(e) => setForm({ ...form, headline: e.target.value })}
               />
             </FieldLabel>
-            <FieldLabel label="About">
+            <FieldLabel label="Giới thiệu">
               <Textarea
                 rows={3}
                 value={form.about}
@@ -122,7 +122,7 @@ function OnboardingContent() {
           </div>
           <div className="mt-5">
             <Button onClick={saveProfile} disabled={saving}>
-              {saving ? "Saving..." : "Save profile and refresh checklist"}
+              {saving ? "Đang lưu..." : "Lưu hồ sơ và cập nhật checklist"}
             </Button>
           </div>
         </Card>

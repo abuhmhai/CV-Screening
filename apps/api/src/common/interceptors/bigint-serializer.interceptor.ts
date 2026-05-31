@@ -15,7 +15,7 @@ function normalize(value: unknown): unknown {
     return value.map((item) => normalize(item));
   }
 
-  if (value && typeof value === "object") {
+  if (value && typeof value === "object" && Object.getPrototypeOf(value) === Object.prototype) {
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>).map(([key, item]) => [key, normalize(item)])
     );

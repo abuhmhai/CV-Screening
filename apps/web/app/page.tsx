@@ -30,14 +30,14 @@ export default function HomePage() {
           <p className="inline-flex rounded-pill bg-primary-pale px-4 py-1 text-xs font-semibold text-ink-deep">
             AI Screening + Professional Network
           </p>
-          <h1 className="mt-4 max-w-2xl font-display text-display-md font-black text-ink">
+          <h1 className="mt-4 max-w-2xl font-display text-4xl font-black leading-[0.95] text-ink sm:text-display-md">
             Tuyển dụng thông minh. Kết nối chuyên nghiệp.
           </h1>
           <p className="mt-4 max-w-2xl text-body-md text-body">
             TalentFlow giúp ứng viên xây hồ sơ, ứng tuyển và nhận điểm AI minh bạch — đồng thời
             giúp recruiter shortlist nhanh với pipeline trực quan và thông báo realtime.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link href="/jobs">
               <Button>Khám phá việc làm</Button>
             </Link>
@@ -50,7 +50,7 @@ export default function HomePage() {
           </div>
         </div>
         <aside className="bg-ink p-8 text-white lg:p-10">
-          <h2 className="text-lg font-semibold">Live platform snapshot</h2>
+          <h2 className="text-lg font-semibold">Tổng quan realtime</h2>
           <div className="mt-6 space-y-3">
             {[
               { label: "Việc làm đang mở", value: loading ? "…" : String(jobs.length) },
@@ -71,10 +71,10 @@ export default function HomePage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-4">
-        <StatCard label="Open Jobs" value={loading ? "…" : String(jobs.length)} />
+        <StatCard label="Việc đang mở" value={loading ? "…" : String(jobs.length)} />
         <StatCard label="Applications" value={loading ? "…" : String(totalApplications)} tone="positive" />
         <StatCard label="AI Engine" value="v1.0" />
-        <StatCard label="Avg match" value="78.4" tone="warning" />
+        <StatCard label="Match trung bình" value="78.4" tone="warning" />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
@@ -98,7 +98,7 @@ export default function HomePage() {
             {[
               "Dashboard pipeline với lọc theo status & AI score",
               "Chuyển trạng thái ứng viên + thông báo tự động",
-              "Đăng tin tuyển dụng có cấu trúc kỹ nang yêu cầu"
+              "Đăng tin tuyển dụng có cấu trúc kỹ năng yêu cầu"
             ].map((text) => (
               <li key={text} className="rounded-lg bg-canvas-soft px-4 py-3">
                 {text}
@@ -109,7 +109,7 @@ export default function HomePage() {
       </section>
 
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-2xl font-semibold">Việc làm nổi bật</h2>
           <Link href="/jobs" className="text-sm font-semibold text-ink-deep hover:underline">
             Xem tất cả →

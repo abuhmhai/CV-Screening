@@ -61,7 +61,7 @@ export default function JobsPage() {
         description="Lọc theo kỹ năng, địa điểm, cấp bậc. Xem chi tiết JD và ứng tuyển trực tiếp."
       />
 
-      <div className="grid gap-4 rounded-xl bg-canvas p-6 md:grid-cols-4">
+      <Card className="grid gap-4 md:grid-cols-4">
         <FieldLabel label="Tìm kiếm">
           <Input
             placeholder="Backend, React, ML..."
@@ -88,15 +88,15 @@ export default function JobsPage() {
           </Select>
         </FieldLabel>
         <div className="flex items-end">
-          <p className="rounded-lg bg-canvas-soft px-4 py-3 text-sm font-semibold text-ink">
+          <p className="w-full rounded-lg bg-canvas-soft px-4 py-3 text-sm font-semibold text-ink">
             {filtered.length} vị trí
           </p>
         </div>
-      </div>
+      </Card>
 
       {recommendedJobs.length > 0 ? (
         <Card>
-          <h2 className="text-lg font-semibold">Recommended for you</h2>
+          <h2 className="text-lg font-semibold">Gợi ý phù hợp với bạn</h2>
           <p className="mt-1 text-sm text-body">
             Đề xuất dựa trên kỹ năng hồ sơ và tín hiệu matching.
           </p>

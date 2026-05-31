@@ -155,8 +155,8 @@ function MessagesContent() {
       {conversations.length === 0 ? (
         <EmptyState title="Chưa có hội thoại" description="Bắt đầu kết nối từ trang Mạng lưới." actionHref="/network" actionLabel="Mạng lưới" />
       ) : (
-        <div className="grid min-h-[520px] gap-4 overflow-hidden rounded-xl border border-ink/10 bg-canvas lg:grid-cols-[320px_1fr]">
-          <div className="border-b border-ink/10 lg:border-b-0 lg:border-r">
+        <div className="grid min-h-[520px] overflow-hidden rounded-xl border border-ink/10 bg-canvas lg:grid-cols-[320px_1fr]">
+          <div className="max-h-72 overflow-y-auto border-b border-ink/10 lg:max-h-none lg:border-b-0 lg:border-r">
             {conversations.map((item) => {
               const other = item.conversation.participants.find((p) => p.userId !== user?.id)?.user;
               const last = item.conversation.messages[0];
@@ -190,11 +190,11 @@ function MessagesContent() {
               </div>
             </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto px-6 py-4">
+            <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 sm:px-6">
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.isMine ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[75%] rounded-xl px-4 py-3 text-sm ${
+                    className={`max-w-[85%] break-words rounded-xl px-4 py-3 text-sm sm:max-w-[75%] ${
                       msg.isMine ? "bg-primary text-ink" : "bg-canvas-soft text-ink"
                     }`}
                   >
@@ -206,14 +206,14 @@ function MessagesContent() {
             </div>
 
             <form onSubmit={handleSend} className="border-t border-ink/10 p-4">
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
-                  className="mt-0"
+                  className="!mt-0"
                   placeholder="Nhập tin nhắn..."
                   value={draft}
                   onChange={(e) => handleTyping(e.target.value)}
                 />
-                <Button type="submit" disabled={sending} className="px-4 py-2 text-sm">
+                <Button type="submit" disabled={sending || !draft.trim()} className="px-4 py-2 text-sm">
                   Gửi
                 </Button>
               </div>

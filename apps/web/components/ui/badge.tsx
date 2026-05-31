@@ -6,7 +6,7 @@ const tones: Record<Tone, string> = {
   default: "bg-canvas-soft text-ink",
   positive: "bg-primary-pale text-ink-deep",
   warning: "bg-warning/30 text-warning-content",
-  negative: "bg-negative/10 text-negative",
+  negative: "bg-negative-bg text-white",
   primary: "bg-primary text-ink"
 };
 
@@ -21,7 +21,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex rounded-pill px-3 py-1 text-xs font-semibold ${tones[tone]} ${className}`}
+      className={`inline-flex items-center rounded-pill px-3 py-1 text-xs font-semibold leading-5 ${tones[tone]} ${className}`}
     >
       {children}
     </span>

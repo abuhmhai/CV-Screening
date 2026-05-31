@@ -36,20 +36,20 @@ function SearchContent() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Unified Search"
+        title="Tìm kiếm"
         description="Tìm người, bài viết, công ty và việc làm trong một giao diện."
       />
 
       <Card>
-        <form onSubmit={handleSearch} className="flex gap-2">
+        <form onSubmit={handleSearch} className="flex flex-col gap-2 sm:flex-row">
           <Input
-            className="mt-0"
-            placeholder="Search people, jobs, companies, posts..."
+            className="!mt-0"
+            placeholder="Tìm người, việc làm, công ty, bài viết..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
           <Button type="submit" disabled={loading}>
-            {loading ? "Searching..." : "Search"}
+            {loading ? "Đang tìm..." : "Tìm kiếm"}
           </Button>
         </form>
       </Card>
@@ -59,7 +59,7 @@ function SearchContent() {
       ) : (
         <div className="space-y-6">
           <Card>
-            <h2 className="text-lg font-semibold">People ({result.people.length})</h2>
+            <h2 className="text-lg font-semibold">Mọi người ({result.people.length})</h2>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {result.people.map((person) => (
                 <div key={person.id} className="flex items-center gap-3 rounded-lg bg-canvas-soft p-3">
@@ -78,14 +78,14 @@ function SearchContent() {
           </Card>
 
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Jobs ({result.jobs.length})</h2>
+            <h2 className="text-lg font-semibold">Việc làm ({result.jobs.length})</h2>
             {result.jobs.map((job) => (
               <JobCard key={job.id} job={job} />
             ))}
           </div>
 
           <Card>
-            <h2 className="text-lg font-semibold">Posts ({result.posts.length})</h2>
+            <h2 className="text-lg font-semibold">Bài viết ({result.posts.length})</h2>
             <div className="mt-4 space-y-3">
               {result.posts.map((post) => (
                 <div key={post.id} className="rounded-lg bg-canvas-soft p-4">
@@ -99,7 +99,7 @@ function SearchContent() {
           </Card>
 
           <Card>
-            <h2 className="text-lg font-semibold">Companies ({result.companies.length})</h2>
+            <h2 className="text-lg font-semibold">Công ty ({result.companies.length})</h2>
             <div className="mt-4 space-y-3">
               {result.companies.map((company) => (
                 <div key={company.id} className="rounded-lg bg-canvas-soft p-4">

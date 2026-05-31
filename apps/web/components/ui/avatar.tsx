@@ -25,6 +25,7 @@ export function Avatar({
 
   return (
     <div
+      aria-label={name ?? email ?? "Avatar"}
       className={`${sizes[size]} flex items-center justify-center rounded-full bg-primary font-semibold text-ink ring-2 ring-primary-pale`}
     >
       {initials(name, email)}

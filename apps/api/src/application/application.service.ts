@@ -18,6 +18,22 @@ export class ApplicationService {
   // ─── Candidate: submit application ───────────────────────────────────────────
 
   async create(candidateId: string, payload: CreateApplicationDto): Promise<Application> {
+    const existing = await this.prisma.application.findUnique({
+      where: {
+        jobId_candidateId: {
+          jobId: payload.jobId,
+          candidateId
+        }
+      }
+    });
+
+    if (existing) {
+      setImmediate(() => {
+        void this.runAiScreening(existing.id, candidateId, payload.jobId);
+      });
+      return existing;
+    }
+
     const application = await this.prisma.application.create({
       data: {
         candidateId,
@@ -61,19 +77,78 @@ export class ApplicationService {
       // 1. Mark AI_SCREENING
       await this.setStatusInternal(applicationId, ApplicationStatus.AI_SCREENING, candidateId, "Queued for AI screening");
 
-      // 2. Load CV text + JD text
+      // 2. Load CV text + JD text + structured candidate signals
       const data = await this.prisma.application.findUnique({
         where: { id: applicationId },
-        include: { cvFile: true, job: true },
+        include: {
+          cvFile: true,
+          job: true,
+          candidate: {
+            include: {
+              profile: true,
+              userSkills: { include: { skill: true } },
+              workExperiences: true,
+              educations: true,
+            },
+          },
+        },
       });
       if (!data) return;
 
-      // Use CV fileName as stand-in for extracted text (real extraction via MinIO + parser in production)
-      const cvContent = data.cvFile.fileName;
-      const jdText = data.job.description;
+      const candidate = data.candidate;
+      const candidateSkills = (candidate?.userSkills ?? []).map((item) => ({
+        name: item.skill.name,
+        years: item.yearsExp != null ? Number(item.yearsExp) : null,
+      }));
+      const education = (candidate?.educations ?? []).map((row) => ({
+        degree: row.degree,
+        gpa: row.gpa != null ? Number(row.gpa) : null,
+      }));
 
-      // 3. Call AI service
-      const aiResult = await this.aiScreeningService.screen(cvContent, jdText, jobId);
+      const requiredSkills = Array.isArray(data.job.requiredSkills)
+        ? (data.job.requiredSkills as unknown[]).map((item) => String(item))
+        : [];
+      const candidateTotalYears = (candidate?.workExperiences ?? []).reduce((max, exp) => {
+        const end = exp.endDate ? new Date(exp.endDate) : new Date();
+        const years = (end.getTime() - new Date(exp.startDate).getTime()) / (1000 * 60 * 60 * 24 * 365);
+        return Math.max(max, years);
+      }, 0);
+
+      // Build a rich CV text blob so both the Python service and the local
+      // fallback engine have meaningful content to parse.
+      const cvContent = [
+        candidate?.profile?.fullName ?? "",
+        candidate?.profile?.headline ?? "",
+        candidate?.profile?.about ?? "",
+        candidateSkills.length
+          ? `Skills: ${candidateSkills.map((s) => `${s.name}${s.years ? ` (${s.years}y)` : ""}`).join(", ")}`
+          : "",
+        (candidate?.workExperiences ?? [])
+          .map((exp) => `${exp.position} at ${exp.company}. ${exp.description ?? ""}`)
+          .join("\n"),
+        (candidate?.educations ?? [])
+          .map((row) => `${row.degree} ${row.major ?? ""} - ${row.school}`)
+          .join("\n"),
+        data.cvFile.fileName,
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      const jdText = [
+        data.job.title,
+        data.job.description,
+        requiredSkills.length ? `Required skills: ${requiredSkills.join(", ")}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      // 3. Call AI service (remote Python service, with native TS fallback)
+      const aiResult = await this.aiScreeningService.screen(cvContent, jdText, jobId, {
+        candidateSkills,
+        requiredSkills,
+        education,
+        candidateTotalYears: Math.round(candidateTotalYears),
+      });
       if (!aiResult) {
         this.logger.warn(`AI screening returned null for application ${applicationId}`);
         return;

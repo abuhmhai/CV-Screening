@@ -110,6 +110,25 @@ function RecruiterDashboardContent() {
     }
   }
 
+  async function rescreen(applicationId: string) {
+    if (!token) return;
+    setUpdatingId(applicationId);
+    const res = await apiFetch(`/applications/${applicationId}/rescreen`, {
+      method: "POST",
+      token
+    });
+    setUpdatingId(null);
+    if (res.ok) {
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === applicationId ? { ...app, status: "AI_SCREENING", aiResult: null } : app
+        )
+      );
+      return;
+    }
+    setError(res.error ?? "Không thể chạy lại AI screening");
+  }
+
   async function exportCsv(): Promise<void> {
     if (!token || !selectedJobId) return;
     setExporting(true);
@@ -242,6 +261,14 @@ function RecruiterDashboardContent() {
                             Score
                           </Button>
                         </Link>
+                        <Button
+                          variant="secondary"
+                          className="px-3 py-1 text-xs"
+                          disabled={updatingId === app.id}
+                          onClick={() => void rescreen(app.id)}
+                        >
+                          Re-screen
+                        </Button>
                         <Select
                           className="!mt-0 !w-auto !py-1 text-xs"
                           value={app.status}

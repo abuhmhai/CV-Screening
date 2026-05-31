@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "../../../lib/auth-context";
@@ -15,28 +15,97 @@ import { ErrorBlock, LoadingBlock, ScoreBar } from "../../../components/ui/state
 
 function AiScoreContent() {
   const params = useParams<{ id: string }>();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [application, setApplication] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [reviewed, setReviewed] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const loadApplication = useCallback(async () => {
+    if (!token) return;
+    const res = await apiFetch<Application>(`/applications/${params.id}`, { token });
+    if (res.ok && res.data) setApplication(res.data);
+    setLoading(false);
+    setAttempts((value) => value + 1);
+  }, [params.id, token]);
 
   useEffect(() => {
-    if (!token) return;
-    void apiFetch<Application>(`/applications/${params.id}`, { token }).then((res) => {
-      if (res.ok && res.data) setApplication(res.data);
-      setLoading(false);
-    });
-  }, [token, params.id]);
+    void loadApplication();
+  }, [loadApplication]);
+
+  useEffect(() => {
+    if (loading || application?.aiResult || attempts >= 8) return;
+    const timer = window.setTimeout(() => {
+      void loadApplication();
+    }, 2500);
+    return () => window.clearTimeout(timer);
+  }, [application?.aiResult, attempts, loadApplication, loading]);
 
   if (loading) return <LoadingBlock />;
   if (!application?.aiResult) {
+    const canRescreen = user?.role === "RECRUITER" || user?.role === "ADMIN";
+
+    async function requestRescreen() {
+      if (!token || !application) return;
+      setActionLoading(true);
+      setActionMessage(null);
+      const res = await apiFetch(`/applications/${application.id}/rescreen`, {
+        method: "POST",
+        token
+      });
+      setActionLoading(false);
+      setActionMessage(res.ok ? "Đã gửi yêu cầu chạy lại AI screening." : res.error ?? "Không thể chạy lại AI screening.");
+      setAttempts(0);
+    }
+
     return (
-      <ErrorBlock message="Chưa có kết quả AI screening cho đơn này. Hãy thử lại sau vài giây." />
+      <div className="space-y-4">
+        <ErrorBlock message="Chưa có kết quả AI screening. Hệ thống đang tự kiểm tra lại trong vài giây." />
+        {canRescreen ? (
+          <Card className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-body">
+              Nếu kết quả chưa xuất hiện, recruiter có thể chạy lại AI screening ngay.
+            </p>
+            <Button
+              className="px-4 py-2 text-sm"
+              disabled={actionLoading}
+              onClick={() => void requestRescreen()}
+            >
+              {actionLoading ? "Đang chạy..." : "Chạy lại AI screening"}
+            </Button>
+          </Card>
+        ) : null}
+        {actionMessage ? <p className="text-sm text-body">{actionMessage}</p> : null}
+      </div>
     );
   }
 
   const ai = application.aiResult;
   const overall = parseFloat(String(ai.overallScore));
+  const canManage = user?.role === "RECRUITER" || user?.role === "ADMIN";
+
+  async function moveToInterview() {
+    if (!token || !application) return;
+    setActionLoading(true);
+    setActionMessage(null);
+    const res = await apiFetch(`/applications/${application.id}/status`, {
+      method: "PATCH",
+      token,
+      body: JSON.stringify({
+        status: "INTERVIEW",
+        note: "AI score reviewed from AI Score page"
+      })
+    });
+    setActionLoading(false);
+    if (res.ok) {
+      setApplication((prev) => (prev ? { ...prev, status: "INTERVIEW" } : prev));
+      setActionMessage("Đã chuyển ứng viên sang phỏng vấn.");
+      return;
+    }
+    setActionMessage(res.error ?? "Không thể chuyển trạng thái ứng viên.");
+  }
 
   return (
     <div className="space-y-6">
@@ -122,15 +191,22 @@ function AiScoreContent() {
             <span>Tôi đã xem xét kết quả AI và hiểu đây là gợi ý hỗ trợ, không thay thế quyết định của con người.</span>
           </label>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <Button disabled={!reviewed} className="px-4 py-2 text-sm">
-              Chuyển sang phỏng vấn
-            </Button>
+            {canManage ? (
+              <Button
+                disabled={!reviewed || actionLoading}
+                className="px-4 py-2 text-sm"
+                onClick={() => void moveToInterview()}
+              >
+                {actionLoading ? "Đang cập nhật..." : "Chuyển sang phỏng vấn"}
+              </Button>
+            ) : null}
             <Link href={`/applications/${application.id}`}>
               <Button variant="secondary" className="px-4 py-2 text-sm">
                 Quay lại đơn
               </Button>
             </Link>
           </div>
+          {actionMessage ? <p className="mt-3 text-sm text-body">{actionMessage}</p> : null}
         </Card>
       </div>
     </div>

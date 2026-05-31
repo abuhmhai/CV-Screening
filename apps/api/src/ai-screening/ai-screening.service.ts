@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { runLocalScreening, ScreeningContext } from "./local-screening";
 
 export interface AiScreeningBreakdown {
   skill_score: number;
@@ -39,7 +40,28 @@ export class AiScreeningService {
     this.timeoutMs = 10_000;
   }
 
-  async screen(cvContent: string, jdText: string, jobId?: string): Promise<AiScreeningResult | null> {
+  async screen(
+    cvContent: string,
+    jdText: string,
+    jobId?: string,
+    context?: ScreeningContext
+  ): Promise<AiScreeningResult | null> {
+    const remote = await this.screenRemote(cvContent, jdText, jobId);
+    if (remote) {
+      return remote;
+    }
+
+    // Fallback: native TS scorer mirroring AI Screening.md so the platform
+    // always returns a real, explainable result (e.g. local dev without Python).
+    this.logger.warn("Falling back to local TS screening engine");
+    return runLocalScreening(cvContent, jdText, context);
+  }
+
+  private async screenRemote(
+    cvContent: string,
+    jdText: string,
+    jobId?: string
+  ): Promise<AiScreeningResult | null> {
     const url = `${this.aiServiceUrl}/screen`;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -64,7 +86,7 @@ export class AiScreeningService {
       return (await response.json()) as AiScreeningResult;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      this.logger.error(`AI screening call failed: ${message}`);
+      this.logger.warn(`AI service unreachable: ${message}`);
       return null;
     } finally {
       clearTimeout(timer);

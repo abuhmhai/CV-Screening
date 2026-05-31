@@ -149,4 +149,27 @@ export class UserService {
 
     return weightMap.reduce((sum, item) => (item.ok ? sum + item.weight : sum), 0);
   }
+
+  async uploadCv(userId: string, file: Express.Multer.File) {
+    // Basic mock implementation for local upload handling.
+    // In production, we'd use a service like AWS S3 or MinIO to upload.
+    // Here we'll generate a dummy URL.
+    const fileUrl = `https://storage.local/cvs/${userId}/${Date.now()}-${file.originalname}`;
+    
+    // Unset primary for existing CVs
+    await this.prisma.cvFile.updateMany({
+      where: { userId, isPrimary: true },
+      data: { isPrimary: false }
+    });
+
+    return this.prisma.cvFile.create({
+      data: {
+        userId,
+        fileName: file.originalname,
+        fileUrl,
+        fileSize: file.size,
+        isPrimary: true
+      }
+    });
+  }
 }

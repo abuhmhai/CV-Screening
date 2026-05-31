@@ -58,6 +58,11 @@ export interface Application {
   appliedAt: string;
   job?: Job | null;
   aiResult?: AiResult | null;
+  cvFile?: {
+    id: string;
+    fileUrl: string;
+    fileName: string;
+  } | null;
   candidate?: {
     id: string;
     email: string;

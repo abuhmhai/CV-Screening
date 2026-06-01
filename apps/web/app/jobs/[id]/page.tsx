@@ -175,7 +175,7 @@ function JobDetailContent() {
                   
                   <div className="flex items-center gap-3">
                     <div className="text-xs text-mute flex-1">Hoặc</div>
-                    <label className={`cursor-pointer rounded-lg bg-surface px-4 py-2 text-sm font-medium border border-outline hover:bg-surface-hover transition-colors ${uploadingCv ? "opacity-50 cursor-not-allowed" : ""}`}>
+                    <label className={`cursor-pointer rounded-xl border border-ink/10 bg-canvas px-4 py-2 text-body-sm font-semibold transition hover:bg-canvas-soft ${uploadingCv ? "cursor-not-allowed opacity-50" : ""}`}>
                       {uploadingCv ? "Đang tải lên..." : "Tải lên CV mới"}
                       <input 
                         type="file" 

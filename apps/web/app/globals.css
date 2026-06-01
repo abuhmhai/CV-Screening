@@ -5,16 +5,24 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap");
 
 :root {
+  /* Brand & accent — DESIGN.md */
   --colors-primary: #9fe870;
   --colors-primary-active: #cdffad;
   --colors-primary-neutral: #c5edab;
   --colors-primary-pale: #e2f6d5;
+  --colors-on-primary: #0e0f0c;
+
+  /* Surface */
   --colors-canvas: #ffffff;
   --colors-canvas-soft: #e8ebe6;
+
+  /* Text */
   --colors-ink: #0e0f0c;
   --colors-ink-deep: #163300;
   --colors-body: #454745;
   --colors-mute: #868685;
+
+  /* Semantic */
   --colors-positive: #2ead4b;
   --colors-positive-deep: #054d28;
   --colors-warning: #ffd11a;
@@ -27,6 +35,7 @@
   --colors-accent-orange: #ffc091;
   --colors-accent-cyan: #38c8ff;
 
+  /* Radius — canonical button/card = xl 24px */
   --rounded-none: 0px;
   --rounded-sm: 8px;
   --rounded-md: 12px;
@@ -35,6 +44,17 @@
   --rounded-pill: 9999px;
   --rounded-full: 9999px;
 
+  /* Spacing */
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+
+  /* Typography scale */
   --font-display: "Inter", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
   --typography-display-mega-size: 126px;
@@ -47,10 +67,22 @@
   --typography-display-md-line-height: 34px;
   --typography-display-sm-size: 32px;
   --typography-display-sm-line-height: 38.4px;
+  --typography-display-xs-size: 24px;
+  --typography-display-xs-line-height: 31.2px;
+  --typography-body-lg-size: 20px;
+  --typography-body-lg-line-height: 30px;
   --typography-body-md-size: 16px;
   --typography-body-md-line-height: 24px;
+  --typography-body-sm-size: 14px;
+  --typography-body-sm-line-height: 20px;
+  --typography-caption-size: 12px;
+  --typography-caption-line-height: 16px;
   --typography-button-md-size: 16px;
   --typography-button-md-line-height: 24px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body {
@@ -58,6 +90,9 @@ body {
   background: var(--colors-canvas-soft);
   color: var(--colors-ink);
   font-family: var(--font-body), Inter, system-ui, sans-serif;
+  font-size: var(--typography-body-md-size);
+  line-height: var(--typography-body-md-line-height);
+  font-feature-settings: "calt";
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
@@ -76,8 +111,70 @@ body {
   outline-offset: 2px;
 }
 
+/* Layout bands — DESIGN.md */
+.hero-band {
+  background: var(--colors-canvas-soft);
+  color: var(--colors-ink);
+  padding: var(--spacing-3xl) var(--spacing-xl);
+}
+
+.hero-band-dark {
+  background: var(--colors-ink);
+  color: var(--colors-primary);
+  padding: var(--spacing-3xl) var(--spacing-xl);
+}
+
+.content-band {
+  background: var(--colors-canvas);
+  color: var(--colors-ink);
+  padding: var(--spacing-3xl) var(--spacing-xl);
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+
+.animate-fade-up { animation: fadeUp 0.4s ease forwards; }
+.animate-fade-in { animation: fadeIn 0.3s ease forwards; }
+.animate-scale-in { animation: scaleIn 0.25s ease forwards; }
+
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--colors-canvas-soft) 25%,
+    var(--colors-primary-pale) 50%,
+    var(--colors-canvas-soft) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--rounded-md);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;

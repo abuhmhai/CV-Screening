@@ -8,7 +8,7 @@ import { Job } from "../lib/types";
 import { JobCard } from "../components/job-card";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
-import { LoadingBlock } from "../components/ui/states";
+import { FileUser, Zap, MessageSquare, Briefcase, Filter, Bell, ArrowRight } from "lucide-react";
 
 function AnimatedNumber({ value, decimals = 0, suffix = "" }: { value: number; decimals?: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -18,11 +18,15 @@ function AnimatedNumber({ value, decimals = 0, suffix = "" }: { value: number; d
 
   useEffect(() => {
     if (isInView) {
-      animate(count, value, { duration: 2, ease: "easeOut" });
+      animate(count, value, { duration: 1.5, ease: "easeOut" });
     }
   }, [isInView, value, count]);
 
-  return <motion.span ref={ref}>{rounded}</motion.span>;
+  return (
+    <motion.span ref={ref} className="tabular-nums">
+      {rounded}
+    </motion.span>
+  );
 }
 
 export default function HomePage() {
@@ -40,126 +44,113 @@ export default function HomePage() {
 
   return (
     <div className="space-y-8">
-      {/* 1. Dark hero background with 5. Subtle grid/dot pattern */}
-      <section className="relative overflow-hidden rounded-xl bg-slate-950 text-white lg:grid lg:grid-cols-[1.6fr_1fr] shadow-xl">
-        <div 
-          className="absolute inset-0 z-0 opacity-30" 
-          style={{ backgroundImage: "radial-gradient(circle, #334155 1.5px, transparent 1.5px)", backgroundSize: "24px 24px" }}
-        />
-        <div className="relative z-10 p-8 lg:p-10 flex flex-col justify-center">
-          <p className="inline-flex w-fit rounded-pill bg-white/10 backdrop-blur-md border border-white/10 px-4 py-1.5 text-xs font-semibold text-primary">
-            ✨ AI Screening + Professional Network
+      {/* hero-band — DESIGN.md */}
+      <section className="hero-band overflow-hidden rounded-xl lg:grid lg:grid-cols-[1.6fr_1fr]">
+        <div className="flex flex-col justify-center">
+          <p className="inline-flex w-fit rounded-pill bg-canvas px-4 py-1.5 text-body-sm font-semibold text-ink">
+            AI Screening + Professional Network
           </p>
-          <h1 className="mt-5 max-w-2xl font-display text-4xl font-black leading-[1.1] text-white sm:text-display-md">
-            Tuyển dụng thông minh. <br/><span className="text-primary">Kết nối chuyên nghiệp.</span>
+          <h1 className="mt-5 max-w-2xl font-display text-display-md font-black leading-tight text-ink sm:text-display-xl">
+            Tuyển dụng thông minh.
+            <br />
+            <span className="text-ink-deep">Kết nối chuyên nghiệp.</span>
           </h1>
-          <p className="mt-5 max-w-xl text-body-md text-slate-300">
-            TalentFlow giúp ứng viên xây hồ sơ, ứng tuyển và nhận điểm AI minh bạch — đồng thời
-            giúp recruiter shortlist nhanh với pipeline trực quan và thông báo realtime.
+          <p className="mt-5 max-w-xl text-body-lg text-body">
+            TalentFlow giúp ứng viên xây hồ sơ, ứng tuyển và nhận điểm AI minh bạch — đồng thời giúp
+            recruiter shortlist nhanh với pipeline trực quan và thông báo realtime.
           </p>
           <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
             <Link href="/jobs">
-              {/* 2. Glowing CTA button */}
-              <Button className="shadow-[0_0_20px_rgba(34,197,94,0.4)] hover:shadow-[0_0_30px_rgba(34,197,94,0.6)] border-none">
-                Khám phá việc làm
-              </Button>
+              <Button>Khám phá việc làm</Button>
             </Link>
             <Link href="/auth/sign-in">
-              <Button className="bg-white/10 text-white hover:bg-white/20 border border-white/10 backdrop-blur-md">
-                Đăng nhập demo
-              </Button>
+              <Button variant="tertiary">Đăng nhập demo</Button>
             </Link>
           </div>
         </div>
-        
-        <aside className="relative z-10 flex flex-col justify-center border-l border-white/10 bg-slate-900/50 p-8 lg:p-10 backdrop-blur-sm">
-          <h2 className="text-lg font-semibold text-white/90">Tổng quan realtime</h2>
-          <div className="mt-6 space-y-3">
-            <div className="flex items-center justify-between rounded-lg backdrop-blur-md bg-white/5 border border-white/10 px-4 py-3">
-              <span className="text-sm text-slate-300">Việc làm đang mở</span>
-              <strong className="text-primary font-black text-lg">
-                {loading ? "…" : <AnimatedNumber value={jobs.length} />}
-              </strong>
-            </div>
-            <div className="flex items-center justify-between rounded-lg backdrop-blur-md bg-white/5 border border-white/10 px-4 py-3">
-              <span className="text-sm text-slate-300">Tổng đơn ứng tuyển</span>
-              <strong className="text-primary font-black text-lg">
-                {loading ? "…" : <AnimatedNumber value={totalApplications} />}
-              </strong>
-            </div>
-            <div className="flex items-center justify-between rounded-lg backdrop-blur-md bg-white/5 border border-white/10 px-4 py-3">
-              <span className="text-sm text-slate-300">Công ty đối tác</span>
-              <strong className="text-white font-black text-lg">
-                <AnimatedNumber value={2} />
-              </strong>
-            </div>
-            <div className="flex items-center justify-between rounded-lg backdrop-blur-md bg-white/5 border border-white/10 px-4 py-3">
-              <span className="text-sm text-slate-300">Thời gian AI screening</span>
-              <strong className="text-white font-black text-lg">
-                &lt; <AnimatedNumber value={2} suffix="s" />
-              </strong>
-            </div>
+
+        <aside className="mt-8 flex flex-col justify-center border-t border-ink/10 pt-8 lg:mt-0 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+          <h2 className="text-body-md font-semibold text-ink">Tổng quan realtime</h2>
+          <div className="mt-4 space-y-3">
+            {[
+              { label: "Việc làm đang mở", value: jobs.length, loading },
+              { label: "Tổng đơn ứng tuyển", value: totalApplications, loading },
+              { label: "Công ty đối tác", value: 2, loading: false },
+              { label: "Thời gian AI screening", value: 2, suffix: "s", prefix: "< ", loading: false }
+            ].map((stat, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between rounded-xl bg-canvas px-4 py-3 transition hover:translate-x-0.5"
+              >
+                <span className="text-body-sm text-body">{stat.label}</span>
+                <strong className="text-lg font-black text-ink tabular-nums">
+                  {stat.loading ? "…" : (
+                    <>
+                      {stat.prefix}
+                      <AnimatedNumber value={stat.value} suffix={stat.suffix} />
+                    </>
+                  )}
+                </strong>
+              </div>
+            ))}
           </div>
         </aside>
       </section>
 
-      {/* 4. Glassmorphism cards & 3. Animated số realtime for Stat Cards section */}
-      <section className="relative overflow-hidden rounded-xl bg-slate-950 p-6 shadow-lg">
-        <div 
-          className="absolute inset-0 z-0 opacity-20" 
-          style={{ backgroundImage: "radial-gradient(circle, #334155 1px, transparent 1px)", backgroundSize: "20px 20px" }}
-        />
-        <div className="relative z-10 grid gap-4 md:grid-cols-4">
-          <article className="rounded-xl backdrop-blur-md bg-white/5 border border-white/10 p-5">
-            <p className="text-sm font-semibold text-slate-300">Việc đang mở</p>
-            <p className="mt-2 text-3xl font-black text-white">
-              {loading ? "…" : <AnimatedNumber value={jobs.length} />}
+      {/* Stats — white cards on sage (surface contrast = elevation) */}
+      <section className="grid gap-4 md:grid-cols-4">
+        {[
+          { label: "Việc đang mở", value: jobs.length, loading },
+          { label: "Applications", value: totalApplications, loading },
+          { label: "AI Engine", value: "v1.0", loading: false, isString: true },
+          { label: "Match trung bình", value: 78.4, suffix: "%", decimals: 1, loading: false }
+        ].map((stat, i) => (
+          <Card key={i} variant="content" className="text-center">
+            <p className="text-body-sm font-semibold text-body">{stat.label}</p>
+            <p className="mt-2 text-3xl font-black text-ink tabular-nums">
+              {stat.loading ? "…" : stat.isString ? stat.value : <AnimatedNumber value={stat.value as number} decimals={stat.decimals} suffix={stat.suffix} />}
             </p>
-          </article>
-          <article className="rounded-xl backdrop-blur-md bg-primary/10 border border-primary/20 p-5">
-            <p className="text-sm font-semibold text-primary">Applications</p>
-            <p className="mt-2 text-3xl font-black text-white">
-              {loading ? "…" : <AnimatedNumber value={totalApplications} />}
-            </p>
-          </article>
-          <article className="rounded-xl backdrop-blur-md bg-white/5 border border-white/10 p-5">
-            <p className="text-sm font-semibold text-slate-300">AI Engine</p>
-            <p className="mt-2 text-3xl font-black text-white">v1.0</p>
-          </article>
-          <article className="rounded-xl backdrop-blur-md bg-amber-500/10 border border-amber-500/20 p-5">
-            <p className="text-sm font-semibold text-amber-400">Match trung bình</p>
-            <p className="mt-2 text-3xl font-black text-white">
-              <AnimatedNumber value={78.4} decimals={1} suffix="%" />
-            </p>
-          </article>
-        </div>
+          </Card>
+        ))}
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <Card className="hover:shadow-md transition-shadow">
-          <h2 className="text-xl font-semibold">Dành cho ứng viên</h2>
-          <ul className="mt-4 space-y-3 text-sm text-body">
+        <Card variant="sage">
+          <h2 className="text-xl font-semibold text-ink">Dành cho ứng viên</h2>
+          <ul className="mt-4 space-y-3">
             {[
-              "Hồ sơ LinkedIn-style với kinh nghiệm, học vấn, kỹ năng",
-              "Ứng tuyển 1-click với CV đã lưu + AI score breakdown",
-              "Feed, kết nối, nhắn tin trực tiếp với recruiter"
-            ].map((text) => (
-              <li key={text} className="flex items-center gap-3 rounded-lg bg-canvas-soft px-4 py-3">
-                <span className="text-primary text-lg">✓</span> {text}
+              { icon: <FileUser size={20} />, text: "Hồ sơ LinkedIn-style với kinh nghiệm, học vấn, kỹ năng" },
+              { icon: <Zap size={20} />, text: "Ứng tuyển 1-click với CV đã lưu + AI score breakdown" },
+              { icon: <MessageSquare size={20} />, text: "Feed, kết nối, nhắn tin trực tiếp với recruiter" }
+            ].map((feature, i) => (
+              <li
+                key={i}
+                className="flex items-center gap-3 rounded-xl bg-canvas px-4 py-3 transition hover:translate-x-1"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-pale text-ink-deep">
+                  {feature.icon}
+                </span>
+                <span className="text-body-sm font-medium text-ink">{feature.text}</span>
               </li>
             ))}
           </ul>
         </Card>
-        <Card className="hover:shadow-md transition-shadow">
-          <h2 className="text-xl font-semibold">Dành cho recruiter</h2>
-          <ul className="mt-4 space-y-3 text-sm text-body">
+        <Card variant="green">
+          <h2 className="text-xl font-semibold text-ink">Dành cho recruiter</h2>
+          <ul className="mt-4 space-y-3">
             {[
-              "Dashboard pipeline với lọc theo status & AI score",
-              "Chuyển trạng thái ứng viên + thông báo tự động",
-              "Đăng tin tuyển dụng có cấu trúc kỹ năng yêu cầu"
-            ].map((text) => (
-              <li key={text} className="flex items-center gap-3 rounded-lg bg-canvas-soft px-4 py-3">
-                <span className="text-primary text-lg">✓</span> {text}
+              { icon: <Filter size={20} />, text: "Dashboard pipeline với lọc theo status & AI score" },
+              { icon: <Bell size={20} />, text: "Chuyển trạng thái ứng viên + thông báo tự động" },
+              { icon: <Briefcase size={20} />, text: "Đăng tin tuyển dụng có cấu trúc kỹ năng yêu cầu" }
+            ].map((feature, i) => (
+              <li
+                key={i}
+                className="flex items-center gap-3 rounded-xl bg-canvas px-4 py-3 transition hover:translate-x-1"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-ink">
+                  {feature.icon}
+                </span>
+                <span className="text-body-sm font-medium text-ink">{feature.text}</span>
               </li>
             ))}
           </ul>
@@ -168,15 +159,29 @@ export default function HomePage() {
 
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-2xl font-semibold">Việc làm nổi bật</h2>
-          <Link href="/jobs" className="text-sm font-semibold text-primary hover:text-primary-active transition-colors flex items-center gap-1">
-            Xem tất cả <span>→</span>
+          <h2 className="font-display text-2xl font-black text-ink">Việc làm nổi bật</h2>
+          <Link
+            href="/jobs"
+            className="group flex items-center gap-1 text-body-sm font-semibold text-ink hover:text-ink-deep"
+          >
+            Xem tất cả
+            <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
           </Link>
         </div>
         {loading ? (
-          <LoadingBlock />
+          <div className="grid gap-4 md:grid-cols-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="skeleton h-40 w-full" />
+            ))}
+          </div>
         ) : (
-          jobs.slice(0, 4).map((job) => <JobCard key={job.id} job={job} />)
+          <div className="grid gap-4 md:grid-cols-2 stagger-children">
+            {jobs.slice(0, 4).map((job) => (
+              <div key={job.id} className="animate-fade-up">
+                <JobCard job={job} />
+              </div>
+            ))}
+          </div>
         )}
       </section>
     </div>

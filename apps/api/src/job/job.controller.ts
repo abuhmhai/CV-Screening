@@ -7,6 +7,7 @@ import { requireUser } from "../common/auth/require-user";
 import { Roles } from "../common/auth/roles.decorator";
 import { RolesGuard } from "../common/auth/roles.guard";
 import { CreateJobDto } from "./dto/create-job.dto";
+import { SearchJobsDto } from "./dto/search-jobs.dto";
 import { JobService } from "./job.service";
 
 @Controller("jobs")
@@ -16,6 +17,16 @@ export class JobController {
   @Get()
   list(@Query("status") status?: JobStatus, @Query("location") location?: string) {
     return this.jobService.list(status, location);
+  }
+
+  @Get("search")
+  search(@Query() query: SearchJobsDto) {
+    return this.jobService.search(query);
+  }
+
+  @Get("facets")
+  facets() {
+    return this.jobService.facets();
   }
 
   @Get(":id")

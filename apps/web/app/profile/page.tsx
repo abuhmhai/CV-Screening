@@ -9,19 +9,29 @@ import { AuthGate } from "../../components/auth-gate";
 import { Card } from "../../components/ui/card";
 import { Avatar } from "../../components/ui/avatar";
 import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
 import { ErrorBlock, LoadingBlock } from "../../components/ui/states";
+import { ProfileEditor } from "../../components/profile-editor";
+import { Pencil, Eye, FileText } from "lucide-react";
+import Link from "next/link";
 
 function ProfileContent() {
   const { token, user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
 
-  useEffect(() => {
+  const loadProfile = () => {
     if (!token || !user) return;
     void apiFetch<UserProfile>(`/users/${user.id}/profile`, { token }).then((res) => {
       if (res.ok && res.data) setProfile(res.data);
       setLoading(false);
     });
+  };
+
+  useEffect(() => {
+    loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user]);
 
   if (loading) return <LoadingBlock />;
@@ -31,6 +41,28 @@ function ProfileContent() {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Button
+            variant={editing ? "tertiary" : "primary"}
+            onClick={() => setEditing((v) => !v)}
+            leftIcon={editing ? <Eye size={16} /> : <Pencil size={16} />}
+            className="min-h-10 px-4 py-2"
+          >
+            {editing ? "Xem hồ sơ" : "Chỉnh sửa hồ sơ"}
+          </Button>
+          <Link href="/cv-builder">
+            <Button variant="ghost" leftIcon={<FileText size={16} />} className="min-h-10 px-4 py-2">
+              Tạo CV
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {editing ? (
+        <ProfileEditor profile={profile} onChange={loadProfile} />
+      ) : (
+      <>
       <Card className="overflow-hidden p-0">
         <div className="h-32 bg-gradient-to-r from-primary to-primary-neutral" />
         <div className="relative px-6 pb-6">
@@ -108,6 +140,8 @@ function ProfileContent() {
           ))}
         </ul>
       </Card>
+      </>
+      )}
     </div>
   );
 }

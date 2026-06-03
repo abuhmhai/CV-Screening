@@ -3,16 +3,43 @@
 import Link from "next/link";
 import { Application } from "../lib/types";
 import { formatDate, formatScore } from "../lib/format";
+import { apiFetch } from "../lib/api-client";
+import { useAuth } from "../lib/auth-context";
 import { Card } from "./ui/card";
 import { Badge, BadgeVariant } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Sparkles, ChevronRight, FileText, XCircle } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
-export function ApplicationCard({ application }: { application: Application }) {
+export function ApplicationCard({
+  application,
+  onWithdrawn
+}: {
+  application: Application;
+  onWithdrawn?: () => void;
+}) {
+  const { token } = useAuth();
   const [expanded, setExpanded] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
   const score = application.aiResult?.overallScore ? Number(application.aiResult.overallScore) : undefined;
+
+  const canWithdraw = !["HIRED", "REJECTED"].includes(application.status);
+
+  const withdraw = async () => {
+    if (!token || withdrawing) return;
+    if (!window.confirm("Bạn chắc chắn muốn rút đơn ứng tuyển này?")) return;
+    setWithdrawing(true);
+    const res = await apiFetch(`/applications/${application.id}`, { method: "DELETE", token });
+    setWithdrawing(false);
+    if (res.ok) {
+      toast.success("Đã rút đơn ứng tuyển");
+      onWithdrawn?.();
+    } else {
+      toast.error(res.error ?? "Không rút được đơn");
+    }
+  };
 
   const statusMap: Record<string, { label: string; variant: BadgeVariant }> = {
     APPLIED: { label: "Đã nộp", variant: "pending" },
@@ -105,13 +132,17 @@ export function ApplicationCard({ application }: { application: Application }) {
               </Link>
             ) : null}
             <div className="flex-1" />
-            <Button
-              variant="ghost"
-              className="w-full text-negative-deep hover:bg-negative-bg/10 sm:w-auto"
-              leftIcon={<XCircle size={16} />}
-            >
-              Rút đơn
-            </Button>
+            {canWithdraw ? (
+              <Button
+                variant="ghost"
+                className="w-full text-negative-deep hover:bg-negative-bg/10 sm:w-auto"
+                leftIcon={<XCircle size={16} />}
+                isLoading={withdrawing}
+                onClick={withdraw}
+              >
+                Rút đơn
+              </Button>
+            ) : null}
           </motion.div>
         ) : null}
       </AnimatePresence>

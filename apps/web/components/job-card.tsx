@@ -6,6 +6,7 @@ import { Badge, StatusBadge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Avatar } from "./ui/avatar";
 import { SkillTag } from "./ui/skill-tag";
+import { SaveJobButton } from "./save-job-button";
 
 export function JobCard({ job }: { job: Job }) {
   return (
@@ -21,18 +22,31 @@ export function JobCard({ job }: { job: Job }) {
               {job.title}
             </Link>
             <p className="mt-1 text-body-sm text-body">
-              {job.company?.name} · {job.level} · {job.jobType} · {job.location ?? "Remote"}
+              {job.company?.id ? (
+                <Link
+                  href={`/company/${job.company.id}`}
+                  className="font-medium text-ink transition hover:text-ink-deep hover:underline"
+                >
+                  {job.company.name}
+                </Link>
+              ) : (
+                job.company?.name
+              )}{" "}
+              · {job.level} · {job.jobType} · {job.location ?? "Remote"}
             </p>
             <p className="mt-1.5 text-body-sm font-semibold text-ink-deep">
               {formatSalary(job.minSalary, job.maxSalary)}
             </p>
           </div>
         </div>
-        {job.status === "ACTIVE" ? (
-          <Badge variant="active">ACTIVE</Badge>
-        ) : (
-          <StatusBadge status={job.status} />
-        )}
+        <div className="flex items-center gap-1">
+          {job.status === "ACTIVE" ? (
+            <Badge variant="active">ACTIVE</Badge>
+          ) : (
+            <StatusBadge status={job.status} />
+          )}
+          <SaveJobButton jobId={job.id} />
+        </div>
       </div>
 
       <div className="mt-auto">

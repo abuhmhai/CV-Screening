@@ -1,6 +1,11 @@
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
-$env:Path = "C:\Program Files\nodejs;" + $env:Path
+$localNode = Join-Path $Root ".tools\node"
+if (Test-Path (Join-Path $localNode "npm.cmd")) {
+  $env:Path = "$localNode;" + $env:Path
+} else {
+  $env:Path = "C:\Program Files\nodejs;" + $env:Path
+}
 
 Set-Location $Root
 Write-Host "==> CV Screening - Local dev (no Docker)" -ForegroundColor Cyan

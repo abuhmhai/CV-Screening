@@ -17,7 +17,13 @@ export interface Company {
   name: string;
   slug?: string;
   logoUrl?: string | null;
+  coverUrl?: string | null;
+  website?: string | null;
   industry?: string | null;
+  sizeRange?: string | null;
+  foundedYear?: number | null;
+  address?: string | null;
+  description?: string | null;
 }
 
 export interface Job {
@@ -26,14 +32,114 @@ export interface Job {
   description: string;
   level: string;
   jobType: string;
+  experienceLevel?: string | null;
+  category?: string | null;
+  isRemote?: boolean;
   location?: string | null;
   status: string;
   minSalary?: number | null;
   maxSalary?: number | null;
+  salaryCurrency?: string | null;
+  slug?: string | null;
+  viewsCount?: number;
+  publishedAt?: string | null;
   requiredSkills?: string[];
   company?: Company | null;
   _count?: { applications: number };
   expiresAt?: string | null;
+}
+
+export interface Paginated<T> {
+  items: T[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface JobFacets {
+  jobTypes: { value: string; count: number }[];
+  levels: { value: string; count: number }[];
+  categories: { value: string; count: number }[];
+}
+
+export interface SavedJob {
+  jobId: string;
+  createdAt: string;
+  job: Job;
+}
+
+export interface CompanyPost {
+  id: string;
+  content: string;
+  createdAt: string;
+  author?: {
+    email: string;
+    profile?: { fullName?: string | null; avatarUrl?: string | null } | null;
+  } | null;
+}
+
+export interface CompanyDetail {
+  company: Company;
+  activeJobs: Job[];
+  followerCount: number;
+  jobsCount: number;
+  posts: CompanyPost[];
+}
+
+export interface CvExperienceEntry {
+  company?: string;
+  position?: string;
+  startDate?: string;
+  endDate?: string;
+  description?: string;
+}
+
+export interface CvEducationEntry {
+  school?: string;
+  degree?: string;
+  major?: string;
+  startYear?: string | number;
+  endYear?: string | number;
+}
+
+export interface CvSkillEntry {
+  name?: string;
+  level?: string;
+}
+
+export interface GeneratedCvData {
+  fullName?: string;
+  headline?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  summary?: string;
+  experiences?: CvExperienceEntry[];
+  educations?: CvEducationEntry[];
+  skills?: CvSkillEntry[];
+}
+
+export interface GeneratedCv {
+  id: string;
+  title: string;
+  templateId: string;
+  data: GeneratedCvData;
+  isPrimary: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JobAlert {
+  id: string;
+  keyword?: string | null;
+  filters?: Record<string, unknown> | null;
+  frequency: "DAILY" | "WEEKLY" | "INSTANT";
+  isActive: boolean;
+  lastSentAt?: string | null;
+  createdAt: string;
 }
 
 export interface AiResult {
@@ -62,11 +168,42 @@ export interface Application {
     id: string;
     fileUrl: string;
     fileName: string;
+    fileSize?: number | string;
+    isPrimary?: boolean;
   } | null;
   candidate?: {
     id: string;
     email: string;
-    profile?: { fullName?: string | null; headline?: string | null; avatarUrl?: string | null } | null;
+    profile?: {
+      fullName?: string | null;
+      headline?: string | null;
+      about?: string | null;
+      avatarUrl?: string | null;
+      location?: string | null;
+    } | null;
+    userSkills?: Array<{
+      level?: string | null;
+      yearsExp?: string | number | null;
+      skill: { id: string; name: string };
+    }>;
+    workExperiences?: Array<{
+      id: string;
+      company: string;
+      position: string;
+      startDate: string;
+      endDate?: string | null;
+      isCurrent: boolean;
+      description?: string | null;
+    }>;
+    educations?: Array<{
+      id: string;
+      school: string;
+      degree: string;
+      major?: string | null;
+      gpa?: string | number | null;
+      startYear?: number | null;
+      endYear?: number | null;
+    }>;
   } | null;
   statusHistory?: Array<{
     id: string;

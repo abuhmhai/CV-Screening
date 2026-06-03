@@ -10,8 +10,13 @@ import {
   SkillLevel,
   UserRole,
 } from "@prisma/client";
+import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
+
+// All seeded accounts share this password (also usable via password login).
+const SEED_PASSWORD = "Password123!";
+const SEED_PASSWORD_HASH = bcrypt.hashSync(SEED_PASSWORD, 10);
 
 async function main() {
   await prisma.$transaction([
@@ -58,7 +63,7 @@ async function main() {
     const user = await prisma.user.create({
       data: {
         email: seed.email,
-        passwordHash: "hashed_password_candidate",
+        passwordHash: SEED_PASSWORD_HASH,
         role: UserRole.CANDIDATE,
         isVerified: true,
       },
@@ -71,7 +76,7 @@ async function main() {
     const user = await prisma.user.create({
       data: {
         email: seed.email,
-        passwordHash: "hashed_password_recruiter",
+        passwordHash: SEED_PASSWORD_HASH,
         role: UserRole.RECRUITER,
         isVerified: true,
       },
@@ -82,7 +87,7 @@ async function main() {
   const admin = await prisma.user.create({
     data: {
       email: "admin@example.com",
-      passwordHash: "hashed_password_admin",
+      passwordHash: SEED_PASSWORD_HASH,
       role: UserRole.ADMIN,
       isVerified: true,
     },
@@ -181,19 +186,22 @@ async function main() {
     ];
 
     for (const [sIdx, skillId] of candidateSkillIds.entries()) {
+      const yearsForSkill = Number((1.5 + idx + sIdx * 0.5).toFixed(1));
       await prisma.userSkill.create({
         data: {
           userId: candidate.id,
           skillId,
+          // Keep level consistent with years of experience to avoid
+          // contradictions like "3 years but BEGINNER".
           level:
-            sIdx === 0
+            yearsForSkill >= 6
               ? SkillLevel.EXPERT
-              : sIdx === 1
+              : yearsForSkill >= 4
                 ? SkillLevel.ADVANCED
-                : sIdx === 2
+                : yearsForSkill >= 2
                   ? SkillLevel.INTERMEDIATE
                   : SkillLevel.BEGINNER,
-          yearsExp: (1.5 + idx + sIdx * 0.5).toFixed(1),
+          yearsExp: yearsForSkill.toFixed(1),
         },
       });
     }
@@ -229,8 +237,12 @@ async function main() {
         name: "TechNova Vietnam",
         slug: "technova-vietnam",
         logoUrl: "https://cdn.example.com/company/technova.png",
+        coverUrl: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&q=80",
+        website: "https://technova.vn",
         industry: "SaaS",
         sizeRange: "51-200",
+        foundedYear: 2017,
+        address: "Quận 1, TP. Hồ Chí Minh",
         description: "Builds recruiting automation platforms for SEA market.",
       },
     }),
@@ -239,8 +251,12 @@ async function main() {
         name: "Astra Fintech",
         slug: "astra-fintech",
         logoUrl: "https://cdn.example.com/company/astra.png",
+        coverUrl: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1600&q=80",
+        website: "https://astra.finance",
         industry: "Fintech",
         sizeRange: "201-500",
+        foundedYear: 2015,
+        address: "Quận Ba Đình, Hà Nội",
         description: "Digital banking infrastructure with data-driven hiring.",
       },
     }),
@@ -281,15 +297,21 @@ async function main() {
         description: `We are hiring a ${jobTemplates[i]} to join our fast-growing product team.`,
         jobType: i % 3 === 0 ? "FULL_TIME" : i % 3 === 1 ? "HYBRID" : "REMOTE",
         level: i % 2 === 0 ? "MID" : "SENIOR",
+        experienceLevel: i % 2 === 0 ? "2-5 years" : "5+ years",
+        category: ["Engineering", "Data", "Design", "Product", "Marketing"][i % 5],
+        isRemote: i % 3 === 2,
         minSalary: 1500 + i * 150,
         maxSalary: 2500 + i * 200,
+        salaryCurrency: "USD",
         location: i % 2 === 0 ? "Ho Chi Minh City" : "Hanoi",
         requiredSkills: [
           skillSeeds[i % skillSeeds.length].name,
           skillSeeds[(i + 2) % skillSeeds.length].name,
           skillSeeds[(i + 4) % skillSeeds.length].name,
         ],
+        slug: `${jobTemplates[i].toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "")}-${i}`,
         status: i < 8 ? "ACTIVE" : "DRAFT",
+        publishedAt: i < 8 ? new Date(Date.now() - i * 24 * 60 * 60 * 1000) : null,
         expiresAt: new Date(Date.now() + (14 + i) * 24 * 60 * 60 * 1000),
       },
     });

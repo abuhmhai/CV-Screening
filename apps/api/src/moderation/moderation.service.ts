@@ -1,40 +1,37 @@
 import { Injectable } from "@nestjs/common";
-import { randomUUID } from "crypto";
+import { PrismaService } from "../prisma/prisma.service";
 
-export interface ReportItem {
-  id: string;
-  reporterId: string;
+interface CreateReportInput {
   contentType: "POST" | "COMMENT" | "PROFILE" | "MESSAGE";
   targetId: string;
   reason: string;
   detail?: string;
-  status: "OPEN" | "REVIEWED" | "DISMISSED";
-  createdAt: string;
 }
 
 @Injectable()
 export class ModerationService {
-  private readonly reports: ReportItem[] = [];
+  constructor(private readonly prisma: PrismaService) {}
 
-  createReport(
-    reporterId: string,
-    payload: Omit<ReportItem, "id" | "reporterId" | "status" | "createdAt">
-  ) {
-    const report: ReportItem = {
-      id: randomUUID(),
-      reporterId,
-      contentType: payload.contentType,
-      targetId: payload.targetId,
-      reason: payload.reason,
-      detail: payload.detail,
-      status: "OPEN",
-      createdAt: new Date().toISOString()
-    };
-    this.reports.unshift(report);
-    return report;
+  createReport(reporterId: string, payload: CreateReportInput) {
+    return this.prisma.moderationReport.create({
+      data: {
+        reporterId,
+        targetType: payload.contentType,
+        targetId: payload.targetId,
+        reason: payload.reason,
+        details: payload.detail,
+        status: "PENDING"
+      }
+    });
   }
 
   listReports() {
-    return this.reports.slice(0, 300);
+    return this.prisma.moderationReport.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 300,
+      include: {
+        reporter: { select: { id: true, email: true } }
+      }
+    });
   }
 }

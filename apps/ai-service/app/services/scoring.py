@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Tuple
 
+from app.services.embeddings import semantic_matches
 from app.services.parsers import _normalize_skill, degree_satisfies
 
 
@@ -26,6 +27,16 @@ def _score_skills(cv_data: Dict[str, Any], jd_data: Dict[str, Any]) -> Tuple[flo
     missing_required = [skill for skill in required if skill not in cv_skills]
     matched_preferred = [skill for skill in preferred if skill in cv_skills]
     missing_preferred = [skill for skill in preferred if skill not in cv_skills]
+
+    # Recover semantically-equivalent skills (e.g. "react" ~ "react.js") that
+    # exact matching missed. No-op when embeddings are unavailable.
+    cv_skill_list = list(cv_skills)
+    for skill in semantic_matches(missing_required, cv_skill_list):
+        missing_required.remove(skill)
+        matched_required.append(skill)
+    for skill in semantic_matches(missing_preferred, cv_skill_list):
+        missing_preferred.remove(skill)
+        matched_preferred.append(skill)
 
     required_ratio = len(matched_required) / len(required) if required else 1.0
     preferred_ratio = len(matched_preferred) / len(preferred) if preferred else 1.0

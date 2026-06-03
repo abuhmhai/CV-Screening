@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "setup": "powershell -ExecutionPolicy Bypass -File ./scripts/setup.ps1",
     "dev": "npm run dev -w apps/web & npm run dev -w apps/api",
     "dev:local": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-local.ps1",
     "db:local": "node apps/api/scripts/embedded-db.mjs",

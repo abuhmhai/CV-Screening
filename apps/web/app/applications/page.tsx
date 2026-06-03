@@ -17,13 +17,18 @@ function ApplicationsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadApplications = () => {
     if (!token) return;
     void apiFetch<Application[]>("/applications/me", { token }).then((res) => {
       if (res.ok && res.data) setApplications(res.data);
       else setError(res.error ?? "Không tải được danh sách");
       setLoading(false);
     });
+  };
+
+  useEffect(() => {
+    loadApplications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   if (loading) return <LoadingBlock />;
@@ -85,7 +90,7 @@ function ApplicationsContent() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: i * 0.1 }}
             >
-              <ApplicationCard application={app} />
+              <ApplicationCard application={app} onWithdrawn={loadApplications} />
             </motion.div>
           ))}
         </div>

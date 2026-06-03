@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Res, UseGuards } from "@nestjs/common";
 import { UserRole } from "@prisma/client";
 import { Response } from "express";
 import { CurrentUser } from "../common/auth/current-user.decorator";
@@ -33,8 +33,16 @@ export class ApplicationController {
 
   @Get(":id")
   @Roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.CANDIDATE)
-  getOne(@Param("id") id: string) {
-    return this.applicationService.getOne(id);
+  getOne(@Param("id") id: string, @CurrentUser() user: RequestUser | undefined) {
+    const currentUser = requireUser(user);
+    return this.applicationService.getOne(id, currentUser);
+  }
+
+  @Delete(":id")
+  @Roles(UserRole.CANDIDATE)
+  withdraw(@Param("id") id: string, @CurrentUser() user: RequestUser | undefined) {
+    const currentUser = requireUser(user);
+    return this.applicationService.withdraw(id, currentUser.id);
   }
 
   @Get("job/:jobId")

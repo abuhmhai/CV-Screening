@@ -1,5 +1,5 @@
-import { Injectable } from "@nestjs/common";
-import { ApplicationStatus } from "@prisma/client";
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { ApplicationStatus, JobStatus, PostVisibility } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateCompanyDto } from "./dto/create-company.dto";
 
@@ -16,6 +16,59 @@ export class CompanyService {
         description: payload.description
       }
     });
+  }
+
+  async getPublicDetail(idOrSlug: string) {
+    const company = await this.prisma.company.findFirst({
+      where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] }
+    });
+    if (!company) {
+      throw new NotFoundException("Company not found");
+    }
+
+    const [activeJobs, followerCount, jobsCount, posts] = await Promise.all([
+      this.prisma.job.findMany({
+        where: { companyId: company.id, status: JobStatus.ACTIVE },
+        include: { company: true, _count: { select: { applications: true } } },
+        orderBy: { publishedAt: "desc" },
+        take: 20
+      }),
+      this.prisma.companyFollower.count({ where: { companyId: company.id } }),
+      this.prisma.job.count({ where: { companyId: company.id } }),
+      this.prisma.post.findMany({
+        where: { companyId: company.id, deletedAt: null, visibility: PostVisibility.PUBLIC },
+        include: { author: { include: { profile: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 6
+      })
+    ]);
+
+    return { company, activeJobs, followerCount, jobsCount, posts };
+  }
+
+  async follow(userId: string, companyId: string) {
+    const company = await this.prisma.company.findUnique({ where: { id: companyId } });
+    if (!company) {
+      throw new NotFoundException("Company not found");
+    }
+    await this.prisma.companyFollower.upsert({
+      where: { userId_companyId: { userId, companyId } },
+      create: { userId, companyId },
+      update: {}
+    });
+    return { following: true };
+  }
+
+  async unfollow(userId: string, companyId: string) {
+    await this.prisma.companyFollower.deleteMany({ where: { userId, companyId } });
+    return { following: false };
+  }
+
+  async isFollowing(userId: string, companyId: string) {
+    const row = await this.prisma.companyFollower.findUnique({
+      where: { userId_companyId: { userId, companyId } }
+    });
+    return { following: Boolean(row) };
   }
 
   list() {

@@ -6,6 +6,7 @@ from redis import Redis
 
 from app.schemas import ScreenRequest, ScreeningResponse
 from app.services.cache import ScreeningCache
+from app.services.extraction import extract_text
 from app.services.screening import build_cache_key, screen_candidate
 
 app = FastAPI(title="AI Screening Service", version="0.1.0")
@@ -17,11 +18,8 @@ screen_cache = ScreeningCache(redis_client, cache_ttl)
 
 
 def _decode_upload(content: bytes, filename: str) -> str:
-    name = filename.lower()
-    if name.endswith(".pdf") or name.endswith(".docx"):
-        # Placeholder extraction path for MVP scaffold.
-        return content.decode("utf-8", errors="ignore")
-    return content.decode("utf-8", errors="ignore")
+    # Real extraction for PDF/DOCX with graceful UTF-8 fallback.
+    return extract_text(content, filename)
 
 
 def _validate_upload(file: UploadFile, content: bytes) -> None:

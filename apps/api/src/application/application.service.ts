@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Application, ApplicationStatus, UserRole } from "@prisma/client";
 import { AiScreeningService } from "../ai-screening/ai-screening.service";
+import { RequestUser } from "../common/auth/request-user.type";
 import { PrismaService } from "../prisma/prisma.service";
 import { NotificationGateway } from "../realtime/notification.gateway";
 import { CreateApplicationDto } from "./dto/create-application.dto";
@@ -50,6 +51,29 @@ export class ApplicationService {
     });
 
     return application;
+  }
+
+  // ─── Candidate: withdraw application ─────────────────────────────────────────
+
+  async withdraw(applicationId: string, candidateId: string): Promise<{ withdrawn: boolean }> {
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId }
+    });
+    if (!application) {
+      throw new NotFoundException("Application not found");
+    }
+    if (application.candidateId !== candidateId) {
+      throw new ForbiddenException("You can only withdraw your own application");
+    }
+    if (
+      application.status === ApplicationStatus.HIRED ||
+      application.status === ApplicationStatus.REJECTED
+    ) {
+      throw new ForbiddenException("Cannot withdraw a finalized application");
+    }
+
+    await this.prisma.application.delete({ where: { id: applicationId } });
+    return { withdrawn: true };
   }
 
   // ─── Recruiter: trigger re-screen ────────────────────────────────────────────
@@ -265,17 +289,47 @@ export class ApplicationService {
 
   // ─── Reads ────────────────────────────────────────────────────────────────────
 
-  getOne(applicationId: string) {
-    return this.prisma.application.findUnique({
+  async getOne(applicationId: string, currentUser: RequestUser) {
+    const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
       include: {
         job: { include: { company: true } },
-        candidate: { include: { profile: true } },
+        candidate: {
+          include: {
+            profile: true,
+            userSkills: { include: { skill: true } },
+            workExperiences: { orderBy: { startDate: "desc" } },
+            educations: { orderBy: { startYear: "desc" } },
+          },
+        },
         cvFile: true,
         aiResult: true,
         statusHistory: { orderBy: { changedAt: "desc" } },
       },
     });
+
+    if (!application) {
+      throw new NotFoundException("Application not found");
+    }
+
+    if (currentUser.role === UserRole.CANDIDATE && application.candidateId !== currentUser.id) {
+      throw new ForbiddenException("Candidate can only view their own applications");
+    }
+
+    if (currentUser.role === UserRole.RECRUITER) {
+      const membership = await this.prisma.companyMember.findFirst({
+        where: {
+          userId: currentUser.id,
+          companyId: application.job.companyId,
+        },
+      });
+
+      if (!membership) {
+        throw new ForbiddenException("Recruiter can only view applications of own company jobs");
+      }
+    }
+
+    return application;
   }
 
   listForCandidate(candidateId: string) {

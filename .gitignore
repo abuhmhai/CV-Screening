@@ -1,3 +1,6 @@
+# Local toolchain (setup.ps1)
+.tools/
+
 # Node
 node_modules/
 .npm/
@@ -23,6 +26,9 @@ venv/
 
 # Local embedded PostgreSQL data
 apps/api/.pgdata/
+
+# Local filesystem storage fallback
+apps/api/storage-data/
 
 # OS / IDE
 .DS_Store

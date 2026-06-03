@@ -98,6 +98,12 @@ model User {
   conversationLinks      ConversationParticipant[]
   messages               Message[]
   notifications          Notification[]
+  savedJobs              SavedJob[]
+  jobAlerts              JobAlert[]
+  companyFollows         CompanyFollower[]
+  generatedCvs           GeneratedCv[]
+  moderationReports      ModerationReport[]         @relation("ModerationReporter")
+  privacySettings        PrivacySettings?
 
   @@index([role], map: "users_role_idx")
   @@index([isVerified], map: "users_is_verified_idx")
@@ -107,15 +113,15 @@ model User {
 }
 
 model UserProfile {
-  userId               String   @id @map("user_id") @db.Uuid
-  fullName             String   @map("full_name")
-  headline             String?
-  about                String?
-  avatarUrl            String?  @map("avatar_url")
-  coverUrl             String?  @map("cover_url")
-  location             String?
-  profileCompleteness  Int      @default(0) @map("profile_completeness")
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              String  @id @map("user_id") @db.Uuid
+  fullName            String  @map("full_name")
+  headline            String?
+  about               String?
+  avatarUrl           String? @map("avatar_url")
+  coverUrl            String? @map("cover_url")
+  location            String?
+  profileCompleteness Int     @default(0) @map("profile_completeness")
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([location], map: "user_profiles_location_idx")
   @@index([profileCompleteness], map: "user_profiles_completeness_idx")
@@ -140,15 +146,15 @@ model WorkExperience {
 }
 
 model Education {
-  id        String  @id @default(uuid()) @db.Uuid
-  userId    String  @map("user_id") @db.Uuid
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
   school    String
   degree    String
   major     String?
   gpa       Decimal? @db.Decimal(3, 2)
-  startYear Int     @map("start_year")
-  endYear   Int?    @map("end_year")
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startYear Int      @map("start_year")
+  endYear   Int?     @map("end_year")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId], map: "educations_user_id_idx")
   @@index([school], map: "educations_school_idx")
@@ -157,10 +163,10 @@ model Education {
 }
 
 model Skill {
-  id          String             @id @default(uuid()) @db.Uuid
-  name        String             @unique
-  category    String?
-  userSkills  UserSkill[]
+  id           String             @id @default(uuid()) @db.Uuid
+  name         String             @unique
+  category     String?
+  userSkills   UserSkill[]
   endorsements SkillEndorsement[]
 
   @@index([category], map: "skills_category_idx")
@@ -196,13 +202,13 @@ model SkillEndorsement {
 }
 
 model CvFile {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  fileUrl   String   @map("file_url")
-  fileName  String   @map("file_name")
-  fileSize  BigInt   @map("file_size")
-  isPrimary Boolean  @default(false) @map("is_primary")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String        @id @default(uuid()) @db.Uuid
+  userId       String        @map("user_id") @db.Uuid
+  fileUrl      String        @map("file_url")
+  fileName     String        @map("file_name")
+  fileSize     BigInt        @map("file_size")
+  isPrimary    Boolean       @default(false) @map("is_primary")
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   applications Application[]
 
   @@index([userId], map: "cv_files_user_id_idx")
@@ -211,16 +217,21 @@ model CvFile {
 }
 
 model Company {
-  id          String          @id @default(uuid()) @db.Uuid
+  id          String            @id @default(uuid()) @db.Uuid
   name        String
-  slug        String          @unique
-  logoUrl     String?         @map("logo_url")
+  slug        String            @unique
+  logoUrl     String?           @map("logo_url")
+  coverUrl    String?           @map("cover_url")
+  website     String?
   industry    String?
-  sizeRange   String?         @map("size_range")
+  sizeRange   String?           @map("size_range")
+  foundedYear Int?              @map("founded_year")
+  address     String?
   description String?
   members     CompanyMember[]
   jobs        Job[]
   posts       Post[]
+  followers   CompanyFollower[]
 
   @@index([industry], map: "companies_industry_idx")
   @@map("companies")
@@ -240,28 +251,40 @@ model CompanyMember {
 }
 
 model Job {
-  id             String        @id @default(uuid()) @db.Uuid
-  companyId      String        @map("company_id") @db.Uuid
-  createdBy      String        @map("created_by") @db.Uuid
-  title          String
-  description    String
-  jobType        String        @map("job_type")
-  level          String
-  minSalary      Int?          @map("min_salary")
-  maxSalary      Int?          @map("max_salary")
-  location       String?
-  requiredSkills Json          @map("required_skills")
-  status         JobStatus     @default(DRAFT)
-  expiresAt      DateTime?     @map("expires_at")
-  company        Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  creator        User          @relation("JobsCreatedByUser", fields: [createdBy], references: [id], onDelete: Restrict)
-  applications   Application[]
+  id              String        @id @default(uuid()) @db.Uuid
+  companyId       String        @map("company_id") @db.Uuid
+  createdBy       String        @map("created_by") @db.Uuid
+  title           String
+  description     String
+  jobType         String        @map("job_type")
+  level           String
+  experienceLevel String?       @map("experience_level")
+  category        String?
+  isRemote        Boolean       @default(false) @map("is_remote")
+  minSalary       Int?          @map("min_salary")
+  maxSalary       Int?          @map("max_salary")
+  salaryCurrency  String        @default("VND") @map("salary_currency")
+  location        String?
+  requiredSkills  Json          @map("required_skills")
+  status          JobStatus     @default(DRAFT)
+  slug            String?       @unique
+  viewsCount      Int           @default(0) @map("views_count")
+  publishedAt     DateTime?     @map("published_at")
+  expiresAt       DateTime?     @map("expires_at")
+  company         Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  creator         User          @relation("JobsCreatedByUser", fields: [createdBy], references: [id], onDelete: Restrict)
+  applications    Application[]
+  savedBy         SavedJob[]
 
   @@index([companyId], map: "jobs_company_id_idx")
   @@index([createdBy], map: "jobs_created_by_idx")
   @@index([status], map: "jobs_status_idx")
   @@index([expiresAt], map: "jobs_expires_at_idx")
   @@index([location], map: "jobs_location_idx")
+  @@index([category], map: "jobs_category_idx")
+  @@index([experienceLevel], map: "jobs_experience_level_idx")
+  @@index([isRemote], map: "jobs_is_remote_idx")
+  @@index([publishedAt], map: "jobs_published_at_idx")
   @@map("jobs")
 }
 
@@ -311,14 +334,14 @@ model AiScreeningResult {
 }
 
 model ApplicationStatusHistory {
-  applicationId String            @map("application_id") @db.Uuid
+  applicationId String             @map("application_id") @db.Uuid
   fromStatus    ApplicationStatus? @map("from_status")
-  toStatus      ApplicationStatus @map("to_status")
-  changedBy     String            @map("changed_by") @db.Uuid
+  toStatus      ApplicationStatus  @map("to_status")
+  changedBy     String             @map("changed_by") @db.Uuid
   note          String?
-  changedAt     DateTime          @default(now()) @map("changed_at")
-  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  changedByUser User              @relation("ApplicationStatusChangedBy", fields: [changedBy], references: [id], onDelete: Restrict)
+  changedAt     DateTime           @default(now()) @map("changed_at")
+  application   Application        @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  changedByUser User               @relation("ApplicationStatusChangedBy", fields: [changedBy], references: [id], onDelete: Restrict)
 
   @@id([applicationId, changedAt, toStatus])
   @@index([changedBy], map: "application_status_history_changed_by_idx")
@@ -327,18 +350,18 @@ model ApplicationStatusHistory {
 }
 
 model Post {
-  id           String          @id @default(uuid()) @db.Uuid
-  authorId     String          @map("author_id") @db.Uuid
-  companyId    String?         @map("company_id") @db.Uuid
+  id           String         @id @default(uuid()) @db.Uuid
+  authorId     String         @map("author_id") @db.Uuid
+  companyId    String?        @map("company_id") @db.Uuid
   content      String
-  mediaUrls    Json?           @map("media_urls")
-  visibility   PostVisibility  @default(PUBLIC)
-  likeCount    Int             @default(0) @map("like_count")
-  commentCount Int             @default(0) @map("comment_count")
-  createdAt    DateTime        @default(now()) @map("created_at")
-  deletedAt    DateTime?       @map("deleted_at")
-  author       User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  company      Company?        @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  mediaUrls    Json?          @map("media_urls")
+  visibility   PostVisibility @default(PUBLIC)
+  likeCount    Int            @default(0) @map("like_count")
+  commentCount Int            @default(0) @map("comment_count")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  deletedAt    DateTime?      @map("deleted_at")
+  author       User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  company      Company?       @relation(fields: [companyId], references: [id], onDelete: SetNull)
   comments     Comment[]
 
   @@index([authorId, createdAt], map: "posts_author_created_at_idx")
@@ -447,4 +470,94 @@ model Notification {
   @@index([userId, isRead, createdAt], map: "notifications_user_read_created_idx")
   @@index([type], map: "notifications_type_idx")
   @@map("notifications")
+}
+
+enum AlertFrequency {
+  DAILY
+  WEEKLY
+  INSTANT
+}
+
+model SavedJob {
+  userId    String   @map("user_id") @db.Uuid
+  jobId     String   @map("job_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@id([userId, jobId])
+  @@index([userId, createdAt], map: "saved_jobs_user_created_idx")
+  @@index([jobId], map: "saved_jobs_job_id_idx")
+  @@map("saved_jobs")
+}
+
+model JobAlert {
+  id         String         @id @default(uuid()) @db.Uuid
+  userId     String         @map("user_id") @db.Uuid
+  keyword    String?
+  filters    Json?
+  frequency  AlertFrequency @default(DAILY)
+  isActive   Boolean        @default(true) @map("is_active")
+  lastSentAt DateTime?      @map("last_sent_at")
+  createdAt  DateTime       @default(now()) @map("created_at")
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "job_alerts_user_id_idx")
+  @@index([isActive, frequency], map: "job_alerts_active_frequency_idx")
+  @@map("job_alerts")
+}
+
+model CompanyFollower {
+  userId    String   @map("user_id") @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([userId, companyId])
+  @@index([companyId], map: "company_followers_company_id_idx")
+  @@map("company_followers")
+}
+
+model GeneratedCv {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  title      String
+  templateId String   @default("classic") @map("template_id")
+  data       Json
+  isPrimary  Boolean  @default(false) @map("is_primary")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isPrimary], map: "generated_cv_user_primary_idx")
+  @@map("generated_cvs")
+}
+
+model ModerationReport {
+  id         String   @id @default(uuid()) @db.Uuid
+  reporterId String   @map("reporter_id") @db.Uuid
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id") @db.Uuid
+  reason     String
+  details    String?
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now()) @map("created_at")
+  reporter   User     @relation("ModerationReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt], map: "moderation_reports_status_created_idx")
+  @@index([targetType, targetId], map: "moderation_reports_target_idx")
+  @@map("moderation_reports")
+}
+
+model PrivacySettings {
+  userId            String   @id @map("user_id") @db.Uuid
+  profileVisibility String   @default("PUBLIC") @map("profile_visibility")
+  showActivity      Boolean  @default(true) @map("show_activity")
+  showConnections   Boolean  @default(true) @map("show_connections")
+  allowMessages     String   @default("EVERYONE") @map("allow_messages")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("privacy_settings")
 }

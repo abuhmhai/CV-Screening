@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsBoolean,
   IsInt,
   IsOptional,
   IsString,
@@ -26,6 +27,18 @@ export class CreateJobDto {
   level!: string;
 
   @IsOptional()
+  @IsString()
+  experienceLevel?: string;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isRemote?: boolean;
+
+  @IsOptional()
   @IsInt()
   @Min(0)
   minSalary?: number;
@@ -34,6 +47,10 @@ export class CreateJobDto {
   @IsInt()
   @Min(0)
   maxSalary?: number;
+
+  @IsOptional()
+  @IsString()
+  salaryCurrency?: string;
 
   @IsOptional()
   @IsString()

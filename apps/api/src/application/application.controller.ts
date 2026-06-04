@@ -9,7 +9,9 @@ import { Roles } from "../common/auth/roles.decorator";
 import { RolesGuard } from "../common/auth/roles.guard";
 import { ApplicationService } from "./application.service";
 import { CreateApplicationDto } from "./dto/create-application.dto";
+import { RespondOfferDto } from "./dto/respond-offer.dto";
 import { ScheduleInterviewDto } from "./dto/schedule-interview.dto";
+import { SendOfferDto } from "./dto/send-offer.dto";
 import { UpdateApplicationStatusDto } from "./dto/update-application-status.dto";
 
 @Controller("applications")
@@ -79,14 +81,20 @@ export class ApplicationController {
     @CurrentUser() user: RequestUser | undefined
   ) {
     const currentUser = requireUser(user);
-    return this.applicationService.updateStatus(id, payload.status, currentUser.id, payload.note);
+    return this.applicationService.updateStatus(
+      id,
+      payload.status,
+      currentUser.id,
+      currentUser.role,
+      payload.note
+    );
   }
 
   @Post(":id/rescreen")
   @Roles(UserRole.RECRUITER, UserRole.ADMIN)
   rescreen(@Param("id") id: string, @CurrentUser() user: RequestUser | undefined) {
-    requireUser(user);
-    return this.applicationService.rescreenApplication(id);
+    const currentUser = requireUser(user);
+    return this.applicationService.rescreenApplication(id, currentUser.id, currentUser.role);
   }
 
   @Post(":id/schedule-interview")
@@ -101,7 +109,30 @@ export class ApplicationController {
       id,
       payload.interviewAt,
       currentUser.id,
+      currentUser.role,
       payload.note
     );
+  }
+
+  @Post(":id/offer")
+  @Roles(UserRole.RECRUITER, UserRole.ADMIN)
+  sendOffer(
+    @Param("id") id: string,
+    @CurrentUser() user: RequestUser | undefined,
+    @Body() payload: SendOfferDto
+  ) {
+    const currentUser = requireUser(user);
+    return this.applicationService.sendOffer(id, payload, currentUser.id, currentUser.role);
+  }
+
+  @Post(":id/offer/respond")
+  @Roles(UserRole.CANDIDATE)
+  respondToOffer(
+    @Param("id") id: string,
+    @CurrentUser() user: RequestUser | undefined,
+    @Body() payload: RespondOfferDto
+  ) {
+    const currentUser = requireUser(user);
+    return this.applicationService.respondToOffer(id, currentUser.id, payload);
   }
 }

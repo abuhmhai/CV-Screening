@@ -16,8 +16,8 @@ export function CvPreview({
   templateId: string;
 }) {
   const modern = templateId === "modern";
-  const accent = modern ? "text-blue-700" : "text-emerald-700";
-  const accentBorder = modern ? "border-blue-600" : "border-emerald-600";
+  const accent = modern ? "text-link" : "text-positive";
+  const accentBorder = modern ? "border-link" : "border-positive";
   const contact = [data.email, data.phone, data.location].filter(Boolean).join("  •  ");
 
   return (
@@ -88,7 +88,7 @@ export function CvPreview({
               <span
                 key={i}
                 className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  modern ? "bg-blue-50 text-blue-700" : "bg-emerald-50 text-emerald-700"
+                  modern ? "bg-accent-blue-glow text-link" : "bg-accent-green-glow text-positive"
                 }`}
               >
                 {skill.name}

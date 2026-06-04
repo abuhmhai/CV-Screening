@@ -7,6 +7,7 @@ import { demoAccounts } from "../../../lib/demo-accounts";
 import { Card, PageHeader } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
 import { FieldLabel, Input } from "../../../components/ui/input";
+import { LoaderOverlay } from "../../../components/ui/loader";
 
 export default function SignInPage() {
   const { login, demoLogin } = useAuth();
@@ -43,6 +44,7 @@ export default function SignInPage() {
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
+      <LoaderOverlay show={loading} label="Đang đăng nhập..." />
       <PageHeader
         title="Đăng nhập"
         description="Dùng email/password hoặc chọn tài khoản demo để trải nghiệm đầy đủ tính năng."
@@ -85,7 +87,7 @@ export default function SignInPage() {
               type="button"
               disabled={loading}
               onClick={() => handleDemo(account.email)}
-              className="flex w-full items-center justify-between rounded-xl border border-ink/10 bg-canvas-soft px-4 py-3 text-left transition hover:bg-primary-pale"
+              className="flex w-full items-center justify-between rounded-xl border border-hairline-strong bg-surface-card px-4 py-3 text-left transition hover:bg-surface-elevated"
             >
               <span className="text-sm font-semibold">{account.label}</span>
               <span className="text-xs text-mute">{account.role}</span>

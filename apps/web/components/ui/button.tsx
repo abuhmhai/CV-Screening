@@ -1,5 +1,5 @@
 import React from "react";
-import { Loader2 } from "lucide-react";
+import { Spinner } from "./loader";
 
 /** DESIGN.md: button-primary | button-secondary | button-tertiary | danger */
 type ButtonVariant = "primary" | "secondary" | "tertiary" | "ghost" | "danger";
@@ -13,13 +13,11 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary:
-    "bg-primary text-on-primary hover:bg-primary-active active:bg-primary-neutral",
-  secondary: "bg-canvas-soft text-ink hover:bg-primary-pale",
-  tertiary:
-    "bg-canvas text-ink border border-ink hover:bg-canvas-soft",
-  ghost: "bg-transparent text-ink hover:bg-canvas-soft",
-  danger: "bg-negative text-white hover:bg-negative-deep active:bg-negative-darkest"
+  primary: "bg-primary text-primary-on hover:bg-surface-light active:bg-surface-light/90 shadow-none",
+  secondary: "bg-surface-card text-ink border border-hairline-strong hover:bg-surface-elevated",
+  tertiary: "bg-canvas text-ink border border-hairline-strong hover:bg-surface-card",
+  ghost: "bg-surface-elevated text-ink border border-hairline-strong hover:bg-surface-card",
+  danger: "bg-negative text-white hover:bg-accent-red-glow active:bg-negative border border-hairline-strong"
 };
 
 export function Button({
@@ -35,11 +33,11 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-6 py-3 text-button-md font-semibold transition-all duration-150 hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-primary/80 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:pointer-events-none disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-55 ${variantStyles[variant]} ${fullWidth ? "w-full" : ""} ${className}`}
+      className={`inline-flex min-h-[36px] items-center justify-center gap-2 rounded-md px-4 py-2 text-button-md font-medium transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-primary/80 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:pointer-events-none disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-55 ${variantStyles[variant]} ${fullWidth ? "w-full" : ""} ${className}`}
       disabled={disabled || isLoading}
       {...props}
     >
-      {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+      {isLoading && <Spinner size={16} />}
       {!isLoading && leftIcon}
       {children}
       {!isLoading && rightIcon}

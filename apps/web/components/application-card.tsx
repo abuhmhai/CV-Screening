@@ -8,7 +8,7 @@ import { useAuth } from "../lib/auth-context";
 import { Card } from "./ui/card";
 import { Badge, BadgeVariant } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Sparkles, ChevronRight, FileText, XCircle } from "lucide-react";
+import { Sparkles, ChevronRight, FileText, PartyPopper, XCircle } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -85,6 +85,18 @@ export function ApplicationCard({
         </div>
         <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
       </div>
+
+      {application.offer?.status === "PENDING" ? (
+        <Link
+          href={`/applications/${application.id}`}
+          className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-hairline-strong bg-accent-green-glow px-4 py-3 transition-colors hover:bg-surface-elevated"
+        >
+          <span className="flex items-center gap-2 text-sm font-semibold text-positive">
+            <PartyPopper size={16} /> Bạn nhận được offer — phản hồi ngay
+          </span>
+          <ChevronRight size={16} className="text-positive" />
+        </Link>
+      ) : null}
 
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
         <div className={`rounded-xl px-4 py-3 ${getScoreBg(score)} transition-colors`}>

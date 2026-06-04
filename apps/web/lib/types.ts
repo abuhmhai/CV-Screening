@@ -1,4 +1,12 @@
 export type UserRole = "CANDIDATE" | "RECRUITER" | "ADMIN";
+export type ApplicationStatus =
+  | "APPLIED"
+  | "AI_SCREENING"
+  | "HR_REVIEW"
+  | "INTERVIEW"
+  | "OFFER"
+  | "HIRED"
+  | "REJECTED";
 
 export interface AuthUser {
   id: string;
@@ -47,6 +55,30 @@ export interface Job {
   company?: Company | null;
   _count?: { applications: number };
   expiresAt?: string | null;
+}
+
+export interface ExternalJob {
+  id: string;
+  source: "topcv" | "vietnamworks" | "linkedin";
+  title: string;
+  company: string;
+  salary?: string | null;
+  location?: string | null;
+  url: string;
+  jd?: string | null;
+  skills: string[];
+  isActive: boolean;
+  crawledAt: string;
+}
+
+export interface CvScreeningReport {
+  score: number;
+  verdict: string;
+  strengths: string[];
+  gaps: string[];
+  suggestion: string;
+  keywords_matched: string[];
+  keywords_missing: string[];
 }
 
 export interface Paginated<T> {
@@ -157,19 +189,40 @@ export interface AiResult {
   processingTimeMs?: number | null;
 }
 
+export type OfferStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "WITHDRAWN";
+
+export interface Offer {
+  id: string;
+  applicationId: string;
+  salaryAmount?: number | null;
+  salaryCurrency: string;
+  startDate?: string | null;
+  responseDeadline?: string | null;
+  note?: string | null;
+  offerLetterUrl?: string | null;
+  status: OfferStatus;
+  declineReason?: string | null;
+  createdBy: string;
+  respondedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Application {
   id: string;
-  status: string;
+  status: ApplicationStatus;
   coverLetter?: string | null;
   appliedAt: string;
   job?: Job | null;
   aiResult?: AiResult | null;
+  offer?: Offer | null;
   cvFile?: {
     id: string;
     fileUrl: string;
     fileName: string;
     fileSize?: number | string;
     isPrimary?: boolean;
+    extractedText?: string | null;
   } | null;
   candidate?: {
     id: string;
@@ -206,9 +259,8 @@ export interface Application {
     }>;
   } | null;
   statusHistory?: Array<{
-    id: string;
-    fromStatus: string;
-    toStatus: string;
+    fromStatus?: ApplicationStatus | null;
+    toStatus: ApplicationStatus;
     note?: string | null;
     changedAt: string;
   }>;
@@ -286,6 +338,7 @@ export interface NotificationItem {
   body?: string | null;
   isRead: boolean;
   createdAt: string;
+  data?: Record<string, unknown> | null;
   payload?: Record<string, unknown> | null;
 }
 

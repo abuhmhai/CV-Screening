@@ -12,6 +12,7 @@ import { StatusBadge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { FieldLabel, Select, Textarea } from "../../../components/ui/input";
 import { ErrorBlock, LoadingBlock } from "../../../components/ui/states";
+import { LoaderOverlay } from "../../../components/ui/loader";
 
 function JobDetailContent() {
   const params = useParams<{ id: string }>();
@@ -115,6 +116,10 @@ function JobDetailContent() {
 
   return (
     <div className="space-y-6">
+      <LoaderOverlay
+        show={uploadingCv || applying}
+        label={uploadingCv ? "Đang tải lên CV..." : "Đang gửi đơn ứng tuyển..."}
+      />
       <PageHeader
         title={job.title}
         description={`${job.company?.name} · ${job.level} · ${job.jobType} · ${job.location ?? "Remote"}`}
@@ -129,7 +134,7 @@ function JobDetailContent() {
           </div>
           <div>
             <h2 className="text-lg font-semibold">Mức lương</h2>
-            <p className="mt-2 text-xl font-black text-ink-deep">{formatSalary(job.minSalary, job.maxSalary)}</p>
+            <p className="mt-2 text-xl font-black text-ink-deep">{formatSalary(job.minSalary, job.maxSalary, job.salaryCurrency ?? "VND")}</p>
           </div>
           {job.requiredSkills && job.requiredSkills.length > 0 ? (
             <div>
@@ -179,7 +184,7 @@ function JobDetailContent() {
                       {uploadingCv ? "Đang tải lên..." : "Tải lên CV mới"}
                       <input 
                         type="file" 
-                        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
+                        accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
                         className="hidden" 
                         onChange={handleCvUpload}
                         disabled={uploadingCv}

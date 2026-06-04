@@ -7,7 +7,7 @@ import { Application } from "../../lib/types";
 import { AuthGate } from "../../components/auth-gate";
 import { ApplicationCard } from "../../components/application-card";
 import { PageHeader } from "../../components/ui/card";
-import { EmptyState, ErrorBlock, LoadingBlock } from "../../components/ui/states";
+import { EmptyState, ErrorBlock, SkeletonList } from "../../components/ui/states";
 import { motion } from "framer-motion";
 import { FileText, CheckCircle2, Users, Briefcase } from "lucide-react";
 
@@ -31,8 +31,18 @@ function ApplicationsContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  if (loading) return <LoadingBlock />;
-  if (error) return <ErrorBlock message={error} />;
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <PageHeader
+          title="Đơn ứng tuyển của tôi"
+          description="Theo dõi trạng thái pipeline và xem chi tiết AI score cho từng vị trí."
+        />
+        <SkeletonList count={3} />
+      </div>
+    );
+  }
+  if (error) return <ErrorBlock message={error} onRetry={() => { setLoading(true); setError(null); loadApplications(); }} />;
 
   // Tính toán số lượng theo từng stage
   const stats = {

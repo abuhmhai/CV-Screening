@@ -42,6 +42,13 @@ enum ApplicationStatus {
   REJECTED
 }
 
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+}
+
 enum PostVisibility {
   PUBLIC
   CONNECTIONS
@@ -208,6 +215,7 @@ model CvFile {
   fileName     String        @map("file_name")
   fileSize     BigInt        @map("file_size")
   isPrimary    Boolean       @default(false) @map("is_primary")
+  extractedText String?      @map("extracted_text")
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   applications Application[]
 
@@ -288,6 +296,27 @@ model Job {
   @@map("jobs")
 }
 
+/// Aggregated job listings crawled from external sources (TopCV, VietnamWorks).
+/// Kept separate from the platform-posted `Job` model: no company/creator FK,
+/// only public listing data plus crawl bookkeeping.
+model ExternalJob {
+  id        String   @id @default(uuid()) @db.Uuid
+  source    String
+  title     String
+  company   String
+  salary    String?
+  location  String?
+  url       String   @unique
+  jd        String?
+  skills    Json     @default("[]")
+  isActive  Boolean  @default(true) @map("is_active")
+  crawledAt DateTime @default(now()) @map("crawled_at")
+
+  @@index([source], map: "external_jobs_source_idx")
+  @@index([crawledAt], map: "external_jobs_crawled_at_idx")
+  @@map("external_jobs")
+}
+
 model Application {
   id            String                     @id @default(uuid()) @db.Uuid
   jobId         String                     @map("job_id") @db.Uuid
@@ -300,6 +329,7 @@ model Application {
   candidate     User                       @relation("CandidateApplications", fields: [candidateId], references: [id], onDelete: Cascade)
   cvFile        CvFile                     @relation(fields: [cvFileId], references: [id], onDelete: Restrict)
   aiResult      AiScreeningResult?
+  offer         Offer?
   statusHistory ApplicationStatusHistory[]
 
   @@unique([jobId, candidateId], map: "applications_job_candidate_unique")
@@ -331,6 +361,30 @@ model AiScreeningResult {
   @@index([overallScore], map: "ai_screening_results_overall_score_idx")
   @@index([grade], map: "ai_screening_results_grade_idx")
   @@map("ai_screening_results")
+}
+
+/// Structured job offer sent by HR after the interview round. One offer per
+/// application (re-sending an offer updates the same row). The candidate can
+/// accept or decline, which drives the Application status to HIRED / REJECTED.
+model Offer {
+  id               String      @id @default(uuid()) @db.Uuid
+  applicationId    String      @unique @map("application_id") @db.Uuid
+  salaryAmount     Int?        @map("salary_amount")
+  salaryCurrency   String      @default("VND") @map("salary_currency")
+  startDate        DateTime?   @map("start_date")
+  responseDeadline DateTime?   @map("response_deadline")
+  note             String?
+  offerLetterUrl   String?     @map("offer_letter_url")
+  status           OfferStatus @default(PENDING)
+  declineReason    String?     @map("decline_reason")
+  createdBy        String      @map("created_by") @db.Uuid
+  respondedAt      DateTime?   @map("responded_at")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+  application      Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([status], map: "offers_status_idx")
+  @@map("offers")
 }
 
 model ApplicationStatusHistory {

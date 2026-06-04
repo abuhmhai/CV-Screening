@@ -3,14 +3,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Bot, Lightbulb, Loader2, MapPin, Sparkles } from "lucide-react";
+import { Bot, CalendarClock, CheckCircle2, FileText, Lightbulb, Loader2, MapPin, PartyPopper, Sparkles, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "../lib/auth-context";
 import { apiFetch } from "../lib/api-client";
 import { Application } from "../lib/types";
-import { formatDate, formatDateTime, formatSalary, formatScore, statusLabel } from "../lib/format";
+import { formatAmount, formatDate, formatDateTime, formatSalary, formatScore, offerStatusLabel, statusLabel } from "../lib/format";
 import { Badge, StatusBadge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, PageHeader } from "./ui/card";
+import { FieldLabel, Textarea } from "./ui/input";
 import { ErrorBlock, LoadingBlock } from "./ui/states";
 
 type PipelineStep = {
@@ -73,15 +75,15 @@ function timelineState(step: number, active: number): "done" | "active" | "pendi
 }
 
 function timelineDotClass(state: "done" | "active" | "pending") {
-  if (state === "done") return "bg-emerald-500 border-emerald-500";
-  if (state === "active") return "bg-blue-500 border-blue-500";
-  return "bg-white border-slate-300";
+  if (state === "done") return "bg-positive border-positive";
+  if (state === "active") return "bg-link border-link";
+  return "bg-surface-elevated border-hairline-strong";
 }
 
 function stepTextClass(state: "done" | "active" | "pending") {
-  if (state === "done") return "text-emerald-700";
-  if (state === "active") return "text-blue-700";
-  return "text-slate-500";
+  if (state === "done") return "text-positive";
+  if (state === "active") return "text-link";
+  return "text-mute";
 }
 
 function scoreGrade(score: number, grade?: string | null) {
@@ -93,10 +95,10 @@ function scoreGrade(score: number, grade?: string | null) {
 }
 
 function gradeClass(grade: string) {
-  if (grade.startsWith("A")) return "bg-emerald-100 text-emerald-700";
-  if (grade.startsWith("B")) return "bg-blue-100 text-blue-700";
-  if (grade.startsWith("C")) return "bg-amber-100 text-amber-700";
-  return "bg-red-100 text-red-700";
+  if (grade.startsWith("A")) return "bg-accent-green-glow text-positive";
+  if (grade.startsWith("B")) return "bg-accent-blue-glow text-link";
+  if (grade.startsWith("C")) return "bg-accent-yellow-glow text-warning";
+  return "bg-accent-red-glow text-negative";
 }
 
 function estimateLabel(status: string) {
@@ -113,6 +115,9 @@ export function ApplicationDetailCandidateRedesign() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [offerActionLoading, setOfferActionLoading] = useState<"accept" | "decline" | null>(null);
+  const [showDecline, setShowDecline] = useState(false);
+  const [declineReason, setDeclineReason] = useState("");
 
   const loadApplication = useCallback(async () => {
     if (!token) return;
@@ -156,6 +161,28 @@ export function ApplicationDetailCandidateRedesign() {
     setRefreshing(false);
   }
 
+  async function respondOffer(action: "accept" | "decline") {
+    if (!token || !application?.id) return;
+    setOfferActionLoading(action);
+    const res = await apiFetch(`/applications/${application.id}/offer/respond`, {
+      method: "POST",
+      token,
+      body: JSON.stringify({
+        action,
+        reason: action === "decline" ? declineReason.trim() || undefined : undefined
+      })
+    });
+    setOfferActionLoading(null);
+    if (!res.ok) {
+      toast.error(res.error ?? "Không gửi được phản hồi offer.");
+      return;
+    }
+    toast.success(action === "accept" ? "Bạn đã chấp nhận offer. Chúc mừng!" : "Bạn đã từ chối offer.");
+    setShowDecline(false);
+    setDeclineReason("");
+    void loadApplication();
+  }
+
   if (loading) return <LoadingBlock label="Đang tải trạng thái ứng tuyển..." />;
   if (error && !application) return <ErrorBlock message={error} />;
 
@@ -179,24 +206,166 @@ export function ApplicationDetailCandidateRedesign() {
         }
       />
 
-      <Card className="border border-blue-100 bg-blue-50/60">
+      <Card className="border border-hairline-strong bg-accent-blue-glow">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="relative flex h-3 w-3">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-600" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-link opacity-75" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-link" />
             </span>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Trạng thái hiện tại</p>
-              <p className="text-sm font-bold text-blue-900">{statusLabel(status)}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-link">Trạng thái hiện tại</p>
+              <p className="text-sm font-bold text-ink">{statusLabel(status)}</p>
             </div>
           </div>
-          <div className="text-sm text-blue-900">
+          <div className="text-sm text-ink">
             <p className="font-semibold">{estimateLabel(status)}</p>
-            <p className="text-xs text-blue-700">Cập nhật: {formatDateTime(view.latestChangedAt)}</p>
+            <p className="text-xs text-link">Cập nhật: {formatDateTime(view.latestChangedAt)}</p>
           </div>
         </div>
       </Card>
+
+      {view.source.offer ? (
+        (() => {
+          const offer = view.source.offer!;
+          const deadlinePassed =
+            offer.responseDeadline != null && new Date(offer.responseDeadline).getTime() < Date.now();
+
+          if (offer.status === "ACCEPTED") {
+            return (
+              <Card className="border border-hairline-strong bg-accent-green-glow">
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 rounded-lg bg-surface-elevated p-2 text-positive">
+                    <PartyPopper size={20} />
+                  </span>
+                  <div>
+                    <p className="font-bold text-positive">Bạn đã chấp nhận offer</p>
+                    <p className="mt-1 text-sm text-ink">
+                      Mức lương {formatAmount(offer.salaryAmount, offer.salaryCurrency)}
+                      {offer.startDate ? ` · bắt đầu ${formatDate(offer.startDate)}` : ""}. Bộ phận HR sẽ liên hệ để
+                      hoàn tất thủ tục onboarding.
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            );
+          }
+
+          if (offer.status === "DECLINED") {
+            return (
+              <Card className="border border-hairline-strong bg-accent-red-glow">
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 rounded-lg bg-surface-elevated p-2 text-negative">
+                    <XCircle size={20} />
+                  </span>
+                  <div>
+                    <p className="font-bold text-negative">Bạn đã từ chối offer</p>
+                    <p className="mt-1 text-sm text-ink">
+                      {offer.declineReason ? `Lý do: ${offer.declineReason}` : "Cảm ơn bạn đã phản hồi."}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            );
+          }
+
+          return (
+            <Card className="border border-hairline-strong bg-accent-green-glow">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-positive">Đề nghị nhận việc</p>
+                  <h2 className="mt-1 text-lg font-bold text-ink">
+                    {view.source.job?.company?.name ?? "Nhà tuyển dụng"} đã gửi offer cho bạn
+                  </h2>
+                </div>
+                <Badge tone="warning">{offerStatusLabel(offer.status)}</Badge>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl bg-surface-elevated p-3">
+                  <p className="text-xs text-body">Mức lương</p>
+                  <p className="mt-1 text-sm font-bold text-ink">
+                    {formatAmount(offer.salaryAmount, offer.salaryCurrency)}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-surface-elevated p-3">
+                  <p className="flex items-center gap-1 text-xs text-body">
+                    <CalendarClock size={13} /> Ngày bắt đầu
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-ink">
+                    {offer.startDate ? formatDate(offer.startDate) : "Thỏa thuận"}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-surface-elevated p-3">
+                  <p className="flex items-center gap-1 text-xs text-body">
+                    <CalendarClock size={13} /> Hạn phản hồi
+                  </p>
+                  <p className={`mt-1 text-sm font-bold ${deadlinePassed ? "text-negative" : "text-ink"}`}>
+                    {offer.responseDeadline ? formatDate(offer.responseDeadline) : "Không giới hạn"}
+                  </p>
+                </div>
+              </div>
+
+              {offer.note ? (
+                <div className="mt-3 rounded-xl bg-surface-elevated p-3">
+                  <p className="text-xs text-body">Ghi chú từ HR</p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-ink">{offer.note}</p>
+                </div>
+              ) : null}
+
+              {offer.offerLetterUrl ? (
+                <a
+                  href={offer.offerLetterUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-link hover:underline"
+                >
+                  <FileText size={15} /> Xem thư mời nhận việc
+                </a>
+              ) : null}
+
+              {showDecline ? (
+                <div className="mt-4 space-y-3">
+                  <FieldLabel label="Lý do từ chối (tùy chọn)">
+                    <Textarea
+                      value={declineReason}
+                      onChange={(event) => setDeclineReason(event.target.value)}
+                      placeholder="Chia sẻ lý do giúp nhà tuyển dụng cải thiện..."
+                      maxLength={1000}
+                    />
+                  </FieldLabel>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="danger"
+                      isLoading={offerActionLoading === "decline"}
+                      onClick={() => void respondOffer("decline")}
+                    >
+                      Xác nhận từ chối
+                    </Button>
+                    <Button variant="ghost" onClick={() => setShowDecline(false)}>
+                      Quay lại
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    variant="primary"
+                    leftIcon={<CheckCircle2 size={16} />}
+                    isLoading={offerActionLoading === "accept"}
+                    onClick={() => void respondOffer("accept")}
+                  >
+                    Chấp nhận offer
+                  </Button>
+                  <Button variant="secondary" leftIcon={<XCircle size={16} />} onClick={() => setShowDecline(true)}>
+                    Từ chối
+                  </Button>
+                </div>
+              )}
+            </Card>
+          );
+        })()
+      ) : null}
 
       <Card>
         <h2 className="text-lg font-bold text-ink">Tiến trình tuyển dụng</h2>
@@ -238,8 +407,8 @@ export function ApplicationDetailCandidateRedesign() {
             <div className="flex items-center justify-between border-b border-ink/5 pb-2">
               <dt className="text-body">AI Score</dt>
               <dd className="flex items-center gap-2">
-                <span className={`rounded-pill px-3 py-1 text-xs font-bold ${gradeClass(view.grade)}`}>Grade {view.grade}</span>
-                <span className={view.grade.startsWith("C") ? "rounded-pill bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700" : "rounded-pill bg-canvas-soft px-3 py-1 text-xs font-bold text-ink"}>
+                <span className={`rounded-full px-3 py-1 text-xs font-bold ${gradeClass(view.grade)}`}>Grade {view.grade}</span>
+                <span className={view.grade.startsWith("C") ? "rounded-full bg-accent-yellow-glow px-3 py-1 text-xs font-bold text-warning" : "rounded-full bg-surface-elevated px-3 py-1 text-xs font-bold text-ink"}>
                   {formatScore(view.score)}
                 </span>
               </dd>
@@ -250,7 +419,7 @@ export function ApplicationDetailCandidateRedesign() {
             </div>
             <div className="flex items-center justify-between">
               <dt className="text-body">Salary</dt>
-              <dd className="font-semibold text-ink">{formatSalary(view.source.job?.minSalary, view.source.job?.maxSalary)}</dd>
+              <dd className="font-semibold text-ink">{formatSalary(view.source.job?.minSalary, view.source.job?.maxSalary, view.source.job?.salaryCurrency ?? "VND")}</dd>
             </div>
           </dl>
         </Card>
@@ -341,8 +510,8 @@ export function ApplicationDetailCandidateRedesign() {
                     <span className="font-semibold text-body">{item.label}</span>
                     <span className="font-semibold text-ink">{item.value.toFixed(1)}</span>
                   </div>
-                  <div className="h-2 rounded-pill bg-white">
-                    <div className="h-2 rounded-pill bg-blue-500" style={{ width: `${Math.max(0, Math.min(100, item.value))}%` }} />
+                  <div className="h-2 rounded-full bg-surface-elevated">
+                    <div className="h-2 rounded-full bg-link" style={{ width: `${Math.max(0, Math.min(100, item.value))}%` }} />
                   </div>
                 </div>
               ))}
@@ -354,14 +523,14 @@ export function ApplicationDetailCandidateRedesign() {
         </Card>
       </div>
 
-      <Card className="border border-amber-200 bg-amber-50">
+      <Card className="border border-hairline-strong bg-accent-yellow-glow">
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 rounded-lg bg-amber-100 p-2 text-amber-700">
+          <span className="mt-0.5 rounded-lg bg-surface-elevated p-2 text-warning">
             <Lightbulb size={18} />
           </span>
           <div>
-            <p className="font-semibold text-amber-800">Trong khi chờ kết quả...</p>
-            <p className="mt-1 text-sm text-amber-900/80">
+            <p className="font-semibold text-warning">Trong khi chờ kết quả...</p>
+            <p className="mt-1 text-sm text-ink">
               Hãy cập nhật profile và bổ sung thêm dự án gần đây để tăng độ tin cậy hồ sơ cho các vòng đánh giá tiếp theo.
             </p>
           </div>

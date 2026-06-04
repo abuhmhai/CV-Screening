@@ -10,6 +10,7 @@ import { CompanyModule } from "./company/company.module";
 import { FeedModule } from "./feed/feed.module";
 import { GeneratedCvModule } from "./generated-cv/generated-cv.module";
 import { JobModule } from "./job/job.module";
+import { ExternalJobsModule } from "./external-jobs/external-jobs.module";
 import { JobAlertModule } from "./job-alert/job-alert.module";
 import { SavedJobModule } from "./saved-job/saved-job.module";
 import { MessageModule } from "./message/message.module";
@@ -38,6 +39,7 @@ import { RateLimitGuard } from "./common/rate-limit/rate-limit.guard";
     UserModule,
     CompanyModule,
     JobModule,
+    ExternalJobsModule,
     SavedJobModule,
     JobAlertModule,
     GeneratedCvModule,

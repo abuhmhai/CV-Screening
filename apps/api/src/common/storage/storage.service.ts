@@ -82,11 +82,10 @@ export class StorageService implements OnModuleInit {
       }
     }
 
-    const absDir = path.join(this.localRoot, input.folder);
-    await fs.mkdir(absDir, { recursive: true });
-    const fileName = key.split("/").slice(1).join("/");
-    await fs.writeFile(path.join(absDir, fileName), input.buffer);
-    const url = `${this.publicBase}/api/v1/files/${input.folder}/${fileName}`;
+    const absPath = path.join(this.localRoot, key);
+    await fs.mkdir(path.dirname(absPath), { recursive: true });
+    await fs.writeFile(absPath, input.buffer);
+    const url = `${this.publicBase}/api/v1/files/${key}`;
     return { url, key, size };
   }
 

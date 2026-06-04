@@ -10,11 +10,11 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const variantStyles: Record<CardVariant, string> = {
-  content: "bg-canvas text-ink",
-  sage: "bg-canvas-soft text-ink",
-  green: "bg-primary-pale text-ink",
-  dark: "bg-ink text-primary",
-  converter: "bg-canvas text-ink border border-ink"
+  content: "bg-surface-card text-ink border border-hairline-strong",
+  sage: "bg-surface-elevated text-ink border border-hairline-strong",
+  green: "bg-accent-green-glow text-ink border border-hairline-strong",
+  dark: "bg-surface-deep text-body border border-hairline-strong",
+  converter: "bg-canvas text-ink border border-hairline-strong"
 };
 
 export function Card({
@@ -26,9 +26,9 @@ export function Card({
 }: CardProps) {
   return (
     <div
-      className={`rounded-xl p-6 ${variantStyles[variant]} ${
+      className={`rounded-lg p-6 shadow-none ${variantStyles[variant]} ${
         hover
-          ? "cursor-pointer transition-all duration-250 hover:-translate-y-0.5"
+          ? "cursor-pointer transition-all duration-250 hover:-translate-y-1 hover:border-hairline"
           : ""
       } ${className}`}
       {...props}

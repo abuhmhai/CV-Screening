@@ -300,9 +300,9 @@ async function main() {
         experienceLevel: i % 2 === 0 ? "2-5 years" : "5+ years",
         category: ["Engineering", "Data", "Design", "Product", "Marketing"][i % 5],
         isRemote: i % 3 === 2,
-        minSalary: 1500 + i * 150,
-        maxSalary: 2500 + i * 200,
-        salaryCurrency: "USD",
+        minSalary: 20_000_000 + i * 2_000_000,
+        maxSalary: 35_000_000 + i * 3_000_000,
+        salaryCurrency: "VND",
         location: i % 2 === 0 ? "Ho Chi Minh City" : "Hanoi",
         requiredSkills: [
           skillSeeds[i % skillSeeds.length].name,

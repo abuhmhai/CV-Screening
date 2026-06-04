@@ -47,10 +47,12 @@ export default function JobsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [draftKeyword, setDraftKeyword] = useState("");
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const runSearch = useCallback(
     async (f: Filters, p: number) => {
       setLoading(true);
+      setSearchError(null);
       const params = new URLSearchParams();
       if (f.keyword) params.set("keyword", f.keyword);
       if (f.location) params.set("location", f.location);
@@ -58,8 +60,10 @@ export default function JobsPage() {
       if (f.level) params.set("level", f.level);
       if (f.category) params.set("category", f.category);
       if (f.isRemote) params.set("isRemote", "true");
-      if (f.salaryMin) params.set("salaryMin", f.salaryMin);
-      if (f.salaryMax) params.set("salaryMax", f.salaryMax);
+      const salaryMin = f.salaryMin.trim();
+      const salaryMax = f.salaryMax.trim();
+      if (salaryMin) params.set("salaryMin", salaryMin);
+      if (salaryMax) params.set("salaryMax", salaryMax);
       params.set("sort", f.sort);
       params.set("page", String(p));
       params.set("pageSize", "12");
@@ -70,6 +74,14 @@ export default function JobsPage() {
         setTotal(res.data.pagination.total);
         setTotalPages(res.data.pagination.totalPages);
         setPage(res.data.pagination.page);
+      } else {
+        setJobs([]);
+        setTotal(0);
+        setTotalPages(1);
+        setSearchError(
+          res.error ??
+            "Không tải được danh sách việc làm. Kiểm tra API đang chạy tại http://localhost:4000."
+        );
       }
       setLoading(false);
     },
@@ -210,25 +222,26 @@ export default function JobsPage() {
             </FieldLabel>
 
             <div className="grid grid-cols-2 gap-3">
-              <FieldLabel label="Lương từ">
+              <FieldLabel label="Lương từ (VND)">
                 <Input
                   type="number"
                   min={0}
-                  placeholder="1000"
+                  placeholder="VD: 10000000"
                   value={filters.salaryMin}
                   onChange={(e) => update("salaryMin", e.target.value)}
                 />
               </FieldLabel>
-              <FieldLabel label="Đến">
+              <FieldLabel label="Đến (VND)">
                 <Input
                   type="number"
                   min={0}
-                  placeholder="5000"
+                  placeholder="VD: 50000000"
                   value={filters.salaryMax}
                   onChange={(e) => update("salaryMax", e.target.value)}
                 />
               </FieldLabel>
             </div>
+            <p className="text-caption text-mute">Để trống nếu không lọc theo lương. Giá trị theo VND/tháng.</p>
 
             <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-ink/10 px-4 py-3 text-body-sm">
               <input
@@ -263,6 +276,19 @@ export default function JobsPage() {
               </div>
             </section>
           )}
+
+          {searchError ? (
+            <div className="rounded-lg border border-hairline-strong bg-accent-red-glow p-4 text-body-sm text-negative">
+              {searchError}
+              <button
+                type="button"
+                className="ml-3 font-medium text-ink underline"
+                onClick={() => void runSearch(filters, page)}
+              >
+                Thử lại
+              </button>
+            </div>
+          ) : null}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-body-sm font-semibold text-ink">{total} vị trí phù hợp</span>

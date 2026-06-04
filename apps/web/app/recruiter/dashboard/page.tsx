@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../lib/auth-context";
 import { apiFetch, getApiBase } from "../../../lib/api-client";
-import { Application, Job } from "../../../lib/types";
+import { Application, ApplicationStatus, Job } from "../../../lib/types";
 import { formatScore, statusLabel } from "../../../lib/format";
 import { AuthGate } from "../../../components/auth-gate";
 import { PageHeader, Card } from "../../../components/ui/card";
@@ -12,9 +12,9 @@ import { StatusBadge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { FieldLabel, Input, Select } from "../../../components/ui/input";
 import { StatCard } from "../../../components/stat-card";
-import { ErrorBlock, LoadingBlock, ScoreBar } from "../../../components/ui/states";
+import { ErrorBlock, LoadingBlock, ScoreBar, SkeletonList } from "../../../components/ui/states";
 
-const pipelineStatuses = ["APPLIED", "AI_SCREENING", "HR_REVIEW", "INTERVIEW", "OFFER", "REJECTED"];
+const pipelineStatuses: ApplicationStatus[] = ["APPLIED", "AI_SCREENING", "HR_REVIEW", "INTERVIEW", "OFFER", "HIRED", "REJECTED"];
 
 function RecruiterDashboardContent() {
   const { token } = useAuth();
@@ -94,7 +94,7 @@ function RecruiterDashboardContent() {
     }));
   }, [filtered]);
 
-  async function updateStatus(applicationId: string, status: string) {
+  async function updateStatus(applicationId: string, status: ApplicationStatus) {
     if (!token) return;
     setUpdatingId(applicationId);
     const res = await apiFetch(`/applications/${applicationId}/status`, {
@@ -223,7 +223,7 @@ function RecruiterDashboardContent() {
 
       {error ? <ErrorBlock message={error} /> : null}
       {loadingApps ? (
-        <LoadingBlock />
+        <SkeletonList count={4} />
       ) : (
         <>
           <Card className="overflow-hidden p-0">
@@ -273,7 +273,7 @@ function RecruiterDashboardContent() {
                           className="!mt-0 !w-auto !py-1 text-xs"
                           value={app.status}
                           disabled={updatingId === app.id}
-                          onChange={(e) => updateStatus(app.id, e.target.value)}
+                          onChange={(e) => updateStatus(app.id, e.target.value as ApplicationStatus)}
                         >
                           {pipelineStatuses.map((s) => (
                             <option key={s} value={s}>
@@ -316,7 +316,7 @@ function RecruiterDashboardContent() {
                           <Select
                             className="!mt-0 !py-1 text-xs"
                             value={app.status}
-                            onChange={(e) => updateStatus(app.id, e.target.value)}
+                            onChange={(e) => updateStatus(app.id, e.target.value as ApplicationStatus)}
                             disabled={updatingId === app.id}
                           >
                             {pipelineStatuses.map((s) => (

@@ -43,3 +43,21 @@ class ScreenRequest(BaseModel):
     jd_text: str = Field(..., min_length=10)
     job_id: Optional[str] = None
     cv_data: Optional[Dict[str, Any]] = None
+
+
+class CvScreenRequest(BaseModel):
+    job_id: Optional[str] = None
+    jd: str = Field(..., min_length=1)
+    company: Optional[str] = None
+    skills: List[str] = Field(default_factory=list)
+    cv: str = Field(..., min_length=1)
+
+
+class CvScreenResponse(BaseModel):
+    score: int
+    verdict: str
+    strengths: List[str]
+    gaps: List[str]
+    suggestion: str
+    keywords_matched: List[str]
+    keywords_missing: List[str]

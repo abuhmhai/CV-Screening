@@ -20,22 +20,22 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 /** Semantic status — DESIGN.md badge-positive / badge-negative patterns */
 const variantStyles: Record<BadgeVariant, string> = {
-  active: "bg-primary-pale text-positive-deep",
-  screening: "bg-warning text-warning-content",
-  review: "bg-canvas-soft text-ink",
-  interview: "bg-primary-neutral text-ink-deep",
-  rejected: "bg-negative-bg text-white",
-  pending: "bg-warning text-warning-content",
-  accepted: "bg-primary-pale text-positive-deep",
-  default: "bg-canvas-soft text-body"
+  active: "bg-surface-elevated text-positive border border-hairline-strong",
+  screening: "bg-surface-elevated text-warning border border-hairline-strong",
+  review: "bg-surface-elevated text-ink border border-hairline-strong",
+  interview: "bg-surface-elevated text-link border border-hairline-strong",
+  rejected: "bg-surface-elevated text-negative border border-hairline-strong",
+  pending: "bg-surface-elevated text-warning border border-hairline-strong",
+  accepted: "bg-surface-elevated text-positive border border-hairline-strong",
+  default: "bg-surface-elevated text-body border border-hairline-strong"
 };
 
 const toneStyles: Record<Tone, string> = {
-  default: "bg-canvas-soft text-body",
-  positive: "bg-primary-pale text-positive-deep",
-  warning: "bg-warning text-warning-content",
-  negative: "bg-negative-bg text-white",
-  primary: "bg-primary text-on-primary"
+  default: "bg-surface-elevated text-body border border-hairline-strong",
+  positive: "bg-surface-elevated text-positive border border-hairline-strong",
+  warning: "bg-surface-elevated text-warning border border-hairline-strong",
+  negative: "bg-surface-elevated text-negative border border-hairline-strong",
+  primary: "bg-primary text-primary-on border border-hairline-strong"
 };
 
 export function Badge({ variant, tone, children, className = "", ...props }: BadgeProps) {
@@ -47,7 +47,7 @@ export function Badge({ variant, tone, children, className = "", ...props }: Bad
 
   return (
     <span
-      className={`inline-flex items-center rounded-pill px-3 py-1 text-body-sm font-semibold leading-5 ${styleClass} ${className}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-caption font-medium leading-5 ${styleClass} ${className}`}
       {...props}
     >
       {children}

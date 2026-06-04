@@ -7,13 +7,10 @@ import { StorageService } from "./storage.service";
 export class FilesController {
   constructor(private readonly storage: StorageService) {}
 
-  @Get(":folder/:fileName")
-  async serve(
-    @Param("folder") folder: string,
-    @Param("fileName") fileName: string,
-    @Res() res: Response
-  ) {
-    const file = await this.storage.readLocal(`${folder}/${fileName}`);
+  @Get("*")
+  async serve(@Param() params: Record<string, string>, @Res() res: Response) {
+    const relativePath = params[0] ?? "";
+    const file = await this.storage.readLocal(relativePath);
     if (!file) {
       throw new NotFoundException("File not found");
     }

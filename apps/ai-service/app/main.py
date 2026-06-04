@@ -4,12 +4,14 @@ from typing import Optional
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from redis import Redis
 
+from app.routers.screening import router as screening_router
 from app.schemas import ScreenRequest, ScreeningResponse
 from app.services.cache import ScreeningCache
 from app.services.extraction import extract_text
 from app.services.screening import build_cache_key, screen_candidate
 
 app = FastAPI(title="AI Screening Service", version="0.1.0")
+app.include_router(screening_router)
 
 redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 cache_ttl = int(os.getenv("CACHE_TTL_SECONDS", "86400"))

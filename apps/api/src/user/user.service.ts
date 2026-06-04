@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { StorageService } from "../common/storage/storage.service";
+import { extractCvText } from "../common/storage/cv-text-extractor";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { CreateExperienceDto, UpdateExperienceDto } from "./dto/experience.dto";
 import { CreateEducationDto, UpdateEducationDto } from "./dto/education.dto";
@@ -165,6 +166,8 @@ export class UserService {
       contentType: file.mimetype
     });
 
+    const extractedText = await extractCvText(file.buffer, file.originalname);
+
     // Unset primary for existing CVs
     await this.prisma.cvFile.updateMany({
       where: { userId, isPrimary: true },
@@ -177,7 +180,8 @@ export class UserService {
         fileName: file.originalname,
         fileUrl: uploaded.url,
         fileSize: uploaded.size,
-        isPrimary: true
+        isPrimary: true,
+        extractedText: extractedText || null
       }
     });
   }

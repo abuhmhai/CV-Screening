@@ -23,8 +23,8 @@ function CreateJobContent() {
     jobType: "FULL_TIME",
     level: "MID",
     location: "Ho Chi Minh City",
-    minSalary: "1500",
-    maxSalary: "3000",
+    minSalary: "20000000",
+    maxSalary: "40000000",
     requiredSkills: "TypeScript, NestJS, PostgreSQL"
   });
 
@@ -55,6 +55,7 @@ function CreateJobContent() {
         location: form.location,
         minSalary: Number(form.minSalary),
         maxSalary: Number(form.maxSalary),
+        salaryCurrency: "VND",
         requiredSkills: form.requiredSkills.split(",").map((s) => s.trim()).filter(Boolean)
       })
     });
@@ -124,11 +125,11 @@ function CreateJobContent() {
             <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
           </FieldLabel>
           <div className="grid gap-4 md:grid-cols-2">
-            <FieldLabel label="Lương tối thiểu (USD)">
-              <Input type="number" value={form.minSalary} onChange={(e) => setForm({ ...form, minSalary: e.target.value })} />
+            <FieldLabel label="Lương tối thiểu (VNĐ/tháng)">
+              <Input type="number" min={0} step={1_000_000} value={form.minSalary} onChange={(e) => setForm({ ...form, minSalary: e.target.value })} placeholder="20000000" />
             </FieldLabel>
-            <FieldLabel label="Lương tối cao (USD)">
-              <Input type="number" value={form.maxSalary} onChange={(e) => setForm({ ...form, maxSalary: e.target.value })} />
+            <FieldLabel label="Lương tối đa (VNĐ/tháng)">
+              <Input type="number" min={0} step={1_000_000} value={form.maxSalary} onChange={(e) => setForm({ ...form, maxSalary: e.target.value })} placeholder="40000000" />
             </FieldLabel>
           </div>
           <FieldLabel label="Kỹ năng (phân cách bằng dấu phẩy)">

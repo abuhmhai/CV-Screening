@@ -3,7 +3,6 @@ import { Job } from "../lib/types";
 import { formatSalary } from "../lib/format";
 import { Card } from "./ui/card";
 import { Badge, StatusBadge } from "./ui/badge";
-import { Button } from "./ui/button";
 import { Avatar } from "./ui/avatar";
 import { SkillTag } from "./ui/skill-tag";
 import { SaveJobButton } from "./save-job-button";
@@ -35,7 +34,7 @@ export function JobCard({ job }: { job: Job }) {
               · {job.level} · {job.jobType} · {job.location ?? "Remote"}
             </p>
             <p className="mt-1.5 text-body-sm font-semibold text-ink-deep">
-              {formatSalary(job.minSalary, job.maxSalary)}
+              {formatSalary(job.minSalary, job.maxSalary, job.salaryCurrency ?? "VND")}
             </p>
           </div>
         </div>
@@ -68,10 +67,11 @@ export function JobCard({ job }: { job: Job }) {
             {job._count?.applications ?? 0} ứng viên · Hết hạn{" "}
             {job.expiresAt ? new Date(job.expiresAt).toLocaleDateString("vi-VN") : "—"}
           </span>
-          <Link href={`/jobs/${job.id}`} className="w-full sm:w-auto">
-            <Button variant="primary" className="w-full min-h-10 px-5 py-2 text-body-sm sm:w-auto">
-              Xem & ứng tuyển
-            </Button>
+          <Link
+            href={`/jobs/${job.id}`}
+            className="inline-flex min-h-10 w-full items-center justify-center rounded-md bg-primary px-5 py-2 text-body-sm font-medium text-primary-on transition hover:bg-surface-light active:bg-surface-light/90 sm:w-auto"
+          >
+            Xem & ứng tuyển
           </Link>
         </div>
       </div>

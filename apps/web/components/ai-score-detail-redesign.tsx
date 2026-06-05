@@ -903,28 +903,40 @@ export function AiScoreDetailRedesign() {
             {application?.status ? <Badge tone="primary">Hiện tại: {statusLabel(application.status)}</Badge> : null}
           </div>
           {application?.statusHistory?.length ? (
-            <div className="space-y-3">
+            <div className="relative mt-4 pl-6 before:absolute before:left-[11px] before:top-2 before:h-[calc(100%-1rem)] before:w-px before:bg-ink/10 space-y-6">
               {application.statusHistory.map((item, idx) => (
                 <motion.div
                   key={`${item.changedAt}-${item.toStatus}-${idx}`}
-                  initial={{ opacity: 0, y: 8 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: idx * 0.04, duration: 0.25 }}
-                  className="rounded-xl border border-ink/10 bg-canvas-soft p-3"
+                  transition={{ delay: idx * 0.1, duration: 0.4 }}
+                  className="relative"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-ink">
-                      {item.fromStatus ? `${statusLabel(item.fromStatus)} → ` : ""}{statusLabel(item.toStatus)}
-                    </p>
-                    <span className="text-xs font-semibold text-body">{formatDateTime(item.changedAt)}</span>
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 + 0.2, type: "spring", stiffness: 300 }}
+                    className="absolute -left-[31px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-canvas border-2 border-link shadow-[0_0_0_2px_var(--bg-canvas)]"
+                  >
+                    {idx === 0 && <span className="absolute h-full w-full animate-ping rounded-full bg-link opacity-50" />}
+                  </motion.div>
+                  <div className={`rounded-xl border ${idx === 0 ? "border-link/30 bg-link/5" : "border-ink/10 bg-canvas-soft"} p-4 shadow-sm transition-colors`}>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-ink">
+                        {item.fromStatus ? <span className="text-body font-normal">{statusLabel(item.fromStatus)} → </span> : null}
+                        <span className={idx === 0 ? "text-link" : ""}>{statusLabel(item.toStatus)}</span>
+                      </p>
+                      <span className="text-xs font-medium text-body bg-surface-elevated px-2 py-1 rounded-full">{formatDateTime(item.changedAt)}</span>
+                    </div>
+                    {item.note ? <p className="mt-2 text-sm text-body">{item.note}</p> : null}
                   </div>
-                  {item.note ? <p className="mt-2 text-sm text-body">{item.note}</p> : null}
                 </motion.div>
               ))}
             </div>
           ) : (
-            <p className="rounded-lg bg-canvas-soft p-3 text-sm text-body">Chưa có lịch sử thay đổi trạng thái.</p>
+            <p className="rounded-lg border border-ink/10 bg-canvas-soft p-3 text-sm text-body">Chưa có lịch sử thay đổi trạng thái.</p>
           )}
         </Card>
       </AnimatedContent>

@@ -5,6 +5,36 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 import { BOT_USER_AGENT, RawJob, sleep } from "./crawler.types";
 import { buildVietnamWorksJobUrl, normalizeVietnamWorksJobUrl } from "./job-url.util";
+import {
+  extractNextData,
+  extractRscString,
+  harvestRscJobHtml,
+  htmlToText,
+  isRscReference,
+  looksLikeJunkTitle,
+  sanitizeTitle,
+  titleFromJvUrl
+} from "./vnw-parse";
+
+/** Structured job detail extracted from a VietnamWorks `-jv` page. */
+export interface VnwJobDetail {
+  title: string | null;
+  company: string | null;
+  salary: string | null;
+  location: string | null;
+  description: string;
+  requirements: string;
+}
+
+interface OutstandingJob {
+  jobTitle?: string;
+  company?: string;
+  companyName?: string;
+  location?: string;
+  salary?: string;
+  prettySalary?: string;
+  url?: string;
+}
 
 const LEGACY_SEARCH_URL = "https://ms.vietnamworks.com/job-search/v1.0/jobs";
 const HTML_SEARCH_BASE = "https://www.vietnamworks.com/viec-lam";
@@ -141,12 +171,37 @@ export class VietnamWorksCrawler {
         responseType: "text"
       });
 
+      // 1) Structured jobs embedded in the Next.js __NEXT_DATA__ blob (clean titles).
+      const nextData = extractNextData(data) as
+        | { props?: { pageProps?: { outstandingJobs?: OutstandingJob[] } } }
+        | null;
+      const outstanding = nextData?.props?.pageProps?.outstandingJobs ?? [];
+      for (const item of outstanding) {
+        const url = normalizeVietnamWorksJobUrl(item.url);
+        if (!url || seenUrls.has(url)) continue;
+        const title = this.resolveTitle(item.jobTitle, url);
+        if (!title) continue;
+        seenUrls.add(url);
+        jobs.push({
+          source: "vietnamworks",
+          title,
+          company: item.company || item.companyName || "VietnamWorks",
+          salary: item.prettySalary || item.salary || null,
+          location: item.location || null,
+          url,
+          jd: null,
+          skills: [keyword]
+        });
+      }
+
+      // 2) Anchor fallback for breadth — titles are sanitized / derived from the slug.
       const $ = cheerio.load(data);
       $("a[href]").each((_, element) => {
-        const href = $(element).attr("href");
-        const url = normalizeVietnamWorksJobUrl(href);
-        const title = $(element).text().trim() || $(element).attr("title")?.trim() || "";
-        if (!url || !title || seenUrls.has(url)) return;
+        const url = normalizeVietnamWorksJobUrl($(element).attr("href"));
+        if (!url || seenUrls.has(url)) return;
+        const rawTitle = $(element).text().trim() || $(element).attr("title")?.trim() || "";
+        const title = this.resolveTitle(rawTitle, url);
+        if (!title) return;
         seenUrls.add(url);
 
         jobs.push({
@@ -167,8 +222,55 @@ export class VietnamWorksCrawler {
     return jobs;
   }
 
+  /** Clean a title, falling back to the URL slug when the scraped text is junk. */
+  private resolveTitle(raw: string | null | undefined, url: string): string | null {
+    const cleaned = sanitizeTitle(raw);
+    if (cleaned && !looksLikeJunkTitle(cleaned)) return cleaned;
+    return titleFromJvUrl(url);
+  }
+
+  /**
+   * Fetch a single job detail page and extract clean fields from the RSC payload.
+   * Used on demand to summarize a job; never part of the scheduled crawl.
+   */
+  async fetchJobDetail(url: string): Promise<VnwJobDetail | null> {
+    const normalized = normalizeVietnamWorksJobUrl(url);
+    if (!normalized) return null;
+    try {
+      const { data } = await axios.get<string>(normalized, {
+        headers: { "User-Agent": BOT_USER_AGENT, "Accept-Language": "vi,en;q=0.8" },
+        timeout: 15_000,
+        responseType: "text"
+      });
+      const descRaw = extractRscString(data, "jobDescription");
+      const reqRaw = extractRscString(data, "jobRequirement");
+      let description = isRscReference(descRaw) ? "" : htmlToText(descRaw);
+      let requirements = isRscReference(reqRaw) ? "" : htmlToText(reqRaw);
+
+      // When the JD/requirements are streamed as `$<id>` references, recover them
+      // from the length-prefixed RSC text rows.
+      if (!description && !requirements) {
+        description = htmlToText(harvestRscJobHtml(data));
+      }
+
+      const rawTitle = extractRscString(data, "jobTitle");
+      const title = this.resolveTitle(isRscReference(rawTitle) ? null : rawTitle, normalized);
+      const companyRaw = extractRscString(data, "companyName");
+      const company = isRscReference(companyRaw) ? null : sanitizeTitle(companyRaw) || null;
+      const salaryRaw = extractRscString(data, "prettySalary");
+      const salary = isRscReference(salaryRaw) ? null : sanitizeTitle(salaryRaw) || null;
+
+      if (!description && !requirements && !title) return null;
+
+      return { title, company, salary, location: null, description, requirements };
+    } catch (error) {
+      this.logger.warn(`VietnamWorks detail fetch for "${normalized}" failed: ${this.message(error)}`);
+      return null;
+    }
+  }
+
   private mapJob(item: VnwJob, keyword: string): RawJob | null {
-    const title = item.jobTitle?.trim();
+    const title = sanitizeTitle(item.jobTitle);
     if (!title) return null;
 
     const url = buildVietnamWorksJobUrl({

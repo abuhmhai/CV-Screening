@@ -41,13 +41,19 @@ export function normalizeVietnamWorksJobUrl(href?: string | null): string | null
     const path = url.pathname.replace(/\/+$/, "");
     if (!path || path === "/jobs" || path === "/viec-lam") return null;
 
+    // Real job detail slugs carry a numeric job id before `-jv`
+    // (e.g. `rpa-developer--2056771-jv`). Generic listing links such as
+    // `tim-viec-lam-jv` have no id and must be rejected.
+    const hasJobId = (slug: string) => /\d/.test(slug.replace(/-jv$/i, ""));
+
     if (path.endsWith("-jv")) {
-      return `${url.origin}${path}`;
+      return hasJobId(path) ? `${url.origin}${path}` : null;
     }
 
     const segment = path.startsWith("/") ? path.slice(1) : path;
     if (segment && !segment.includes("/")) {
-      return `${url.origin}/${segment.endsWith("-jv") ? segment : `${segment}-jv`}`;
+      const withSuffix = segment.endsWith("-jv") ? segment : `${segment}-jv`;
+      return hasJobId(withSuffix) ? `${url.origin}/${withSuffix}` : null;
     }
 
     return null;

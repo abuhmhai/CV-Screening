@@ -1,9 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Cron } from "@nestjs/schedule";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../prisma/prisma.service";
 import { RawJob } from "./crawler.types";
 import { resolveJobUrlForSave } from "./job-url.util";
+import { VnwJobDetail } from "./vietnamworks.crawler";
+import { looksLikeJunkTitle, sanitizeTitle, titleFromJvUrl } from "./vnw-parse";
 import { SEED_EXTERNAL_JOBS } from "./seed-jobs";
 import { TopCvCrawler } from "./topcv.crawler";
 import { VietnamWorksCrawler } from "./vietnamworks.crawler";
@@ -15,8 +16,6 @@ export interface CrawlSummary {
   usedFallback: boolean;
 }
 
-const DEFAULT_KEYWORDS = ["react", "nodejs", "fullstack", "python", "devops", "java"];
-
 @Injectable()
 export class CrawlerService {
   private readonly logger = new Logger(CrawlerService.name);
@@ -26,16 +25,6 @@ export class CrawlerService {
     private readonly topCvCrawler: TopCvCrawler,
     private readonly vietnamWorksCrawler: VietnamWorksCrawler
   ) {}
-
-  /** Runs every 6 hours. */
-  @Cron("0 */6 * * *")
-  async scheduledCrawl(): Promise<void> {
-    this.logger.log("Scheduled crawl started");
-    const summary = await this.crawlAll(DEFAULT_KEYWORDS);
-    this.logger.log(
-      `Scheduled crawl done: saved=${summary.saved} skipped=${summary.skipped} fallback=${summary.usedFallback}`
-    );
-  }
 
   /**
    * Runs every crawler for every keyword. Crawlers run with `Promise.allSettled`
@@ -64,6 +53,14 @@ export class CrawlerService {
 
     const { saved, skipped } = await this.deduplicateAndSave(jobs, usedFallback);
     return { crawled: jobs.length, saved, skipped, usedFallback };
+  }
+
+  /** Fetch a single job's detail (currently only VietnamWorks supports it). */
+  async fetchJobDetail(url: string, source: string): Promise<VnwJobDetail | null> {
+    if (source === "vietnamworks") {
+      return this.vietnamWorksCrawler.fetchJobDetail(url);
+    }
+    return null;
   }
 
   private async runCrawler(
@@ -100,9 +97,15 @@ export class CrawlerService {
       }
       seenUrls.add(canonicalUrl);
 
+      const title = this.cleanTitle(job, canonicalUrl);
+      if (!title) {
+        skipped += 1;
+        continue;
+      }
+
       const data = {
         source: job.source,
-        title: job.title,
+        title,
         company: job.company,
         salary: job.salary ?? null,
         location: job.location ?? null,
@@ -127,5 +130,12 @@ export class CrawlerService {
     }
 
     return { saved, skipped };
+  }
+
+  /** Final safety net so no HTML/garbage title is ever persisted. */
+  private cleanTitle(job: RawJob, canonicalUrl: string): string | null {
+    const cleaned = sanitizeTitle(job.title);
+    if (cleaned && !looksLikeJunkTitle(cleaned)) return cleaned;
+    return titleFromJvUrl(canonicalUrl) ?? (cleaned && !/[<>]/.test(cleaned) ? cleaned : null);
   }
 }

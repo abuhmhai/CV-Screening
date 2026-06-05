@@ -43,7 +43,7 @@ Copy-EnvIfMissing "apps\web\.env" "apps\web\.env.example"
 if (-not (Test-Path (Join-Path $Root "apps\api\.env"))) {
   if (Test-Path (Join-Path $Root "apps\api\.env.local.example")) {
     Copy-Item (Join-Path $Root "apps\api\.env.local.example") (Join-Path $Root "apps\api\.env")
-    Write-Host "  Created apps/api/.env from .env.local.example — set PGPASSWORD and DATABASE_URL"
+    Write-Host "  Created apps/api/.env from .env.local.example - set PGPASSWORD and DATABASE_URL"
   } else {
     Copy-EnvIfMissing "apps\api\.env" "apps\api\.env.example"
   }
@@ -58,7 +58,7 @@ Write-Host ""
 Write-Host "Setup complete." -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:"
-Write-Host "  1. Edit apps/api/.env — set PGPASSWORD and DATABASE_URL for your PostgreSQL user"
+Write-Host "  1. Edit apps/api/.env - set PGPASSWORD and DATABASE_URL for your PostgreSQL user"
 Write-Host "  2. Local dev (web + api):  npm run dev:local"
 Write-Host "  3. Or with Docker:         docker compose up --build"
 Write-Host ""

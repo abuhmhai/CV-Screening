@@ -10,6 +10,8 @@ import { RolesGuard } from "../common/auth/roles.guard";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { CreateExperienceDto, UpdateExperienceDto } from "./dto/experience.dto";
 import { CreateEducationDto, UpdateEducationDto } from "./dto/education.dto";
+import { CreateCertificationDto, UpdateCertificationDto } from "./dto/certification.dto";
+import { CreateProjectDto, UpdateProjectDto } from "./dto/project.dto";
 import { UpsertSkillDto } from "./dto/skill.dto";
 import { UserService } from "./user.service";
 
@@ -37,6 +39,24 @@ export class UserController {
   getOnboardingChecklist(@CurrentUser() user: RequestUser | undefined) {
     const currentUser = requireUser(user);
     return this.userService.getOnboardingChecklist(currentUser.id);
+  }
+
+  @Get("me/insights")
+  @Roles(UserRole.ADMIN, UserRole.RECRUITER, UserRole.CANDIDATE)
+  getInsights(@CurrentUser() user: RequestUser | undefined) {
+    return this.userService.getInsights(requireUser(user).id);
+  }
+
+  @Get("me/dashboard")
+  @Roles(UserRole.ADMIN, UserRole.RECRUITER, UserRole.CANDIDATE)
+  getDashboard(@CurrentUser() user: RequestUser | undefined) {
+    return this.userService.getDashboard(requireUser(user).id);
+  }
+
+  @Post("me/public-slug")
+  @Roles(UserRole.ADMIN, UserRole.RECRUITER, UserRole.CANDIDATE)
+  ensurePublicSlug(@CurrentUser() user: RequestUser | undefined) {
+    return this.userService.ensurePublicSlug(requireUser(user).id);
   }
 
   @Patch("me/profile")
@@ -90,6 +110,39 @@ export class UserController {
     }
 
     return this.userService.uploadAvatar(currentUser.id, file);
+  }
+
+  @Post("me/cover")
+  @Roles(UserRole.ADMIN, UserRole.RECRUITER, UserRole.CANDIDATE)
+  @UseInterceptors(FileInterceptor("file"))
+  async uploadCover(
+    @CurrentUser() user: RequestUser | undefined,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    const currentUser = requireUser(user);
+    if (!file) {
+      throw new BadRequestException("No file uploaded");
+    }
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.mimetype)) {
+      throw new BadRequestException("Only PNG, JPEG or WEBP images are allowed");
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      throw new BadRequestException("Image size exceeds 5MB limit");
+    }
+
+    return this.userService.uploadCover(currentUser.id, file);
+  }
+
+  @Patch("me/cv/:id/primary")
+  @Roles(UserRole.CANDIDATE)
+  setPrimaryCv(@CurrentUser() user: RequestUser | undefined, @Param("id") id: string) {
+    return this.userService.setPrimaryCv(requireUser(user).id, id);
+  }
+
+  @Delete("me/cv/:id")
+  @Roles(UserRole.CANDIDATE)
+  deleteCv(@CurrentUser() user: RequestUser | undefined, @Param("id") id: string) {
+    return this.userService.deleteCv(requireUser(user).id, id);
   }
 
   // --- Work experience ---
@@ -167,5 +220,63 @@ export class UserController {
   @Roles(...PROFILE_ROLES)
   deleteSkill(@CurrentUser() user: RequestUser | undefined, @Param("skillId") skillId: string) {
     return this.userService.deleteSkill(requireUser(user).id, skillId);
+  }
+
+  // --- Certifications ---
+  @Get("me/certifications")
+  @Roles(...PROFILE_ROLES)
+  listCertifications(@CurrentUser() user: RequestUser | undefined) {
+    return this.userService.listCertifications(requireUser(user).id);
+  }
+
+  @Post("me/certifications")
+  @Roles(...PROFILE_ROLES)
+  createCertification(@CurrentUser() user: RequestUser | undefined, @Body() dto: CreateCertificationDto) {
+    return this.userService.createCertification(requireUser(user).id, dto);
+  }
+
+  @Patch("me/certifications/:id")
+  @Roles(...PROFILE_ROLES)
+  updateCertification(
+    @CurrentUser() user: RequestUser | undefined,
+    @Param("id") id: string,
+    @Body() dto: UpdateCertificationDto
+  ) {
+    return this.userService.updateCertification(requireUser(user).id, id, dto);
+  }
+
+  @Delete("me/certifications/:id")
+  @Roles(...PROFILE_ROLES)
+  deleteCertification(@CurrentUser() user: RequestUser | undefined, @Param("id") id: string) {
+    return this.userService.deleteCertification(requireUser(user).id, id);
+  }
+
+  // --- Projects ---
+  @Get("me/projects")
+  @Roles(...PROFILE_ROLES)
+  listProjects(@CurrentUser() user: RequestUser | undefined) {
+    return this.userService.listProjects(requireUser(user).id);
+  }
+
+  @Post("me/projects")
+  @Roles(...PROFILE_ROLES)
+  createProject(@CurrentUser() user: RequestUser | undefined, @Body() dto: CreateProjectDto) {
+    return this.userService.createProject(requireUser(user).id, dto);
+  }
+
+  @Patch("me/projects/:id")
+  @Roles(...PROFILE_ROLES)
+  updateProject(
+    @CurrentUser() user: RequestUser | undefined,
+    @Param("id") id: string,
+    @Body() dto: UpdateProjectDto
+  ) {
+    return this.userService.updateProject(requireUser(user).id, id, dto);
+  }
+
+  @Delete("me/projects/:id")
+  @Roles(...PROFILE_ROLES)
+  deleteProject(@CurrentUser() user: RequestUser | undefined, @Param("id") id: string) {
+    return this.userService.deleteProject(requireUser(user).id, id);
   }
 }

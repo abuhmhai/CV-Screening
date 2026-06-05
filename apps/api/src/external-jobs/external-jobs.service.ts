@@ -1,4 +1,11 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnApplicationBootstrap
+} from "@nestjs/common";
+import { Cron, CronExpression } from "@nestjs/schedule";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { CacheService } from "../common/cache/cache.service";
@@ -10,6 +17,23 @@ import { ScreenCvDto } from "./dto/screen-cv.dto";
 const LIST_CACHE_TTL_SEC = 30 * 60; // 30 minutes
 const VERSION_TTL_SEC = 30 * 24 * 60 * 60; // 30 days
 const VERSION_KEY = "external-jobs:cache-version";
+const CRAWL_KEYWORDS = ["react", "nodejs", "fullstack", "python", "devops", "java"];
+
+/** Condensed, readable digest of a crawled job posting. */
+export interface ExternalJobSummary {
+  id: string;
+  source: string;
+  title: string;
+  company: string;
+  location: string | null;
+  salary: string | null;
+  url: string;
+  skills: string[];
+  description: string | null;
+  requirements: string | null;
+  highlights: string[];
+  hasDetail: boolean;
+}
 
 /** Report returned to the client after AI screening a CV against a job. */
 export interface CvScreeningReport {
@@ -23,10 +47,11 @@ export interface CvScreeningReport {
 }
 
 @Injectable()
-export class ExternalJobsService {
+export class ExternalJobsService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ExternalJobsService.name);
   private readonly aiServiceUrl: string;
   private readonly screenTimeoutMs = 20_000;
+  private crawlInFlight = false;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -35,6 +60,40 @@ export class ExternalJobsService {
     private readonly crawler: CrawlerService
   ) {
     this.aiServiceUrl = process.env.AI_SERVICE_URL ?? "http://localhost:8000";
+  }
+
+  // ─── Scheduled crawling ─────────────────────────────────────────────────────
+
+  /** Kick off an immediate crawl on startup so the feed is never empty. */
+  onApplicationBootstrap(): void {
+    void this.runScheduledCrawl("startup");
+  }
+
+  /** Crawl every source every 5 minutes. */
+  @Cron(CronExpression.EVERY_5_MINUTES)
+  async scheduledCrawl(): Promise<void> {
+    await this.runScheduledCrawl("cron");
+  }
+
+  private async runScheduledCrawl(trigger: string): Promise<void> {
+    if (this.crawlInFlight) {
+      this.logger.warn(`Skipping ${trigger} crawl — previous crawl still running`);
+      return;
+    }
+    this.crawlInFlight = true;
+    try {
+      this.logger.log(`Crawl started (${trigger})`);
+      const summary = await this.triggerCrawl(CRAWL_KEYWORDS);
+      this.logger.log(
+        `Crawl done (${trigger}): crawled=${summary.crawled} saved=${summary.saved} ` +
+          `skipped=${summary.skipped} fallback=${summary.usedFallback}`
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Crawl failed (${trigger}): ${message}`);
+    } finally {
+      this.crawlInFlight = false;
+    }
   }
 
   // ─── Reads ──────────────────────────────────────────────────────────────────
@@ -112,6 +171,82 @@ export class ExternalJobsService {
       throw new NotFoundException("External job not found");
     }
     return job;
+  }
+
+  // ─── Job summary ──────────────────────────────────────────────────────────────
+
+  /**
+   * Build a readable digest of a crawled job. If the stored JD is empty we fetch
+   * the source detail page on demand, extract the description/requirements, and
+   * persist them back so subsequent reads are instant. Results are cached.
+   */
+  async summarize(id: string): Promise<ExternalJobSummary> {
+    const cacheKey = `external-job-summary:${id}`;
+    const cached = await this.cache.get<ExternalJobSummary>(cacheKey);
+    if (cached) return cached;
+
+    let job = await this.getOne(id);
+    let description = job.jd ?? "";
+    let requirements = "";
+
+    // Enrich from the source detail page when we don't already have a JD.
+    if (!description || description.trim().length < 40) {
+      const detail = await this.crawler.fetchJobDetail(job.url, job.source);
+      if (detail) {
+        description = detail.description || description;
+        requirements = detail.requirements || "";
+        const combined = [description, requirements].filter(Boolean).join("\n\n").trim();
+        const updates: Prisma.ExternalJobUpdateInput = {};
+        if (combined && combined !== job.jd) updates.jd = combined;
+        if (detail.title && detail.title !== job.title) updates.title = detail.title;
+        if (detail.salary && !job.salary) updates.salary = detail.salary;
+        if (detail.company && (!job.company || job.company === "VietnamWorks")) {
+          updates.company = detail.company;
+        }
+        if (Object.keys(updates).length > 0) {
+          job = await this.prisma.externalJob.update({ where: { id }, data: updates });
+          await this.bumpCacheVersion();
+        }
+      }
+    } else {
+      // Stored JD already contains description + requirements joined with a blank line.
+      const parts = description.split(/\n\s*\n/);
+      description = parts[0] ?? description;
+      requirements = parts.slice(1).join("\n\n");
+    }
+
+    const skills = Array.isArray(job.skills) ? (job.skills as unknown[]).map(String) : [];
+    const summary: ExternalJobSummary = {
+      id: job.id,
+      source: job.source,
+      title: job.title,
+      company: job.company,
+      location: job.location ?? null,
+      salary: job.salary ?? null,
+      url: job.url,
+      skills,
+      description: description.trim() || null,
+      requirements: requirements.trim() || null,
+      highlights: this.buildHighlights(description, requirements),
+      hasDetail: Boolean((description || requirements).trim())
+    };
+
+    await this.cache.set(cacheKey, summary, 6 * 60 * 60);
+    return summary;
+  }
+
+  /** Pick the most informative lines as quick bullet highlights. */
+  private buildHighlights(description: string, requirements: string): string[] {
+    const lines = `${description}\n${requirements}`
+      .split("\n")
+      .map((line) => line.replace(/^[•\-\u2022\s]+/, "").trim())
+      .filter((line) => line.length >= 12 && line.length <= 180);
+    const unique: string[] = [];
+    for (const line of lines) {
+      if (!unique.includes(line)) unique.push(line);
+      if (unique.length >= 5) break;
+    }
+    return unique;
   }
 
   // ─── AI screening ─────────────────────────────────────────────────────────────

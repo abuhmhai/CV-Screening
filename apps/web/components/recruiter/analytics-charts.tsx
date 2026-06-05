@@ -77,13 +77,13 @@ export function PipelineBarChart({ statusCounts }: { statusCounts: Record<string
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: i * 0.06, duration: 0.35 }}
         >
-          <div className="mb-1.5 flex items-center justify-between text-body-sm">
-            <span className="font-semibold text-ink">{item.label}</span>
-            <span className="font-black tabular-nums text-ink">{item.count}</span>
+          <div className="mb-1.5 flex items-center justify-between text-sm">
+            <span className="font-medium text-ink">{item.label}</span>
+            <span className="font-bold tabular-nums text-ink">{item.count}</span>
           </div>
-          <div className="h-3 overflow-hidden rounded-pill bg-canvas-soft">
+          <div className="h-2 overflow-hidden rounded-full bg-canvas-soft shadow-inner">
             <motion.div
-              className="h-full rounded-pill"
+              className="h-full rounded-full"
               style={{ backgroundColor: item.color }}
               initial={{ width: 0 }}
               animate={{ width: `${(item.count / max) * 100}%` }}
@@ -97,42 +97,56 @@ export function PipelineBarChart({ statusCounts }: { statusCounts: Record<string
 }
 
 export function PipelineFunnel({ statusCounts }: { statusCounts: Record<string, number> }) {
-  const funnelStages = PIPELINE_ORDER.filter((s) => s !== "REJECTED");
-  const items = funnelStages.map((key) => ({
-    key,
-    label: STATUS_LABELS[key] ?? key,
-    count: statusCounts[key] ?? 0
-  }));
-  const max = Math.max(...items.map((i) => i.count), 1);
+  const hired = statusCounts.HIRED ?? 0;
+  const offer = hired + (statusCounts.OFFER ?? 0);
+  const interview = offer + (statusCounts.INTERVIEW ?? 0);
+  const hr = interview + (statusCounts.HR_REVIEW ?? 0);
+  const screening = hr + (statusCounts.AI_SCREENING ?? 0);
+  const applied = screening + (statusCounts.APPLIED ?? 0) + (statusCounts.REJECTED ?? 0);
+
+  const funnelData = [
+    { key: "APPLIED", label: "Tổng ứng viên", count: applied },
+    { key: "AI_SCREENING", label: "Qua AI Screening", count: screening },
+    { key: "HR_REVIEW", label: "Qua HR Review", count: hr },
+    { key: "INTERVIEW", label: "Tới Phỏng vấn", count: interview },
+    { key: "OFFER", label: "Nhận Offer", count: offer },
+    { key: "HIRED", label: "Đã tuyển", count: hired }
+  ];
+
+  const max = Math.max(applied, 1);
 
   return (
-    <div className="flex flex-col items-center gap-1 py-2">
-      {items.map((item, i) => {
+    <div className="flex flex-col items-center py-2 space-y-1.5">
+      {funnelData.map((item, i) => {
         const widthPct = 40 + (item.count / max) * 60;
         return (
           <motion.div
             key={item.key}
-            initial={{ opacity: 0, scaleX: 0.6 }}
+            initial={{ opacity: 0, scaleX: 0.8 }}
             animate={{ opacity: 1, scaleX: 1 }}
             transition={{ delay: i * 0.08, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             className="flex w-full flex-col items-center"
             style={{ originX: 0.5 }}
           >
             <div
-              className="flex items-center justify-between rounded-lg px-4 py-2.5 text-body-sm transition-colors"
+              className="flex items-center justify-between rounded-lg px-4 py-2.5 text-sm transition-colors relative overflow-hidden shadow-sm"
               style={{
                 width: `${widthPct}%`,
-                backgroundColor:
-                  i === funnelStages.length - 1 && item.count > 0
-                    ? colors.primaryPale
-                    : colors.canvasSoft,
-                borderLeft: `4px solid ${STATUS_COLORS[item.key]}`
+                backgroundColor: "var(--bg-canvas-soft)",
+                border: "1px solid var(--ink-10)"
               }}
             >
-              <span className="font-semibold text-ink">{item.label}</span>
-              <span className="font-black tabular-nums text-ink">{item.count}</span>
+              <div 
+                className="absolute left-0 top-0 h-full opacity-20"
+                style={{ 
+                  width: '100%',
+                  backgroundColor: STATUS_COLORS[item.key] || "var(--ink)"
+                }}
+              />
+              <span className="font-medium text-ink relative z-10">{item.label}</span>
+              <span className="font-bold tabular-nums text-ink relative z-10">{item.count}</span>
             </div>
-            {i < items.length - 1 ? (
+            {i < funnelData.length - 1 ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.4 }}
@@ -148,8 +162,9 @@ export function PipelineFunnel({ statusCounts }: { statusCounts: Record<string, 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="mt-3 text-caption font-semibold text-negative-deep"
+          className="mt-4 flex items-center gap-1.5 rounded-full bg-accent-red-glow px-3 py-1 text-xs font-semibold text-negative"
         >
+          <span className="h-1.5 w-1.5 rounded-full bg-negative" />
           {statusCounts.REJECTED} ứng viên bị từ chối
         </motion.p>
       ) : null}
@@ -263,22 +278,32 @@ export function ScoreGauge({ score, max = 100 }: { score: number; max?: number }
   );
 }
 
+const SHORT_LABELS: Record<string, string> = {
+  APPLIED: "Đã nộp",
+  AI_SCREENING: "AI",
+  HR_REVIEW: "HR",
+  INTERVIEW: "Phỏng vấn",
+  OFFER: "Offer",
+  HIRED: "Đã tuyển",
+  REJECTED: "Từ chối"
+};
+
 export function StageComparisonChart({ statusCounts }: { statusCounts: Record<string, number> }) {
   const active = PIPELINE_ORDER.filter((s) => s !== "REJECTED").map((key) => ({
     key,
-    label: STATUS_LABELS[key]?.split(" ")[0] ?? key,
+    label: SHORT_LABELS[key] ?? STATUS_LABELS[key]?.split(" ")[0] ?? key,
     count: statusCounts[key] ?? 0
   }));
-  const chartH = 120;
-  const chartW = 280;
+  const chartH = 140;
+  const chartW = 340;
   const max = Math.max(...active.map((a) => a.count), 1);
-  const barW = chartW / active.length - 8;
+  const barW = chartW / active.length - 12;
 
   return (
-    <svg viewBox={`0 0 ${chartW} ${chartH + 28}`} className="w-full max-w-md">
+    <svg viewBox={`0 0 ${chartW} ${chartH + 30}`} className="w-full h-full max-h-64 object-contain">
       {active.map((item, i) => {
         const barH = (item.count / max) * chartH;
-        const x = i * (barW + 8) + 4;
+        const x = i * (barW + 12) + 6;
         const y = chartH - barH;
         return (
           <g key={item.key}>
@@ -294,18 +319,18 @@ export function StageComparisonChart({ statusCounts }: { statusCounts: Record<st
             />
             <text
               x={x + barW / 2}
-              y={chartH + 18}
+              y={chartH + 20}
               textAnchor="middle"
-              className="fill-body text-[9px] font-semibold"
+              className="fill-body text-[10px] font-semibold"
               style={{ fontFamily: "Inter, sans-serif" }}
             >
               {item.label}
             </text>
             <motion.text
               x={x + barW / 2}
-              y={y - 4}
+              y={y - 6}
               textAnchor="middle"
-              className="fill-ink text-[10px] font-black"
+              className="fill-ink text-[12px] font-black"
               initial={{ opacity: 0 }}
               animate={{ opacity: item.count > 0 ? 1 : 0 }}
               transition={{ delay: 0.5 + i * 0.05 }}
@@ -321,12 +346,12 @@ export function StageComparisonChart({ statusCounts }: { statusCounts: Record<st
 }
 
 export function computeConversionRates(statusCounts: Record<string, number>) {
-  const screening = statusCounts.AI_SCREENING ?? 0;
-  const hr = statusCounts.HR_REVIEW ?? 0;
-  const interview = statusCounts.INTERVIEW ?? 0;
-  const offer = statusCounts.OFFER ?? 0;
   const hired = statusCounts.HIRED ?? 0;
-  const total = Object.values(statusCounts).reduce((a, b) => a + b, 0) || 1;
+  const offer = hired + (statusCounts.OFFER ?? 0);
+  const interview = offer + (statusCounts.INTERVIEW ?? 0);
+  const hr = interview + (statusCounts.HR_REVIEW ?? 0);
+  const screening = hr + (statusCounts.AI_SCREENING ?? 0);
+  const total = screening + (statusCounts.APPLIED ?? 0) + (statusCounts.REJECTED ?? 0) || 1;
 
   return [
     { label: "AI → HR", rate: screening ? (hr / screening) * 100 : 0 },

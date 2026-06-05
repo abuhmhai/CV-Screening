@@ -139,7 +139,7 @@ function RecruiterAnalyticsContent() {
       />
 
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-        <Card variant="content" className="flex flex-wrap items-end justify-between gap-4">
+        <Card className="flex flex-wrap items-end justify-between gap-4 p-6">
           <div className="max-w-sm flex-1">
             <label className="mb-2 block text-body-sm font-semibold text-ink">Công ty</label>
             <Select value={selectedCompany} onChange={(e) => setSelectedCompany(e.target.value)}>
@@ -212,18 +212,20 @@ function RecruiterAnalyticsContent() {
           </motion.div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <motion.div variants={item}>
-              <Card variant="content" className="h-full">
+            <motion.div variants={item} className="h-full">
+              <Card className="h-full p-6">
                 <div className="mb-6 flex items-center gap-2">
                   <BarChart3 size={20} className="text-ink-deep" />
                   <h2 className="text-lg font-semibold text-ink">Pipeline theo giai đoạn</h2>
                 </div>
-                <StageComparisonChart statusCounts={analytics?.statusCounts ?? {}} />
+                <div className="flex justify-center">
+                  <StageComparisonChart statusCounts={analytics?.statusCounts ?? {}} />
+                </div>
               </Card>
             </motion.div>
 
-            <motion.div variants={item}>
-              <Card variant="content" className="h-full">
+            <motion.div variants={item} className="h-full">
+              <Card className="h-full p-6">
                 <div className="mb-6 flex items-center gap-2">
                   <GitBranch size={20} className="text-ink-deep" />
                   <h2 className="text-lg font-semibold text-ink">Phễu tuyển dụng</h2>
@@ -234,16 +236,16 @@ function RecruiterAnalyticsContent() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1fr_280px_280px]">
-            <motion.div variants={item}>
-              <Card variant="content">
+            <motion.div variants={item} className="h-full">
+              <Card className="h-full p-6">
                 <h2 className="mb-6 text-lg font-semibold text-ink">Phân bố pipeline</h2>
                 <PipelineBarChart statusCounts={analytics?.statusCounts ?? {}} />
               </Card>
             </motion.div>
 
-            <motion.div variants={item}>
-              <Card variant="sage" className="flex h-full flex-col items-center justify-center py-6">
-                <h2 className="mb-4 text-body-md font-semibold text-ink">AI Pass Rate</h2>
+            <motion.div variants={item} className="h-full">
+              <Card className="flex h-full flex-col items-center justify-center py-8">
+                <h2 className="mb-6 text-base font-semibold text-ink">AI Pass Rate</h2>
                 <div className="relative">
                   <ConversionDonut
                     passRate={analytics?.aiPassRate ?? 0}
@@ -253,16 +255,16 @@ function RecruiterAnalyticsContent() {
               </Card>
             </motion.div>
 
-            <motion.div variants={item}>
-              <Card variant="green" className="flex h-full flex-col items-center justify-center py-6">
-                <h2 className="mb-4 text-body-md font-semibold text-ink">Điểm AI trung bình</h2>
+            <motion.div variants={item} className="h-full">
+              <Card className="flex h-full flex-col items-center justify-center py-8 bg-canvas-soft border border-ink/5">
+                <h2 className="mb-6 text-base font-semibold text-ink">Điểm AI trung bình</h2>
                 <ScoreGauge score={analytics?.avgAiScore ?? 0} />
               </Card>
             </motion.div>
           </div>
 
           <motion.div variants={item}>
-            <Card variant="content">
+            <Card className="p-6">
               <h2 className="mb-6 text-lg font-semibold text-ink">Tỷ lệ chuyển đổi giữa các bước</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 {conversionRates.map((step, i) => (
@@ -286,7 +288,7 @@ function RecruiterAnalyticsContent() {
           </motion.div>
 
           <motion.div variants={item}>
-            <Card variant="content">
+            <Card className="p-6">
               <h2 className="mb-4 text-lg font-semibold text-ink">Chi tiết trạng thái</h2>
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
                 {Object.entries(analytics?.statusCounts ?? {}).map(([status, count], i) => (

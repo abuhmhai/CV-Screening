@@ -12,7 +12,8 @@ export function JobList({
   page,
   totalPages,
   onPageChange,
-  onScreen
+  onScreen,
+  onSummarize
 }: {
   jobs: ExternalJob[];
   loading: boolean;
@@ -20,6 +21,7 @@ export function JobList({
   totalPages: number;
   onPageChange: (next: number) => void;
   onScreen: (job: ExternalJob) => void;
+  onSummarize: (job: ExternalJob) => void;
 }) {
   if (loading) {
     return (
@@ -50,7 +52,7 @@ export function JobList({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: (i % 6) * 0.08 }}
           >
-            <ExternalJobCard job={job} onScreen={onScreen} />
+            <ExternalJobCard job={job} onScreen={onScreen} onSummarize={onSummarize} />
           </motion.div>
         ))}
       </div>

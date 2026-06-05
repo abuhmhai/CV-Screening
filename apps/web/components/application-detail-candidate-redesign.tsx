@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { motion } from "framer-motion";
 import { Bot, CalendarClock, CheckCircle2, FileText, Lightbulb, Loader2, MapPin, PartyPopper, Sparkles, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../lib/auth-context";
@@ -437,7 +438,7 @@ export function ApplicationDetailCandidateRedesign() {
       <div className="grid gap-6 xl:grid-cols-[1.35fr_1fr]">
         <Card>
           <h2 className="text-lg font-bold text-ink">Lịch sử trạng thái</h2>
-          <ol className="mt-5 space-y-4">
+          <ol className="relative mt-6 pl-6 before:absolute before:left-[11px] before:top-2 before:h-[calc(100%-1rem)] before:w-px before:bg-ink/10 space-y-6">
             {pipelineSteps.map((step, idx) => {
               const state = timelineState(idx, view.currentStage);
               const stepHistory = (view.source.statusHistory ?? []).find((item) => {
@@ -455,17 +456,31 @@ export function ApplicationDetailCandidateRedesign() {
                 step.description;
 
               return (
-                <li key={step.key} className="relative pl-8">
-                  <span className="absolute left-0 top-1.5 h-[calc(100%+12px)] w-px bg-ink/10 last:hidden" />
-                  <span className={`absolute left-[-5px] top-1 h-3 w-3 rounded-full border-2 ${timelineDotClass(state)}`} />
-                  <div className="rounded-xl bg-canvas-soft p-3">
+                <motion.li 
+                  key={step.key} 
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1, duration: 0.4 }}
+                  className="relative"
+                >
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 + 0.2, type: "spring", stiffness: 300 }}
+                    className={`absolute -left-[31px] top-1.5 h-4 w-4 rounded-full border-2 shadow-[0_0_0_2px_var(--bg-canvas)] flex items-center justify-center ${timelineDotClass(state)}`}
+                  >
+                    {state === "active" && <span className="absolute h-full w-full animate-ping rounded-full bg-link opacity-50" />}
+                  </motion.div>
+                  <div className={`rounded-xl border ${state === "active" ? "border-link/30 bg-link/5" : "border-ink/10 bg-canvas-soft"} p-4 shadow-sm transition-colors`}>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className={`text-sm font-semibold ${stepTextClass(state)}`}>{step.label}</p>
-                      <p className="text-xs text-body">{timestamp ? formatDateTime(timestamp) : "Chưa có cập nhật"}</p>
+                      <p className="text-xs font-medium text-body bg-surface-elevated px-2 py-1 rounded-full">{timestamp ? formatDateTime(timestamp) : "Chưa có cập nhật"}</p>
                     </div>
-                    <p className="mt-1 text-sm text-body">{note}</p>
+                    <p className="mt-2 text-sm text-body">{note}</p>
                   </div>
-                </li>
+                </motion.li>
               );
             })}
           </ol>

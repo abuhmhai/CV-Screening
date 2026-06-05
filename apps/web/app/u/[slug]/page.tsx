@@ -9,10 +9,9 @@ import { Avatar } from "../../../components/ui/avatar";
 import { Badge } from "../../../components/ui/badge";
 import { ErrorBlock, LoadingBlock } from "../../../components/ui/states";
 import {
-  Github,
-  Linkedin,
+  Link2,
   Globe,
-  Twitter,
+  X,
   ExternalLink,
   Award,
   FolderGit2,

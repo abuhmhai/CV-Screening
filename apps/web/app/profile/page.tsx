@@ -26,10 +26,9 @@ import {
   Eye,
   FileText,
   Share2,
-  Github,
-  Linkedin,
+  Link2,
   Globe,
-  Twitter,
+  X,
   Award,
   FolderGit2,
   Languages as LanguagesIcon,
@@ -97,11 +96,11 @@ function ProfileContent() {
   const p = profile.profile;
   const social = p?.socialLinks ?? null;
   const socialLinks: Array<{ key: string; href: string; icon: React.ReactNode }> = [];
-  if (social?.github) socialLinks.push({ key: "github", href: social.github, icon: <Github size={16} /> });
-  if (social?.linkedin) socialLinks.push({ key: "linkedin", href: social.linkedin, icon: <Linkedin size={16} /> });
+  if (social?.github) socialLinks.push({ key: "github", href: social.github, icon: <Link2 size={16} /> });
+  if (social?.linkedin) socialLinks.push({ key: "linkedin", href: social.linkedin, icon: <Link2 size={16} /> });
   if (social?.website) socialLinks.push({ key: "website", href: social.website, icon: <Globe size={16} /> });
   if (social?.portfolio) socialLinks.push({ key: "portfolio", href: social.portfolio, icon: <ExternalLink size={16} /> });
-  if (social?.twitter) socialLinks.push({ key: "twitter", href: social.twitter, icon: <Twitter size={16} /> });
+  if (social?.twitter) socialLinks.push({ key: "twitter", href: social.twitter, icon: <X size={16} /> });
 
   return (
     <div className="space-y-6">

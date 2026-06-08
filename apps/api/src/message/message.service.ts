@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { MessageGateway } from "../realtime/message.gateway";
 import { SendMessageDto } from "./dto/send-message.dto";
@@ -10,27 +10,44 @@ export class MessageService {
     private readonly messageGateway: MessageGateway
   ) {}
 
-  listConversations(userId: string) {
-    return this.prisma.conversationParticipant.findMany({
+  async listConversations(userId: string) {
+    const rows = await this.prisma.conversationParticipant.findMany({
       where: { userId },
       include: {
         conversation: {
           include: {
             participants: { include: { user: { include: { profile: true } } } },
-            messages: { take: 20, orderBy: { sentAt: "desc" } }
+            messages: { take: 1, orderBy: { sentAt: "desc" } }
           }
         }
-      },
-      orderBy: { lastReadAt: "desc" }
+      }
+    });
+
+    return rows.sort((a, b) => {
+      const aAt = a.conversation.messages[0]?.sentAt?.getTime() ?? 0;
+      const bAt = b.conversation.messages[0]?.sentAt?.getTime() ?? 0;
+      return bAt - aAt;
     });
   }
 
   async sendMessage(userId: string, payload: SendMessageDto) {
+    const participant = await this.prisma.conversationParticipant.findUnique({
+      where: {
+        conversationId_userId: {
+          conversationId: payload.conversationId,
+          userId
+        }
+      }
+    });
+    if (!participant) {
+      throw new ForbiddenException("You are not a participant in this conversation");
+    }
+
     const message = await this.prisma.message.create({
       data: {
         conversationId: payload.conversationId,
         senderId: userId,
-        content: payload.content
+        content: payload.content.trim()
       }
     });
     await this.messageGateway.emitNewMessage({
@@ -38,21 +55,58 @@ export class MessageService {
       messageId: message.id,
       senderId: message.senderId,
       content: message.content,
-      sentAt: message.sentAt.toISOString()
+      sentAt: message.sentAt.toISOString(),
+      isRead: message.isRead
     });
 
-    await this.prisma.message.updateMany({
-      where: {
-        conversationId: payload.conversationId,
-        senderId: { not: userId },
-        isRead: false
-      },
-      data: { isRead: false }
-    });
     return message;
   }
 
+  async listConversationMessages(userId: string, conversationId: string) {
+    const participant = await this.prisma.conversationParticipant.findUnique({
+      where: {
+        conversationId_userId: {
+          conversationId,
+          userId
+        }
+      }
+    });
+    if (!participant) {
+      throw new ForbiddenException("You are not a participant in this conversation");
+    }
+
+    return this.prisma.message.findMany({
+      where: { conversationId, deletedAt: null },
+      orderBy: { sentAt: "asc" },
+      take: 100
+    });
+  }
+
   async markConversationRead(userId: string, conversationId: string) {
+    const participant = await this.prisma.conversationParticipant.findUnique({
+      where: {
+        conversationId_userId: {
+          conversationId,
+          userId
+        }
+      }
+    });
+    if (!participant) {
+      throw new ForbiddenException("You are not a participant in this conversation");
+    }
+
+    const unread = await this.prisma.message.findMany({
+      where: {
+        conversationId,
+        senderId: { not: userId },
+        isRead: false,
+        deletedAt: null
+      },
+      select: { id: true }
+    });
+
+    const readAt = new Date();
+
     await this.prisma.$transaction([
       this.prisma.message.updateMany({
         where: {
@@ -69,11 +123,21 @@ export class MessageService {
             userId
           }
         },
-        data: { lastReadAt: new Date() }
+        data: { lastReadAt: readAt }
       })
     ]);
 
-    return { ok: true };
+    const messageIds = unread.map((row) => row.id);
+    if (messageIds.length > 0) {
+      await this.messageGateway.emitMessagesRead({
+        conversationId,
+        messageIds,
+        readBy: userId,
+        readAt: readAt.toISOString()
+      });
+    }
+
+    return { ok: true, messageIds };
   }
 
   async getUnreadSummary(userId: string) {

@@ -17,6 +17,15 @@ export class MessageController {
     return this.messageService.listConversations(currentUser.id);
   }
 
+  @Get("conversations/:conversationId")
+  listConversationMessages(
+    @CurrentUser() user: RequestUser | undefined,
+    @Param("conversationId") conversationId: string
+  ) {
+    const currentUser = requireUser(user);
+    return this.messageService.listConversationMessages(currentUser.id, conversationId);
+  }
+
   @Post()
   sendMessage(@CurrentUser() user: RequestUser | undefined, @Body() payload: SendMessageDto) {
     const currentUser = requireUser(user);

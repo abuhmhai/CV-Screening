@@ -33,6 +33,13 @@ export class MessageGateway implements OnModuleInit {
         this.server.emit("new_message", message);
       }
     });
+
+    this.pubSub.on("messages_read", (payload) => {
+      const data = JSON.parse(payload) as { conversationId?: string };
+      if (data.conversationId) {
+        this.server.to(`conversation:${data.conversationId}`).emit("messages_read", data);
+      }
+    });
   }
 
   async handleConnection(client: Socket): Promise<void> {
@@ -93,6 +100,10 @@ export class MessageGateway implements OnModuleInit {
 
   async emitNewMessage(payload: Record<string, unknown>): Promise<void> {
     await this.pubSub.publish("messages", JSON.stringify(payload));
+  }
+
+  async emitMessagesRead(payload: Record<string, unknown>): Promise<void> {
+    await this.pubSub.publish("messages_read", JSON.stringify(payload));
   }
 
   private extractToken(client: Socket): string | null {

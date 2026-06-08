@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -8,22 +8,25 @@ import {
   Briefcase,
   ChevronDown,
   Filter,
-  Heart,
+  FileText,
   Image as ImageIcon,
   Lightbulb,
   MessageCircle,
   MoreHorizontal,
+  Paperclip,
   RefreshCw,
   Send,
   Share2,
   Sparkles,
   TrendingUp,
   UserPlus,
-  Users
+  Users,
+  X
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../../lib/auth-context";
-import { apiFetch } from "../../lib/api-client";
+import { apiFetch, getApiBase } from "../../lib/api-client";
+import { fileNameFromUrl, formatFileSize, isImageMedia } from "../../lib/media-utils";
 import { FeedPost, UserProfile } from "../../lib/types";
 import { formatDateTime } from "../../lib/format";
 import { AuthGate } from "../../components/auth-gate";
@@ -33,9 +36,19 @@ import { Button } from "../../components/ui/button";
 import { Input, Textarea } from "../../components/ui/input";
 import { EmptyState, LoadingBlock } from "../../components/ui/states";
 import { Badge } from "../../components/ui/badge";
+import { ReactionPicker } from "../../components/feed/reaction-picker";
+import { PostReactionType } from "../../lib/reactions";
 
 const PAGE_SIZE = 10;
 const POST_LIMIT = 1000;
+const MAX_ATTACHMENTS = 4;
+
+type PendingAttachment = {
+  url: string;
+  name: string;
+  mimeType: string;
+  size?: number;
+};
 
 type FeedFilter = "ALL" | "TRENDING" | "MINE" | "MEDIA";
 type FeedSort = "RECOMMENDED" | "NEWEST";
@@ -87,12 +100,15 @@ function FeedContent() {
   const [activeComposerChip, setActiveComposerChip] = useState("update");
   const [commentDraftByPost, setCommentDraftByPost] = useState<Record<string, string>>({});
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
-  const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
+  const [userReactions, setUserReactions] = useState<Record<string, PostReactionType>>({});
   const [reportedPostIds, setReportedPostIds] = useState<Set<string>>(new Set());
   const [reportConfirmPostId, setReportConfirmPostId] = useState<string | null>(null);
   const [connectingIds, setConnectingIds] = useState<Set<string>>(new Set());
   const [requestedConnectionIds, setRequestedConnectionIds] = useState<Set<string>>(new Set());
   const [posting, setPosting] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState<FeedFilter>("ALL");
   const [sort, setSort] = useState<FeedSort>("RECOMMENDED");
 
@@ -149,10 +165,77 @@ function FeedContent() {
     return { totalComments, totalLikes, mediaPosts };
   }, [posts]);
 
+  async function uploadAttachment(file: File) {
+    if (!token) return null;
+    const form = new FormData();
+    form.append("file", file);
+    const resp = await fetch(`${getApiBase()}/api/v1/uploads/media`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: form
+    });
+    if (!resp.ok) {
+      let message = "Không tải được file";
+      try {
+        const body = (await resp.json()) as { message?: string | string[] };
+        if (Array.isArray(body.message)) message = body.message.join(", ");
+        else if (body.message) message = body.message;
+      } catch {
+        /* ignore */
+      }
+      toast.error(message);
+      return null;
+    }
+    const data = (await resp.json()) as {
+      url: string;
+      name?: string;
+      mimeType?: string;
+      size?: number;
+    };
+    return {
+      url: data.url,
+      name: data.name ?? file.name,
+      mimeType: data.mimeType ?? file.type,
+      size: data.size ?? file.size
+    } satisfies PendingAttachment;
+  }
+
+  async function handleFileSelect(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (!files.length || !token) return;
+
+    const remaining = MAX_ATTACHMENTS - attachments.length;
+    if (remaining <= 0) {
+      toast.error(`Tối đa ${MAX_ATTACHMENTS} file mỗi bài`);
+      return;
+    }
+    const batch = files.slice(0, remaining);
+    if (files.length > remaining) {
+      toast.message(`Chỉ thêm được ${remaining} file nữa`);
+    }
+
+    setUploadingMedia(true);
+    const uploaded: PendingAttachment[] = [];
+    for (const file of batch) {
+      const item = await uploadAttachment(file);
+      if (item) uploaded.push(item);
+    }
+    if (uploaded.length) {
+      setAttachments((prev) => [...prev, ...uploaded]);
+      toast.success(`Đã thêm ${uploaded.length} file`);
+    }
+    setUploadingMedia(false);
+  }
+
+  function removeAttachment(url: string) {
+    setAttachments((prev) => prev.filter((item) => item.url !== url));
+  }
+
   async function handlePost(e: FormEvent) {
     e.preventDefault();
     const trimmed = content.trim();
-    if (!token || !trimmed) return;
+    if (!token || (!trimmed && attachments.length === 0)) return;
 
     setPosting(true);
     const prefix =
@@ -161,50 +244,77 @@ function FeedContent() {
         : activeComposerChip === "tip"
           ? "[Chia sẻ kinh nghiệm] "
           : "";
+    const body =
+      trimmed ||
+      (attachments.length
+        ? attachments.every((item) => isImageMedia(item.url, item.mimeType))
+          ? "📷 "
+          : "📎 "
+        : "");
     const res = await apiFetch<FeedPost>("/social/posts", {
       method: "POST",
       token,
-      body: JSON.stringify({ content: `${prefix}${trimmed}`, visibility: "PUBLIC" })
+      body: JSON.stringify({
+        content: `${prefix}${body}`.trim(),
+        visibility: "PUBLIC",
+        mediaUrls: attachments.map((item) => item.url)
+      })
     });
     setPosting(false);
 
     if (res.ok && res.data) {
       setPosts((prev) => [{ ...res.data!, comments: res.data!.comments ?? [], feedScore: 50 }, ...prev]);
       setContent("");
+      setAttachments([]);
       toast.success("Đã đăng bài lên bảng tin.");
     } else {
       toast.error(res.error ?? "Không đăng được bài viết.");
     }
   }
 
-  async function reactToPost(postId: string) {
-    if (!token || likedPostIds.has(postId)) return;
+  async function reactToPost(postId: string, reactionType: PostReactionType) {
+    if (!token) return;
 
-    setLikedPostIds((prev) => new Set(prev).add(postId));
-    setPosts((prev) =>
-      prev.map((post) => (post.id === postId ? { ...post, likeCount: (post.likeCount ?? 0) + 1 } : post))
-    );
+    const previous = userReactions[postId];
+    if (previous === reactionType) return;
+
+    const isNew = !previous;
+    setUserReactions((prev) => ({ ...prev, [postId]: reactionType }));
+    if (isNew) {
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId ? { ...post, likeCount: (post.likeCount ?? 0) + 1 } : post
+        )
+      );
+    }
 
     const res = await apiFetch<FeedPost>(`/social/posts/${postId}/reactions`, {
       method: "POST",
       token,
-      body: JSON.stringify({ reactionType: "LIKE" })
+      body: JSON.stringify({ reactionType })
     });
 
     if (res.ok && res.data) {
-      setPosts((prev) => prev.map((post) => (post.id === postId ? { ...post, likeCount: res.data!.likeCount } : post)));
+      setPosts((prev) =>
+        prev.map((post) => (post.id === postId ? { ...post, likeCount: res.data!.likeCount } : post))
+      );
       return;
     }
 
-    setLikedPostIds((prev) => {
-      const next = new Set(prev);
-      next.delete(postId);
+    setUserReactions((prev) => {
+      const next = { ...prev };
+      if (previous) next[postId] = previous;
+      else delete next[postId];
       return next;
     });
-    setPosts((prev) =>
-      prev.map((post) => (post.id === postId ? { ...post, likeCount: Math.max(0, (post.likeCount ?? 1) - 1) } : post))
-    );
-    toast.error(res.error ?? "Không thể thả like bài viết.");
+    if (isNew) {
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId ? { ...post, likeCount: Math.max(0, (post.likeCount ?? 1) - 1) } : post
+        )
+      );
+    }
+    toast.error(res.error ?? "Không thể gửi cảm xúc.");
   }
 
   async function addComment(postId: string) {
@@ -336,18 +446,83 @@ function FeedContent() {
                           {chip.label}
                         </button>
                       ))}
+                      <button
+                        type="button"
+                        disabled={uploadingMedia || attachments.length >= MAX_ATTACHMENTS}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-hairline-strong bg-surface-elevated px-3 py-1.5 text-xs font-semibold text-body transition hover:bg-surface-card hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Paperclip size={15} />
+                        {uploadingMedia ? "Đang tải..." : "Đính kèm"}
+                      </button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        multiple
+                        accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,.pdf,.doc,.docx,.txt,text/plain"
+                        onChange={(e) => void handleFileSelect(e)}
+                      />
                     </div>
+                    {attachments.length ? (
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        {attachments.map((item) =>
+                          isImageMedia(item.url, item.mimeType) ? (
+                            <div
+                              key={item.url}
+                              className="group relative overflow-hidden rounded-xl border border-hairline-strong bg-canvas-soft"
+                            >
+                              <img
+                                src={item.url}
+                                alt={item.name}
+                                className="h-32 w-full object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeAttachment(item.url)}
+                                className="absolute right-2 top-2 rounded-full bg-canvas/80 p-1 text-ink transition hover:bg-negative hover:text-white"
+                                aria-label="Xoá ảnh"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div
+                              key={item.url}
+                              className="flex items-center justify-between gap-2 rounded-xl border border-hairline-strong bg-surface-elevated px-3 py-2"
+                            >
+                              <div className="flex min-w-0 items-center gap-2">
+                                <FileText size={16} className="shrink-0 text-accent-blue" />
+                                <div className="min-w-0">
+                                  <p className="truncate text-xs font-semibold text-ink">{item.name}</p>
+                                  <p className="text-[11px] text-mute">{formatFileSize(item.size)}</p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeAttachment(item.url)}
+                                className="rounded-full p-1 text-mute transition hover:bg-surface-card hover:text-negative"
+                                aria-label="Xoá file"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3 bg-canvas-soft px-5 py-3">
                 <p className={`text-xs font-semibold ${content.length > POST_LIMIT * 0.9 ? "text-warning" : "text-mute"}`}>
                   {content.length}/{POST_LIMIT} ký tự
+                  {attachments.length ? ` · ${attachments.length} file` : ""}
                 </p>
                 <Button
                   type="submit"
-                  isLoading={posting}
-                  disabled={!content.trim()}
+                  isLoading={posting || uploadingMedia}
+                  disabled={!content.trim() && attachments.length === 0}
                   rightIcon={<Send size={15} />}
                 >
                   Đăng bài
@@ -400,7 +575,7 @@ function FeedContent() {
                   const comments = post.comments ?? [];
                   const isExpanded = expandedComments[post.id] ?? false;
                   const shownComments = isExpanded ? comments : comments.slice(0, 2);
-                  const isLiked = likedPostIds.has(post.id);
+                  const userReaction = userReactions[post.id];
                   const isReported = reportedPostIds.has(post.id);
 
                   return (
@@ -457,17 +632,39 @@ function FeedContent() {
 
                         {post.mediaUrls?.length ? (
                           <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                            {post.mediaUrls.slice(0, 4).map((url) => (
-                              <a
-                                key={url}
-                                href={url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="group overflow-hidden rounded-xl border border-hairline-strong bg-canvas-soft"
-                              >
-                                <img src={url} alt="Post media" className="h-44 w-full object-cover transition group-hover:scale-105" />
-                              </a>
-                            ))}
+                            {post.mediaUrls.slice(0, 4).map((url) =>
+                              isImageMedia(url) ? (
+                                <a
+                                  key={url}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="group overflow-hidden rounded-xl border border-hairline-strong bg-canvas-soft"
+                                >
+                                  <img
+                                    src={url}
+                                    alt="Post media"
+                                    className="h-44 w-full object-cover transition group-hover:scale-105"
+                                  />
+                                </a>
+                              ) : (
+                                <a
+                                  key={url}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-3 rounded-xl border border-hairline-strong bg-surface-elevated px-4 py-3 transition hover:bg-surface-card"
+                                >
+                                  <FileText size={20} className="shrink-0 text-accent-blue" />
+                                  <div className="min-w-0">
+                                    <p className="truncate text-sm font-semibold text-ink">
+                                      {fileNameFromUrl(url)}
+                                    </p>
+                                    <p className="text-xs text-mute">Mở tệp đính kèm</p>
+                                  </div>
+                                </a>
+                              )
+                            )}
                           </div>
                         ) : null}
 
@@ -479,19 +676,10 @@ function FeedContent() {
                         </div>
 
                         <div className="grid grid-cols-3 gap-2 py-2">
-                          <button
-                            type="button"
-                            onClick={() => void reactToPost(post.id)}
-                            disabled={isLiked}
-                            className={`inline-flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition ${
-                              isLiked
-                                ? "bg-accent-red-glow text-negative"
-                                : "text-body hover:bg-surface-elevated hover:text-ink"
-                            }`}
-                          >
-                            <Heart size={17} className={isLiked ? "fill-current" : ""} />
-                            Thích
-                          </button>
+                          <ReactionPicker
+                            activeReaction={userReaction}
+                            onReact={(type) => void reactToPost(post.id, type)}
+                          />
                           <button
                             type="button"
                             onClick={() => setExpandedComments((prev) => ({ ...prev, [post.id]: !isExpanded }))}

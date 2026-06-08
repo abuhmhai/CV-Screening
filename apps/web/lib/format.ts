@@ -49,7 +49,8 @@ export function statusLabel(status: string): string {
     INTERVIEW: "Phỏng vấn",
     OFFER: "Đề nghị nhận việc",
     HIRED: "Đã tuyển",
-    REJECTED: "Từ chối"
+    REJECTED: "Từ chối",
+    WITHDRAWN: "Đã rút đơn"
   };
   return labels[status] ?? status.replace(/_/g, " ");
 }

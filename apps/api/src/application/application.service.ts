@@ -31,6 +31,9 @@ export class ApplicationService {
     });
 
     if (existing) {
+      if (existing.status === ApplicationStatus.WITHDRAWN) {
+        return this.reactivateApplication(existing.id, candidateId, payload);
+      }
       setImmediate(() => {
         void this.runAiScreening(existing.id, candidateId, payload.jobId);
       });
@@ -57,7 +60,7 @@ export class ApplicationService {
 
   // ─── Candidate: withdraw application ─────────────────────────────────────────
 
-  async withdraw(applicationId: string, candidateId: string): Promise<{ withdrawn: boolean }> {
+  async withdraw(applicationId: string, candidateId: string): Promise<Application> {
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId }
     });
@@ -67,6 +70,9 @@ export class ApplicationService {
     if (application.candidateId !== candidateId) {
       throw new ForbiddenException("You can only withdraw your own application");
     }
+    if (application.status === ApplicationStatus.WITHDRAWN) {
+      throw new ForbiddenException("Application already withdrawn");
+    }
     if (
       application.status === ApplicationStatus.HIRED ||
       application.status === ApplicationStatus.REJECTED
@@ -74,8 +80,77 @@ export class ApplicationService {
       throw new ForbiddenException("Cannot withdraw a finalized application");
     }
 
-    await this.prisma.application.delete({ where: { id: applicationId } });
-    return { withdrawn: true };
+    return this.transitionApplicationStatus({
+      applicationId,
+      toStatus: ApplicationStatus.WITHDRAWN,
+      changedBy: candidateId,
+      note: "Ứng viên đã rút đơn"
+    });
+  }
+
+  async reapply(applicationId: string, candidateId: string): Promise<Application> {
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { job: { include: { company: true } }, aiResult: true, offer: true }
+    });
+    if (!application) {
+      throw new NotFoundException("Application not found");
+    }
+    if (application.candidateId !== candidateId) {
+      throw new ForbiddenException("You can only reapply to your own applications");
+    }
+    if (application.status !== ApplicationStatus.WITHDRAWN) {
+      throw new ForbiddenException("Only withdrawn applications can be reapplied");
+    }
+
+    return this.reactivateApplication(applicationId, candidateId, {
+      jobId: application.jobId,
+      cvFileId: application.cvFileId ?? undefined,
+      coverLetter: application.coverLetter ?? undefined
+    });
+  }
+
+  private async reactivateApplication(
+    applicationId: string,
+    candidateId: string,
+    payload: CreateApplicationDto
+  ): Promise<Application> {
+    await this.transitionApplicationStatus({
+      applicationId,
+      toStatus: ApplicationStatus.APPLIED,
+      changedBy: candidateId,
+      note: "Ứng viên ứng tuyển lại",
+      notifyCandidate: false
+    });
+
+    if (payload.cvFileId || payload.coverLetter !== undefined) {
+      await this.prisma.application.update({
+        where: { id: applicationId },
+        data: {
+          cvFileId: payload.cvFileId ?? undefined,
+          coverLetter: payload.coverLetter ?? undefined,
+          appliedAt: new Date()
+        }
+      });
+    } else {
+      await this.prisma.application.update({
+        where: { id: applicationId },
+        data: { appliedAt: new Date() }
+      });
+    }
+
+    setImmediate(() => {
+      void this.runAiScreening(applicationId, candidateId, payload.jobId);
+    });
+
+    return this.prisma.application.findUniqueOrThrow({
+      where: { id: applicationId },
+      include: {
+        job: { include: { company: true } },
+        aiResult: true,
+        offer: true
+      }
+    });
   }
 
   // ─── Recruiter: trigger re-screen ────────────────────────────────────────────
@@ -381,6 +456,10 @@ export class ApplicationService {
       REJECTED: {
         title: "Cập nhật kết quả ứng tuyển",
         body: `${companyName} đã cập nhật kết quả cho vị trí ${jobName}: hồ sơ chưa phù hợp ở thời điểm hiện tại.${suffix}`
+      },
+      WITHDRAWN: {
+        title: "Đã rút đơn ứng tuyển",
+        body: `Bạn đã rút hồ sơ cho vị trí ${jobName} tại ${companyName}.${suffix}`
       }
     };
 
@@ -484,7 +563,7 @@ export class ApplicationService {
     }
 
     return this.prisma.application.findMany({
-      where: { jobId },
+      where: { jobId, status: { not: ApplicationStatus.WITHDRAWN } },
       include: {
         candidate: { include: { profile: true } },
         cvFile: {

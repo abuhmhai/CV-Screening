@@ -41,6 +41,7 @@ enum ApplicationStatus {
   OFFER
   HIRED
   REJECTED
+  WITHDRAWN
 }
 
 enum OfferStatus {

@@ -6,7 +6,8 @@ export type ApplicationStatus =
   | "INTERVIEW"
   | "OFFER"
   | "HIRED"
-  | "REJECTED";
+  | "REJECTED"
+  | "WITHDRAWN";
 
 export interface AuthUser {
   id: string;

@@ -16,6 +16,7 @@ export function applicationHasAiScore(application: Application) {
 }
 
 export function isAiScreeningInProgress(application: Application) {
+  if (application.status === "WITHDRAWN") return false;
   return application.status === "AI_SCREENING" || (application.status === "APPLIED" && !applicationHasAiScore(application));
 }
 
@@ -40,6 +41,8 @@ export function getCandidateApplicationDisplay(application: Application): Candid
       return { label: "Đã tuyển", variant: "accepted", isAiLoading: false, hasScore };
     case "REJECTED":
       return { label: "Từ chối", variant: "rejected", isAiLoading: false, hasScore };
+    case "WITHDRAWN":
+      return { label: "Đã rút đơn", variant: "rejected", isAiLoading: false, hasScore: false };
     default:
       return { label: application.status, variant: "pending", isAiLoading: false, hasScore };
   }

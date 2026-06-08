@@ -59,12 +59,14 @@ function ApplicationsContent() {
   }
   if (error) return <ErrorBlock message={error} onRetry={() => { setLoading(true); setError(null); loadApplications(); }} />;
 
+  const activeApplications = applications.filter((a) => a.status !== "WITHDRAWN");
   const stats = {
-    screening: applications.filter(isAiScreeningInProgress).length,
-    success: applications.filter((a) => a.status === "APPLIED" && applicationHasAiScore(a)).length,
-    review: applications.filter((a) => a.status === "HR_REVIEW").length,
-    interview: applications.filter((a) => a.status === "INTERVIEW").length,
-    offer: applications.filter((a) => a.status === "OFFER").length
+    screening: activeApplications.filter(isAiScreeningInProgress).length,
+    success: activeApplications.filter((a) => a.status === "APPLIED" && applicationHasAiScore(a)).length,
+    review: activeApplications.filter((a) => a.status === "HR_REVIEW").length,
+    interview: activeApplications.filter((a) => a.status === "INTERVIEW").length,
+    offer: activeApplications.filter((a) => a.status === "OFFER").length,
+    withdrawn: applications.filter((a) => a.status === "WITHDRAWN").length
   };
 
   return (

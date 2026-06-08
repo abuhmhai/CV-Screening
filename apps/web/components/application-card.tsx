@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import { Application } from "../lib/types";
-import { formatDate, formatScore } from "../lib/format";
+import { formatDate } from "../lib/format";
+import {
+  applicationHasAiScore,
+  getCandidateApplicationDisplay
+} from "../lib/application-status";
+import { ApplicationAiScorePanel } from "./application-ai-score";
 import { apiFetch } from "../lib/api-client";
 import { useAuth } from "../lib/auth-context";
 import { Card } from "./ui/card";
-import { Badge, BadgeVariant } from "./ui/badge";
+import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Sparkles, ChevronRight, FileText, PartyPopper, XCircle } from "lucide-react";
 import { useState } from "react";
@@ -23,7 +28,10 @@ export function ApplicationCard({
   const { token } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
-  const score = application.aiResult?.overallScore ? Number(application.aiResult.overallScore) : undefined;
+  const display = getCandidateApplicationDisplay(application);
+  const score = applicationHasAiScore(application)
+    ? Number(application.aiResult!.overallScore)
+    : undefined;
 
   const canWithdraw = !["HIRED", "REJECTED"].includes(application.status);
 
@@ -39,31 +47,6 @@ export function ApplicationCard({
     } else {
       toast.error(res.error ?? "Không rút được đơn");
     }
-  };
-
-  const statusMap: Record<string, { label: string; variant: BadgeVariant }> = {
-    APPLIED: { label: "Đã nộp", variant: "pending" },
-    AI_SCREENING: { label: "AI Đang chấm", variant: "screening" },
-    HR_REVIEW: { label: "HR Đang xem", variant: "review" },
-    INTERVIEW: { label: "Phỏng vấn", variant: "interview" },
-    OFFER: { label: "Đề nghị", variant: "accepted" },
-    REJECTED: { label: "Từ chối", variant: "rejected" }
-  };
-
-  const statusInfo = statusMap[application.status] || { label: application.status, variant: "pending" as BadgeVariant };
-
-  const getScoreColor = (s?: number) => {
-    if (!s) return "text-mute";
-    if (s >= 80) return "text-positive-deep";
-    if (s >= 60) return "text-warning-deep";
-    return "text-negative-deep";
-  };
-
-  const getScoreBg = (s?: number) => {
-    if (!s) return "bg-canvas";
-    if (s >= 80) return "bg-primary-pale";
-    if (s >= 60) return "bg-warning/30";
-    return "bg-negative-bg/10";
   };
 
   return (
@@ -83,7 +66,7 @@ export function ApplicationCard({
             {application.job?.company?.name} · Nộp {formatDate(application.appliedAt)}
           </p>
         </div>
-        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+        <Badge variant={display.variant}>{display.label}</Badge>
       </div>
 
       {application.offer?.status === "PENDING" ? (
@@ -98,28 +81,20 @@ export function ApplicationCard({
         </Link>
       ) : null}
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        <div className={`rounded-xl px-4 py-3 ${getScoreBg(score)} transition-colors`}>
-          <p className="mb-1 text-caption font-semibold uppercase tracking-wider text-mute">AI Score</p>
-          <div className="flex items-end gap-1">
-            <p className={`text-2xl font-black tabular-nums leading-none ${getScoreColor(score)}`}>
-              {score ? formatScore(score) : "—"}
-            </p>
-            {score ? <span className="mb-0.5 text-caption font-bold text-mute">/100</span> : null}
-          </div>
-        </div>
-        <div className="rounded-xl bg-canvas px-4 py-3">
-          <p className="mb-1 text-caption font-semibold uppercase tracking-wider text-mute">Grade</p>
-          <p className={`text-2xl font-black leading-none ${getScoreColor(score)}`}>
-            {application.aiResult?.grade ?? "—"}
-          </p>
-        </div>
-        <div className="rounded-xl bg-canvas px-4 py-3">
+      <div className={`mt-5 grid gap-3 ${display.isAiLoading ? "sm:grid-cols-1" : "sm:grid-cols-3"}`}>
+        <ApplicationAiScorePanel
+          loading={display.isAiLoading}
+          score={score}
+          grade={application.aiResult?.grade}
+        />
+        {!display.isAiLoading ? (
+        <div className="rounded-xl bg-canvas px-4 py-3 sm:col-span-1">
           <p className="mb-1 text-caption font-semibold uppercase tracking-wider text-mute">Vị trí</p>
           <p className="mt-1 line-clamp-1 text-body-sm font-bold text-ink">
             {application.job?.location ?? "Remote"}
           </p>
         </div>
+        ) : null}
       </div>
 
       <AnimatePresence>
@@ -136,7 +111,7 @@ export function ApplicationCard({
                 Chi tiết
               </Button>
             </Link>
-            {application.aiResult ? (
+            {display.hasScore ? (
               <Link href={`/ai-score/${application.id}`} className="w-full sm:w-auto">
                 <Button variant="primary" className="w-full sm:w-auto" leftIcon={<Sparkles size={16} />}>
                   Xem AI Score

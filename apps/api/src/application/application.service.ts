@@ -244,12 +244,13 @@ export class ApplicationService {
         }
       });
 
-      // 6. Advance to HR_REVIEW and persist status notification.
+      // 6. Return to APPLIED — HR_REVIEW only when recruiter moves status manually.
       await this.transitionApplicationStatus({
         applicationId,
-        toStatus: ApplicationStatus.HR_REVIEW,
+        toStatus: ApplicationStatus.APPLIED,
         changedBy: candidateId,
-        note: `AI score: ${aiResult.overall_score} (${aiResult.grade})`
+        note: `AI score: ${aiResult.overall_score} (${aiResult.grade})`,
+        notifyCandidate: false
       });
 
       this.logger.log(`AI screening done for ${applicationId}: score=${aiResult.overall_score} grade=${aiResult.grade}`);

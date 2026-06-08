@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../lib/auth-context";
 import { apiFetch } from "../../lib/api-client";
 import { Application } from "../../lib/types";
@@ -9,7 +9,11 @@ import { ApplicationCard } from "../../components/application-card";
 import { PageHeader } from "../../components/ui/card";
 import { EmptyState, ErrorBlock, SkeletonList } from "../../components/ui/states";
 import { motion } from "framer-motion";
-import { FileText, CheckCircle2, Users, Briefcase } from "lucide-react";
+import { FileText, CheckCircle2, Users, Briefcase, Sparkles } from "lucide-react";
+import {
+  applicationHasAiScore,
+  isAiScreeningInProgress
+} from "../../lib/application-status";
 
 function ApplicationsContent() {
   const { token } = useAuth();
@@ -17,19 +21,30 @@ function ApplicationsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadApplications = () => {
+  const loadApplications = useCallback((options?: { silent?: boolean }) => {
     if (!token) return;
+    if (!options?.silent) setLoading(true);
     void apiFetch<Application[]>("/applications/me", { token }).then((res) => {
       if (res.ok && res.data) setApplications(res.data);
-      else setError(res.error ?? "Không tải được danh sách");
+      else if (!options?.silent) setError(res.error ?? "Không tải được danh sách");
       setLoading(false);
     });
-  };
+  }, [token]);
 
   useEffect(() => {
     loadApplications();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [loadApplications]);
+
+  const hasScreeningPending = useMemo(
+    () => applications.some(isAiScreeningInProgress),
+    [applications]
+  );
+
+  useEffect(() => {
+    if (!token || !hasScreeningPending) return;
+    const timer = window.setInterval(() => loadApplications({ silent: true }), 5000);
+    return () => window.clearInterval(timer);
+  }, [token, hasScreeningPending, loadApplications]);
 
   if (loading) {
     return (
@@ -44,12 +59,12 @@ function ApplicationsContent() {
   }
   if (error) return <ErrorBlock message={error} onRetry={() => { setLoading(true); setError(null); loadApplications(); }} />;
 
-  // Tính toán số lượng theo từng stage
   const stats = {
-    applied: applications.filter(a => a.status === "APPLIED" || a.status === "AI_SCREENING").length,
-    review: applications.filter(a => a.status === "HR_REVIEW").length,
-    interview: applications.filter(a => a.status === "INTERVIEW").length,
-    offer: applications.filter(a => a.status === "OFFER").length,
+    screening: applications.filter(isAiScreeningInProgress).length,
+    success: applications.filter((a) => a.status === "APPLIED" && applicationHasAiScore(a)).length,
+    review: applications.filter((a) => a.status === "HR_REVIEW").length,
+    interview: applications.filter((a) => a.status === "INTERVIEW").length,
+    offer: applications.filter((a) => a.status === "OFFER").length
   };
 
   return (
@@ -60,12 +75,13 @@ function ApplicationsContent() {
       />
       
       {applications.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-5">
           {[
-            { label: "Đã nộp", count: stats.applied, icon: <FileText size={20} />, color: "text-body", bg: "bg-canvas" },
-            { label: "HR Đang xem", count: stats.review, icon: <Users size={20} />, color: "text-accent-cyan", bg: "bg-canvas-soft" },
+            { label: "AI đang chấm", count: stats.screening, icon: <Sparkles size={20} />, color: "text-warning", bg: "bg-canvas-soft" },
+            { label: "Ứng tuyển thành công", count: stats.success, icon: <CheckCircle2 size={20} />, color: "text-positive-deep", bg: "bg-primary-pale" },
+            { label: "HR Đang xem", count: stats.review, icon: <Users size={20} />, color: "text-link", bg: "bg-canvas" },
             { label: "Phỏng vấn", count: stats.interview, icon: <Briefcase size={20} />, color: "text-ink-deep", bg: "bg-primary-neutral" },
-            { label: "Đề nghị", count: stats.offer, icon: <CheckCircle2 size={20} />, color: "text-positive-deep", bg: "bg-primary-pale" },
+            { label: "Đề nghị", count: stats.offer, icon: <FileText size={20} />, color: "text-body", bg: "bg-canvas" }
           ].map((stage, i) => (
             <motion.div 
               key={i}

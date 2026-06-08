@@ -13,7 +13,7 @@ const DEMO_EMAIL = "linh.nguyen@example.com";
 
 function formatDemoError(error: string) {
   if (error === "Failed to fetch" || error === "Network error") {
-    return "Không kết nối được API. Hãy chạy máy chủ API trên http://localhost:4000";
+    return "Không kết nối được API. Kiểm tra API đang chạy (port 4000) và cùng mạng Wi‑Fi với máy dev.";
   }
   return error;
 }

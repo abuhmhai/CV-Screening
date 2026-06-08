@@ -3,5 +3,9 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build -w apps/web",
   "outputDirectory": "apps/web/.next",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PUBLIC_APP_URL": "https://cv-screening-ai-service.vercel.app",
+    "NEXT_PUBLIC_API_URL": "https://cv-screening-api.vercel.app"
+  }
 }

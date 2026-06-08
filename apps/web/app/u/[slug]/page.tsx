@@ -17,7 +17,10 @@ import {
   FolderGit2,
   Languages as LanguagesIcon,
   MapPin,
-  Briefcase
+  Briefcase,
+  Github,
+  Linkedin,
+  Twitter
 } from "lucide-react";
 
 export default function PublicProfilePage({ params }: { params: Promise<{ slug: string }> }) {

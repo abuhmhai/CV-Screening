@@ -58,8 +58,7 @@ export default function AppearanceSettingsPage() {
         }
       >
         <div className="space-y-4 px-1">
-          <div>
-            <FieldLabel>Cỡ chữ</FieldLabel>
+          <FieldLabel label="Cỡ chữ">
             <Select
               value={prefs.fontSize}
               disabled={saving}
@@ -73,7 +72,7 @@ export default function AppearanceSettingsPage() {
               <option value="default">Mặc định</option>
               <option value="large">Lớn hơn</option>
             </Select>
-          </div>
+          </FieldLabel>
 
           <Toggle
             label="Chế độ gọn"

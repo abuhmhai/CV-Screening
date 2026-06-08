@@ -98,38 +98,34 @@ export default function ProfileSettingsPage() {
         }
       >
         <div className="space-y-4 px-1">
-          <div>
-            <FieldLabel>Họ và tên</FieldLabel>
+          <FieldLabel label="Họ và tên">
             <Input
               value={form.fullName}
               disabled={saving}
               onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))}
             />
-          </div>
-          <div>
-            <FieldLabel>Tiêu đề / Headline</FieldLabel>
+          </FieldLabel>
+          <FieldLabel label="Tiêu đề / Headline">
             <Input
               value={form.headline}
               disabled={saving}
               onChange={(e) => setForm((prev) => ({ ...prev, headline: e.target.value }))}
             />
-          </div>
-          <div>
-            <FieldLabel>Địa điểm</FieldLabel>
+          </FieldLabel>
+          <FieldLabel label="Địa điểm">
             <Input
               value={form.location}
               disabled={saving}
               onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))}
             />
-          </div>
-          <div>
-            <FieldLabel>Giới thiệu</FieldLabel>
+          </FieldLabel>
+          <FieldLabel label="Giới thiệu">
             <Textarea
               value={form.about}
               disabled={saving}
               onChange={(e) => setForm((prev) => ({ ...prev, about: e.target.value }))}
             />
-          </div>
+          </FieldLabel>
         </div>
       </SettingsSection>
 

@@ -1,15 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
 import { Shield } from "lucide-react";
 import { useAuth } from "../../../lib/auth-context";
 import { apiFetch } from "../../../lib/api-client";
 import { PrivacySettings } from "../../../lib/types";
-import { AuthGate } from "../../../components/auth-gate";
-import { PageHeader, Card } from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
+import { SettingsSection } from "../../../components/settings/settings-section";
+import { SettingsSaveBar } from "../../../components/settings/settings-save-bar";
 import { Toggle } from "../../../components/ui/toggle";
 import { LoadingBlock } from "../../../components/ui/states";
 
@@ -47,7 +45,7 @@ const PRIVACY_OPTIONS: Array<{
   }
 ];
 
-function PrivacySettingsContent() {
+export default function PrivacySettingsPage() {
   const { token } = useAuth();
   const [settings, setSettings] = useState<PrivacySettings>(DEFAULT_SETTINGS);
   const [initial, setInitial] = useState<PrivacySettings>(DEFAULT_SETTINGS);
@@ -88,62 +86,42 @@ function PrivacySettingsContent() {
   if (loading) return <LoadingBlock label="Đang tải cài đặt..." />;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <PageHeader
-        title="Quyền riêng tư"
-        description="Kiểm soát ai có thể xem hồ sơ, hoạt động và nhắn tin với bạn."
-      />
+    <div className="max-w-2xl space-y-6">
+      <div>
+        <h2 className="font-display text-xl font-bold text-ink">Quyền riêng tư</h2>
+        <p className="mt-1 text-sm text-mute">
+          Kiểm soát ai có thể xem hồ sơ, hoạt động và nhắn tin với bạn.
+        </p>
+      </div>
 
-      <Card className="space-y-1 p-2">
-        <div className="flex items-center gap-2 border-b border-hairline px-3 py-3">
-          <Shield size={18} className="text-accent-blue" />
-          <p className="text-sm font-medium text-ink">Cài đặt hiển thị & liên lạc</p>
-        </div>
-
-        <div className="space-y-2 p-2">
-          {PRIVACY_OPTIONS.map((item) => (
-            <Toggle
-              key={item.key}
-              label={item.label}
-              description={item.description}
-              checked={settings[item.key]}
-              disabled={saving}
-              onChange={(checked) =>
-                setSettings((prev) => ({
-                  ...prev,
-                  [item.key]: checked
-                }))
-              }
-            />
-          ))}
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-hairline px-3 py-4">
-          <Link href="/profile" className="text-sm text-link hover:underline">
-            Quay lại hồ sơ
-          </Link>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              disabled={!hasChanges || saving}
-              onClick={() => setSettings(initial)}
-            >
-              Huỷ thay đổi
-            </Button>
-            <Button onClick={save} disabled={!hasChanges || saving}>
-              {saving ? "Đang lưu..." : "Lưu cài đặt"}
-            </Button>
-          </div>
-        </div>
-      </Card>
+      <SettingsSection
+        icon={Shield}
+        title="Cài đặt hiển thị & liên lạc"
+        footer={
+          <SettingsSaveBar
+            hasChanges={hasChanges}
+            saving={saving}
+            onCancel={() => setSettings(initial)}
+            onSave={save}
+          />
+        }
+      >
+        {PRIVACY_OPTIONS.map((item) => (
+          <Toggle
+            key={item.key}
+            label={item.label}
+            description={item.description}
+            checked={settings[item.key]}
+            disabled={saving}
+            onChange={(checked) =>
+              setSettings((prev) => ({
+                ...prev,
+                [item.key]: checked
+              }))
+            }
+          />
+        ))}
+      </SettingsSection>
     </div>
-  );
-}
-
-export default function PrivacySettingsPage() {
-  return (
-    <AuthGate>
-      <PrivacySettingsContent />
-    </AuthGate>
   );
 }

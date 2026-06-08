@@ -12,6 +12,25 @@ export interface AuthUser {
   id: string;
   email: string;
   role: UserRole;
+  isVerified?: boolean;
+  createdAt?: string;
+}
+
+export interface NotificationPrefs {
+  emailApplications: boolean;
+  emailMessages: boolean;
+  emailJobAlerts: boolean;
+  emailDigest: boolean;
+  pushMessages: boolean;
+  pushApplications: boolean;
+  marketingEmails: boolean;
+}
+
+export interface AppearancePrefs {
+  fontSize: "default" | "large";
+  compactMode: boolean;
+  reduceMotion: boolean;
+  highContrast: boolean;
 }
 
 export interface LoginResponse {

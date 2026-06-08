@@ -43,7 +43,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get("me")
   me(@CurrentUser() user: RequestUser | undefined) {
-    return { user };
+    return this.authService.getMe(requireUser(user).id);
   }
 
   @UseGuards(JwtAuthGuard)

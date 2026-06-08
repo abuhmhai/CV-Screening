@@ -199,3 +199,28 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+html[data-font-size="large"] {
+  --typography-body-md-size: 18px;
+  --typography-body-sm-size: 16px;
+  --typography-caption-size: 14px;
+}
+
+html[data-compact="true"] .rounded-lg.p-6 {
+  padding: 1rem;
+}
+
+html[data-high-contrast="true"] {
+  --colors-hairline: rgba(255, 255, 255, 0.18);
+  --colors-hairline-strong: rgba(255, 255, 255, 0.32);
+  --colors-body: rgba(252, 253, 255, 0.95);
+}
+
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}

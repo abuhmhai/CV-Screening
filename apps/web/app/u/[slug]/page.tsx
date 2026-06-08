@@ -8,6 +8,7 @@ import { Card } from "../../../components/ui/card";
 import { Avatar } from "../../../components/ui/avatar";
 import { Badge } from "../../../components/ui/badge";
 import { ErrorBlock, LoadingBlock } from "../../../components/ui/states";
+import { GithubIcon, LinkedinIcon, TwitterIcon } from "../../../components/ui/brand-icons";
 import {
   Link2,
   Globe,
@@ -17,10 +18,7 @@ import {
   FolderGit2,
   Languages as LanguagesIcon,
   MapPin,
-  Briefcase,
-  Github,
-  Linkedin,
-  Twitter
+  Briefcase
 } from "lucide-react";
 
 export default function PublicProfilePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -44,11 +42,11 @@ export default function PublicProfilePage({ params }: { params: Promise<{ slug: 
 
   const social = profile.socialLinks ?? null;
   const socialLinks: Array<{ key: string; href: string; icon: React.ReactNode }> = [];
-  if (social?.github) socialLinks.push({ key: "github", href: social.github, icon: <Github size={16} /> });
-  if (social?.linkedin) socialLinks.push({ key: "linkedin", href: social.linkedin, icon: <Linkedin size={16} /> });
+  if (social?.github) socialLinks.push({ key: "github", href: social.github, icon: <GithubIcon size={16} /> });
+  if (social?.linkedin) socialLinks.push({ key: "linkedin", href: social.linkedin, icon: <LinkedinIcon size={16} /> });
   if (social?.website) socialLinks.push({ key: "website", href: social.website, icon: <Globe size={16} /> });
   if (social?.portfolio) socialLinks.push({ key: "portfolio", href: social.portfolio, icon: <ExternalLink size={16} /> });
-  if (social?.twitter) socialLinks.push({ key: "twitter", href: social.twitter, icon: <Twitter size={16} /> });
+  if (social?.twitter) socialLinks.push({ key: "twitter", href: social.twitter, icon: <TwitterIcon size={16} /> });
 
   return (
     <div className="space-y-6">

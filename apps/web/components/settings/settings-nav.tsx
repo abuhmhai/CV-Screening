@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Bell,
   LayoutGrid,
+  LucideIcon,
   Palette,
   Shield,
   User,
@@ -12,7 +13,14 @@ import {
   Lock
 } from "lucide-react";
 
-const NAV_ITEMS = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  exact?: boolean;
+};
+
+const NAV_ITEMS: NavItem[] = [
   { href: "/settings", label: "Tổng quan", icon: LayoutGrid, exact: true },
   { href: "/settings/account", label: "Tài khoản", icon: User },
   { href: "/settings/profile", label: "Hồ sơ", icon: UserCircle },
@@ -20,7 +28,7 @@ const NAV_ITEMS = [
   { href: "/settings/appearance", label: "Giao diện", icon: Palette },
   { href: "/settings/security", label: "Bảo mật", icon: Lock },
   { href: "/settings/privacy", label: "Quyền riêng tư", icon: Shield }
-] as const;
+];
 
 export function SettingsNav() {
   const pathname = usePathname();

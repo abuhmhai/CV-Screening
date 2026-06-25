@@ -168,7 +168,7 @@ export function AppShellClient({ children }: { children: ReactNode }) {
                             Hồ sơ của tôi
                           </Link>
                           <Link
-                            href="/settings/privacy"
+                            href="/settings"
                             className="block rounded-lg px-3 py-2 text-body-sm hover:bg-surface-elevated"
                             onClick={() => setMenuOpen(false)}
                           >

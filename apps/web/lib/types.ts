@@ -6,12 +6,32 @@ export type ApplicationStatus =
   | "INTERVIEW"
   | "OFFER"
   | "HIRED"
-  | "REJECTED";
+  | "REJECTED"
+  | "WITHDRAWN";
 
 export interface AuthUser {
   id: string;
   email: string;
   role: UserRole;
+  isVerified?: boolean;
+  createdAt?: string;
+}
+
+export interface NotificationPrefs {
+  emailApplications: boolean;
+  emailMessages: boolean;
+  emailJobAlerts: boolean;
+  emailDigest: boolean;
+  pushMessages: boolean;
+  pushApplications: boolean;
+  marketingEmails: boolean;
+}
+
+export interface AppearancePrefs {
+  fontSize: "default" | "large";
+  compactMode: boolean;
+  reduceMotion: boolean;
+  highContrast: boolean;
 }
 
 export interface LoginResponse {
@@ -69,6 +89,21 @@ export interface ExternalJob {
   skills: string[];
   isActive: boolean;
   crawledAt: string;
+}
+
+export interface ExternalJobSummary {
+  id: string;
+  source: ExternalJob["source"];
+  title: string;
+  company: string;
+  location?: string | null;
+  salary?: string | null;
+  url: string;
+  skills: string[];
+  description?: string | null;
+  requirements?: string | null;
+  highlights: string[];
+  hasDetail: boolean;
 }
 
 export interface CvScreeningReport {
@@ -266,6 +301,37 @@ export interface Application {
   }>;
 }
 
+export interface SocialLinks {
+  github?: string | null;
+  linkedin?: string | null;
+  website?: string | null;
+  portfolio?: string | null;
+  twitter?: string | null;
+}
+
+export interface LanguageEntry {
+  name: string;
+  proficiency?: string | null;
+}
+
+export interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  issueDate?: string | null;
+  credentialUrl?: string | null;
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  description?: string | null;
+  url?: string | null;
+  skills?: string[];
+  startDate?: string | null;
+  endDate?: string | null;
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -277,6 +343,9 @@ export interface UserProfile {
     avatarUrl?: string | null;
     coverUrl?: string | null;
     location?: string | null;
+    socialLinks?: SocialLinks | null;
+    languages?: LanguageEntry[] | null;
+    publicSlug?: string | null;
     profileCompleteness?: number | null;
   } | null;
   workExperiences?: Array<{
@@ -301,11 +370,87 @@ export interface UserProfile {
     level?: string | null;
     skill: { id: string; name: string };
   }>;
+  certifications?: Certification[];
+  projects?: Project[];
   cvFiles?: Array<{
     id: string;
     fileName: string;
+    fileUrl?: string;
+    fileSize?: number | string;
     isPrimary: boolean;
+    extractedText?: string | null;
   }>;
+}
+
+export interface ProfileInsights {
+  readiness: number;
+  completeness: number;
+  skillCoverage: number;
+  matchedSkills: string[];
+  missingSkills: Array<{ skill: string; demand: number }>;
+  recommendedJobs: Array<{
+    id: string;
+    title: string;
+    company?: string | null;
+    location?: string | null;
+    recommendationScore: number;
+    matchedSkillCount: number;
+  }>;
+  tips: string[];
+}
+
+export interface ProfileDashboard {
+  totalApplications: number;
+  applicationsByStatus: Record<string, number>;
+  savedJobs: number;
+  recentApplications: Array<{
+    id: string;
+    status: string;
+    appliedAt: string;
+    jobTitle: string;
+    company?: string | null;
+  }>;
+}
+
+export interface PublicProfile {
+  slug: string;
+  fullName: string;
+  headline?: string | null;
+  about?: string | null;
+  location?: string | null;
+  avatarUrl?: string | null;
+  coverUrl?: string | null;
+  socialLinks?: SocialLinks | null;
+  languages?: LanguageEntry[] | null;
+  skills: Array<{ name: string; level?: string | null }>;
+  experiences: Array<{
+    company: string;
+    position: string;
+    startDate: string;
+    endDate?: string | null;
+    isCurrent: boolean;
+    description?: string | null;
+  }>;
+  educations: Array<{
+    school: string;
+    degree: string;
+    major?: string | null;
+    startYear?: number | null;
+    endYear?: number | null;
+  }>;
+  projects: Array<{
+    title: string;
+    description?: string | null;
+    url?: string | null;
+    skills?: string[];
+  }>;
+  certifications: Array<{
+    name: string;
+    issuer: string;
+    issueDate?: string | null;
+    credentialUrl?: string | null;
+  }>;
+  activity?: { applications: number } | null;
 }
 
 export interface FeedPost {
@@ -380,7 +525,7 @@ export interface SearchResult {
 
 export interface OnboardingChecklist {
   completion: number;
-  items: Array<{ key: string; label: string; done: boolean }>;
+  items: Array<{ key: string; label: string; section?: string; done: boolean }>;
 }
 
 export interface PrivacySettings {

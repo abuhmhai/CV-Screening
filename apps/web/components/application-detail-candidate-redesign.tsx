@@ -3,12 +3,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { motion } from "framer-motion";
 import { Bot, CalendarClock, CheckCircle2, FileText, Lightbulb, Loader2, MapPin, PartyPopper, Sparkles, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../lib/auth-context";
 import { apiFetch } from "../lib/api-client";
 import { Application } from "../lib/types";
 import { formatAmount, formatDate, formatDateTime, formatSalary, formatScore, offerStatusLabel, statusLabel } from "../lib/format";
+import {
+  applicationHasAiScore,
+  getCandidateApplicationDisplay,
+  isAiScreeningInProgress
+} from "../lib/application-status";
+import { ApplicationAiScorePanel } from "./application-ai-score";
 import { Badge, StatusBadge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, PageHeader } from "./ui/card";
@@ -61,10 +68,12 @@ const fallbackApplication = {
   ]
 } as const;
 
-function stageIndex(status: string) {
-  if (status === "APPLIED") return 0;
-  if (status === "AI_SCREENING") return 1;
+function stageIndex(status: string, hasAiResult: boolean) {
+  if (["INTERVIEW", "OFFER", "HIRED", "REJECTED"].includes(status)) return 3;
   if (status === "HR_REVIEW") return 2;
+  if (status === "AI_SCREENING") return 1;
+  if (status === "APPLIED" && hasAiResult) return 2;
+  if (status === "APPLIED") return 0;
   return 3;
 }
 
@@ -101,10 +110,11 @@ function gradeClass(grade: string) {
   return "bg-accent-red-glow text-negative";
 }
 
-function estimateLabel(status: string) {
-  if (status === "APPLIED") return "~1-2 giờ để bắt đầu AI screening";
-  if (status === "AI_SCREENING") return "~5-15 phút để có điểm AI";
-  if (status === "HR_REVIEW") return "~1-3 ngày làm việc để HR phản hồi";
+function estimateLabel(application: Application) {
+  const display = getCandidateApplicationDisplay(application);
+  if (display.isAiLoading) return "AI đang chấm — thường mất vài phút";
+  if (application.status === "APPLIED" && display.hasScore) return "Ứng tuyển thành công — chờ HR xem xét";
+  if (application.status === "HR_REVIEW") return "~1-3 ngày làm việc để HR phản hồi";
   return "Kết quả cuối đang được cập nhật";
 }
 
@@ -136,11 +146,18 @@ export function ApplicationDetailCandidateRedesign() {
     void loadApplication();
   }, [loadApplication]);
 
+  useEffect(() => {
+    if (!application || !isAiScreeningInProgress(application)) return;
+    const timer = window.setInterval(() => void loadApplication(), 5000);
+    return () => window.clearInterval(timer);
+  }, [application, loadApplication]);
+
   const view = useMemo(() => {
     const source = application ?? (fallbackApplication as unknown as Application);
     const score = Number(source.aiResult?.overallScore ?? fallbackApplication.aiResult.overallScore);
     const grade = scoreGrade(score, source.aiResult?.grade);
-    const currentStage = stageIndex(source.status ?? fallbackApplication.status);
+    const hasAiResult = applicationHasAiScore(source);
+    const currentStage = stageIndex(source.status ?? fallbackApplication.status, hasAiResult);
     const latestChangedAt =
       source.statusHistory?.[0]?.changedAt ??
       source.appliedAt ??
@@ -187,6 +204,7 @@ export function ApplicationDetailCandidateRedesign() {
   if (error && !application) return <ErrorBlock message={error} />;
 
   const status = view.source.status ?? fallbackApplication.status;
+  const display = getCandidateApplicationDisplay(view.source);
   const scorePct = Math.max(0, Math.min(100, view.score));
 
   return (
@@ -215,11 +233,11 @@ export function ApplicationDetailCandidateRedesign() {
             </span>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-link">Trạng thái hiện tại</p>
-              <p className="text-sm font-bold text-ink">{statusLabel(status)}</p>
+              <p className="text-sm font-bold text-ink">{display.label}</p>
             </div>
           </div>
           <div className="text-sm text-ink">
-            <p className="font-semibold">{estimateLabel(status)}</p>
+            <p className="font-semibold">{estimateLabel(view.source)}</p>
             <p className="text-xs text-link">Cập nhật: {formatDateTime(view.latestChangedAt)}</p>
           </div>
         </div>
@@ -404,13 +422,21 @@ export function ApplicationDetailCandidateRedesign() {
               <dt className="text-body">Địa điểm</dt>
               <dd className="font-semibold text-ink flex items-center gap-1"><MapPin size={14} /> {view.source.job?.location ?? fallbackApplication.job.location}</dd>
             </div>
-            <div className="flex items-center justify-between border-b border-ink/5 pb-2">
-              <dt className="text-body">AI Score</dt>
-              <dd className="flex items-center gap-2">
-                <span className={`rounded-full px-3 py-1 text-xs font-bold ${gradeClass(view.grade)}`}>Grade {view.grade}</span>
-                <span className={view.grade.startsWith("C") ? "rounded-full bg-accent-yellow-glow px-3 py-1 text-xs font-bold text-warning" : "rounded-full bg-surface-elevated px-3 py-1 text-xs font-bold text-ink"}>
-                  {formatScore(view.score)}
-                </span>
+            <div className="border-b border-ink/5 pb-2">
+              <dt className="mb-2 text-body">AI Score</dt>
+              <dd>
+                {display.isAiLoading ? (
+                  <ApplicationAiScorePanel loading grade={null} />
+                ) : (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${gradeClass(view.grade)}`}>
+                      Grade {view.grade}
+                    </span>
+                    <span className="rounded-full bg-surface-elevated px-3 py-1 text-xs font-bold text-ink">
+                      {formatScore(view.score)}
+                    </span>
+                  </div>
+                )}
               </dd>
             </div>
             <div className="flex items-center justify-between border-b border-ink/5 pb-2">
@@ -437,7 +463,7 @@ export function ApplicationDetailCandidateRedesign() {
       <div className="grid gap-6 xl:grid-cols-[1.35fr_1fr]">
         <Card>
           <h2 className="text-lg font-bold text-ink">Lịch sử trạng thái</h2>
-          <ol className="mt-5 space-y-4">
+          <ol className="relative mt-6 pl-6 before:absolute before:left-[11px] before:top-2 before:h-[calc(100%-1rem)] before:w-px before:bg-ink/10 space-y-6">
             {pipelineSteps.map((step, idx) => {
               const state = timelineState(idx, view.currentStage);
               const stepHistory = (view.source.statusHistory ?? []).find((item) => {
@@ -455,17 +481,31 @@ export function ApplicationDetailCandidateRedesign() {
                 step.description;
 
               return (
-                <li key={step.key} className="relative pl-8">
-                  <span className="absolute left-0 top-1.5 h-[calc(100%+12px)] w-px bg-ink/10 last:hidden" />
-                  <span className={`absolute left-[-5px] top-1 h-3 w-3 rounded-full border-2 ${timelineDotClass(state)}`} />
-                  <div className="rounded-xl bg-canvas-soft p-3">
+                <motion.li 
+                  key={step.key} 
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1, duration: 0.4 }}
+                  className="relative"
+                >
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 + 0.2, type: "spring", stiffness: 300 }}
+                    className={`absolute -left-[31px] top-1.5 h-4 w-4 rounded-full border-2 shadow-[0_0_0_2px_var(--bg-canvas)] flex items-center justify-center ${timelineDotClass(state)}`}
+                  >
+                    {state === "active" && <span className="absolute h-full w-full animate-ping rounded-full bg-link opacity-50" />}
+                  </motion.div>
+                  <div className={`rounded-xl border ${state === "active" ? "border-link/30 bg-link/5" : "border-ink/10 bg-canvas-soft"} p-4 shadow-sm transition-colors`}>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className={`text-sm font-semibold ${stepTextClass(state)}`}>{step.label}</p>
-                      <p className="text-xs text-body">{timestamp ? formatDateTime(timestamp) : "Chưa có cập nhật"}</p>
+                      <p className="text-xs font-medium text-body bg-surface-elevated px-2 py-1 rounded-full">{timestamp ? formatDateTime(timestamp) : "Chưa có cập nhật"}</p>
                     </div>
-                    <p className="mt-1 text-sm text-body">{note}</p>
+                    <p className="mt-2 text-sm text-body">{note}</p>
                   </div>
-                </li>
+                </motion.li>
               );
             })}
           </ol>

@@ -47,6 +47,13 @@ export class ApplicationController {
     return this.applicationService.withdraw(id, currentUser.id);
   }
 
+  @Post(":id/reapply")
+  @Roles(UserRole.CANDIDATE)
+  reapply(@Param("id") id: string, @CurrentUser() user: RequestUser | undefined) {
+    const currentUser = requireUser(user);
+    return this.applicationService.reapply(id, currentUser.id);
+  }
+
   @Get("job/:jobId")
   @Roles(UserRole.RECRUITER, UserRole.ADMIN)
   listByJob(@Param("jobId") jobId: string, @CurrentUser() user: RequestUser | undefined) {

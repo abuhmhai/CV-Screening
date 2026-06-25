@@ -8,13 +8,28 @@ import { Button } from "../ui/button";
 import { SkillTag } from "../ui/skill-tag";
 import { sourceMeta } from "./source-meta";
 
-export function ExternalJobCard({ job, onScreen }: { job: ExternalJob; onScreen: (job: ExternalJob) => void }) {
+export function ExternalJobCard({
+  job,
+  onScreen,
+  onSummarize
+}: {
+  job: ExternalJob;
+  onScreen: (job: ExternalJob) => void;
+  onSummarize: (job: ExternalJob) => void;
+}) {
   const source = sourceMeta(job.source);
 
   return (
     <Card className="flex h-full flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-base font-bold text-ink line-clamp-2">{job.title}</h3>
+        <button
+          type="button"
+          onClick={() => onSummarize(job)}
+          className="text-left text-base font-bold text-ink line-clamp-2 transition hover:text-accent-blue hover:underline focus:outline-none focus-visible:underline"
+          title="Xem tóm tắt việc làm"
+        >
+          {job.title}
+        </button>
         <span className={`shrink-0 rounded-pill border px-2.5 py-1 text-[11px] font-bold ${source.badgeClass}`}>
           {source.label}
         </span>

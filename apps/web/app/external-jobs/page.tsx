@@ -13,6 +13,7 @@ import {
 } from "../../components/external-jobs/job-filters";
 import { JobList } from "../../components/external-jobs/job-list";
 import { CvScreeningPanel } from "../../components/external-jobs/cv-screening-panel";
+import { JobSummaryPanel } from "../../components/external-jobs/job-summary-panel";
 
 const PAGE_SIZE = 12;
 
@@ -25,6 +26,7 @@ export default function ExternalJobsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [filters, setFilters] = useState<ExternalJobFilters>(emptyExternalJobFilters);
   const [selectedJob, setSelectedJob] = useState<ExternalJob | null>(null);
+  const [summaryJob, setSummaryJob] = useState<ExternalJob | null>(null);
 
   const load = useCallback(async (f: ExternalJobFilters, p: number) => {
     setLoading(true);
@@ -82,11 +84,13 @@ export default function ExternalJobsPage() {
             totalPages={totalPages}
             onPageChange={(next) => void load(filters, next)}
             onScreen={setSelectedJob}
+            onSummarize={setSummaryJob}
           />
         </div>
       </div>
 
       <CvScreeningPanel job={selectedJob} onClose={() => setSelectedJob(null)} />
+      <JobSummaryPanel job={summaryJob} onClose={() => setSummaryJob(null)} />
     </div>
   );
 }

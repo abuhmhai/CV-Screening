@@ -2,13 +2,18 @@
 
 import Link from "next/link";
 import { Application } from "../lib/types";
-import { formatDate, formatScore } from "../lib/format";
+import { formatDate } from "../lib/format";
+import {
+  applicationHasAiScore,
+  getCandidateApplicationDisplay
+} from "../lib/application-status";
+import { ApplicationAiScorePanel } from "./application-ai-score";
 import { apiFetch } from "../lib/api-client";
 import { useAuth } from "../lib/auth-context";
 import { Card } from "./ui/card";
-import { Badge, BadgeVariant } from "./ui/badge";
+import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Sparkles, ChevronRight, FileText, PartyPopper, XCircle } from "lucide-react";
+import { Sparkles, ChevronRight, FileText, PartyPopper, RotateCcw, XCircle } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -23,15 +28,23 @@ export function ApplicationCard({
   const { token } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
-  const score = application.aiResult?.overallScore ? Number(application.aiResult.overallScore) : undefined;
+  const [reapplying, setReapplying] = useState(false);
+  const isWithdrawn = application.status === "WITHDRAWN";
+  const display = getCandidateApplicationDisplay(application);
+  const score = applicationHasAiScore(application)
+    ? Number(application.aiResult!.overallScore)
+    : undefined;
 
-  const canWithdraw = !["HIRED", "REJECTED"].includes(application.status);
+  const canWithdraw = !["HIRED", "REJECTED", "WITHDRAWN"].includes(application.status);
 
   const withdraw = async () => {
     if (!token || withdrawing) return;
     if (!window.confirm("Bạn chắc chắn muốn rút đơn ứng tuyển này?")) return;
     setWithdrawing(true);
-    const res = await apiFetch(`/applications/${application.id}`, { method: "DELETE", token });
+    const res = await apiFetch<Application>(`/applications/${application.id}`, {
+      method: "DELETE",
+      token
+    });
     setWithdrawing(false);
     if (res.ok) {
       toast.success("Đã rút đơn ứng tuyển");
@@ -41,36 +54,27 @@ export function ApplicationCard({
     }
   };
 
-  const statusMap: Record<string, { label: string; variant: BadgeVariant }> = {
-    APPLIED: { label: "Đã nộp", variant: "pending" },
-    AI_SCREENING: { label: "AI Đang chấm", variant: "screening" },
-    HR_REVIEW: { label: "HR Đang xem", variant: "review" },
-    INTERVIEW: { label: "Phỏng vấn", variant: "interview" },
-    OFFER: { label: "Đề nghị", variant: "accepted" },
-    REJECTED: { label: "Từ chối", variant: "rejected" }
-  };
-
-  const statusInfo = statusMap[application.status] || { label: application.status, variant: "pending" as BadgeVariant };
-
-  const getScoreColor = (s?: number) => {
-    if (!s) return "text-mute";
-    if (s >= 80) return "text-positive-deep";
-    if (s >= 60) return "text-warning-deep";
-    return "text-negative-deep";
-  };
-
-  const getScoreBg = (s?: number) => {
-    if (!s) return "bg-canvas";
-    if (s >= 80) return "bg-primary-pale";
-    if (s >= 60) return "bg-warning/30";
-    return "bg-negative-bg/10";
+  const reapply = async () => {
+    if (!token || reapplying) return;
+    setReapplying(true);
+    const res = await apiFetch<Application>(`/applications/${application.id}/reapply`, {
+      method: "POST",
+      token
+    });
+    setReapplying(false);
+    if (res.ok) {
+      toast.success("Đã gửi lại đơn ứng tuyển");
+      onWithdrawn?.();
+    } else {
+      toast.error(res.error ?? "Không ứng tuyển lại được");
+    }
   };
 
   return (
     <Card
-      hover
+      hover={!isWithdrawn}
       variant="content"
-      className="group relative overflow-hidden"
+      className={`group relative overflow-hidden ${isWithdrawn ? "opacity-90" : ""}`}
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
     >
@@ -83,10 +87,23 @@ export function ApplicationCard({
             {application.job?.company?.name} · Nộp {formatDate(application.appliedAt)}
           </p>
         </div>
-        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant={display.variant}>{display.label}</Badge>
+          {isWithdrawn ? (
+            <Button
+              variant="secondary"
+              className="h-8 px-3 text-xs"
+              leftIcon={<RotateCcw size={14} />}
+              isLoading={reapplying}
+              onClick={reapply}
+            >
+              Ứng tuyển lại
+            </Button>
+          ) : null}
+        </div>
       </div>
 
-      {application.offer?.status === "PENDING" ? (
+      {application.offer?.status === "PENDING" && !isWithdrawn ? (
         <Link
           href={`/applications/${application.id}`}
           className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-hairline-strong bg-accent-green-glow px-4 py-3 transition-colors hover:bg-surface-elevated"
@@ -98,29 +115,27 @@ export function ApplicationCard({
         </Link>
       ) : null}
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        <div className={`rounded-xl px-4 py-3 ${getScoreBg(score)} transition-colors`}>
-          <p className="mb-1 text-caption font-semibold uppercase tracking-wider text-mute">AI Score</p>
-          <div className="flex items-end gap-1">
-            <p className={`text-2xl font-black tabular-nums leading-none ${getScoreColor(score)}`}>
-              {score ? formatScore(score) : "—"}
-            </p>
-            {score ? <span className="mb-0.5 text-caption font-bold text-mute">/100</span> : null}
-          </div>
+      {isWithdrawn ? (
+        <p className="mt-4 text-sm text-mute">
+          Đơn đã được rút. Bạn có thể ứng tuyển lại bất cứ lúc nào bằng nút bên cạnh.
+        </p>
+      ) : (
+        <div className={`mt-5 grid gap-3 ${display.isAiLoading ? "sm:grid-cols-1" : "sm:grid-cols-3"}`}>
+          <ApplicationAiScorePanel
+            loading={display.isAiLoading}
+            score={score}
+            grade={application.aiResult?.grade}
+          />
+          {!display.isAiLoading ? (
+            <div className="rounded-xl bg-canvas px-4 py-3 sm:col-span-1">
+              <p className="mb-1 text-caption font-semibold uppercase tracking-wider text-mute">Vị trí</p>
+              <p className="mt-1 line-clamp-1 text-body-sm font-bold text-ink">
+                {application.job?.location ?? "Remote"}
+              </p>
+            </div>
+          ) : null}
         </div>
-        <div className="rounded-xl bg-canvas px-4 py-3">
-          <p className="mb-1 text-caption font-semibold uppercase tracking-wider text-mute">Grade</p>
-          <p className={`text-2xl font-black leading-none ${getScoreColor(score)}`}>
-            {application.aiResult?.grade ?? "—"}
-          </p>
-        </div>
-        <div className="rounded-xl bg-canvas px-4 py-3">
-          <p className="mb-1 text-caption font-semibold uppercase tracking-wider text-mute">Vị trí</p>
-          <p className="mt-1 line-clamp-1 text-body-sm font-bold text-ink">
-            {application.job?.location ?? "Remote"}
-          </p>
-        </div>
-      </div>
+      )}
 
       <AnimatePresence>
         {expanded ? (
@@ -131,17 +146,30 @@ export function ApplicationCard({
             transition={{ duration: 0.2 }}
             className="flex flex-col gap-2 border-t border-ink/5 pt-4 sm:flex-row sm:flex-wrap"
           >
-            <Link href={`/applications/${application.id}`} className="w-full sm:w-auto">
-              <Button variant="secondary" className="w-full sm:w-auto" leftIcon={<FileText size={16} />}>
-                Chi tiết
-              </Button>
-            </Link>
-            {application.aiResult ? (
+            {!isWithdrawn ? (
+              <Link href={`/applications/${application.id}`} className="w-full sm:w-auto">
+                <Button variant="secondary" className="w-full sm:w-auto" leftIcon={<FileText size={16} />}>
+                  Chi tiết
+                </Button>
+              </Link>
+            ) : null}
+            {display.hasScore ? (
               <Link href={`/ai-score/${application.id}`} className="w-full sm:w-auto">
                 <Button variant="primary" className="w-full sm:w-auto" leftIcon={<Sparkles size={16} />}>
                   Xem AI Score
                 </Button>
               </Link>
+            ) : null}
+            {isWithdrawn ? (
+              <Button
+                variant="primary"
+                className="w-full sm:w-auto"
+                leftIcon={<RotateCcw size={16} />}
+                isLoading={reapplying}
+                onClick={reapply}
+              >
+                Ứng tuyển lại
+              </Button>
             ) : null}
             <div className="flex-1" />
             {canWithdraw ? (
@@ -160,10 +188,22 @@ export function ApplicationCard({
       </AnimatePresence>
 
       {!expanded ? (
-        <div className="mt-5 flex items-center text-body-sm font-semibold text-ink-deep">
-          <span className="flex items-center gap-1">
-            Xem chi tiết <ChevronRight size={16} />
-          </span>
+        <div className="mt-5 flex items-center justify-between gap-3 text-body-sm font-semibold text-ink-deep">
+          {isWithdrawn ? (
+            <Button
+              variant="secondary"
+              className="h-8 px-3 text-xs"
+              leftIcon={<RotateCcw size={14} />}
+              isLoading={reapplying}
+              onClick={reapply}
+            >
+              Ứng tuyển lại
+            </Button>
+          ) : (
+            <span className="flex items-center gap-1">
+              Xem chi tiết <ChevronRight size={16} />
+            </span>
+          )}
         </div>
       ) : null}
     </Card>

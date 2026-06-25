@@ -131,6 +131,23 @@ export class AuthService {
     return { message: "Logged out" };
   }
 
+  async getMe(userId: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, deletedAt: null },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isVerified: true,
+        createdAt: true
+      }
+    });
+    if (!user) {
+      throw new UnauthorizedException("User not found");
+    }
+    return { user };
+  }
+
   // ─── OAuth (Google / LinkedIn) ───────────────────────────────────────────────
 
   getOAuthRedirectUrl(provider: "google" | "linkedin"): { url: string } {

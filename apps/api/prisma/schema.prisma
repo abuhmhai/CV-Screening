@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum UserRole {
@@ -40,6 +41,7 @@ enum ApplicationStatus {
   OFFER
   HIRED
   REJECTED
+  WITHDRAWN
 }
 
 enum OfferStatus {
@@ -109,6 +111,8 @@ model User {
   jobAlerts              JobAlert[]
   companyFollows         CompanyFollower[]
   generatedCvs           GeneratedCv[]
+  certifications         Certification[]
+  projects               Project[]
   moderationReports      ModerationReport[]         @relation("ModerationReporter")
   privacySettings        PrivacySettings?
 
@@ -127,12 +131,45 @@ model UserProfile {
   avatarUrl           String? @map("avatar_url")
   coverUrl            String? @map("cover_url")
   location            String?
+  socialLinks         Json?   @map("social_links")
+  languages           Json?
+  publicSlug          String? @unique @map("public_slug")
   profileCompleteness Int     @default(0) @map("profile_completeness")
   user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([location], map: "user_profiles_location_idx")
   @@index([profileCompleteness], map: "user_profiles_completeness_idx")
   @@map("user_profiles")
+}
+
+model Certification {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  name          String
+  issuer        String
+  issueDate     DateTime? @map("issue_date")
+  credentialUrl String?   @map("credential_url")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "certifications_user_id_idx")
+  @@map("certifications")
+}
+
+model Project {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  title       String
+  description String?
+  url         String?
+  skills      Json      @default("[]")
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "projects_user_id_idx")
+  @@map("projects")
 }
 
 model WorkExperience {

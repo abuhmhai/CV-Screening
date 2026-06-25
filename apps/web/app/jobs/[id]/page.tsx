@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { apiFetch } from "../../../lib/api-client";
+import { apiFetch, getApiBase } from "../../../lib/api-client";
 import { useAuth } from "../../../lib/auth-context";
 import { Job, UserProfile } from "../../../lib/types";
 import { formatSalary } from "../../../lib/format";
@@ -65,7 +65,7 @@ function JobDetailContent() {
     formData.append("file", file);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/v1/users/me/cv`, {
+      const res = await fetch(`${getApiBase()}/api/v1/users/me/cv`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`

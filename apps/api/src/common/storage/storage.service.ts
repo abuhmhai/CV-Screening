@@ -30,7 +30,9 @@ export class StorageService implements OnModuleInit {
   private readonly logger = new Logger(StorageService.name);
   private readonly bucket = process.env.MINIO_BUCKET_CV ?? "cv-files";
   private readonly publicBase = process.env.PUBLIC_API_URL ?? `http://localhost:${process.env.PORT ?? 4000}`;
-  private readonly localRoot = path.join(process.cwd(), "storage-data");
+  private readonly localRoot = process.env.VERCEL
+    ? path.join("/tmp", "cv-screening-storage")
+    : path.join(process.cwd(), "storage-data");
   private minio: MinioClient | null = null;
   private driver: "minio" | "local" = "local";
 

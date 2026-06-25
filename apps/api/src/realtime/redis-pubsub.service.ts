@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common";
 import Redis from "ioredis";
 
-type ChannelName = "notifications" | "messages";
+type ChannelName = "notifications" | "messages" | "messages_read";
 type Handler = (payload: string) => void;
 
 @Injectable()
@@ -11,7 +11,8 @@ export class RedisPubSubService implements OnModuleDestroy {
   private readonly subscriber: Redis | null;
   private readonly handlers: Record<ChannelName, Handler[]> = {
     notifications: [],
-    messages: []
+    messages: [],
+    messages_read: []
   };
   private redisAvailable = true;
 
@@ -43,10 +44,10 @@ export class RedisPubSubService implements OnModuleDestroy {
 
     void Promise.all([this.publisher.connect(), this.subscriber.connect()])
       .then(async () => {
-        await this.subscriber?.subscribe("notifications", "messages");
+        await this.subscriber?.subscribe("notifications", "messages", "messages_read");
         this.subscriber?.on("message", (channel, payload) => {
-          if (channel === "notifications" || channel === "messages") {
-            for (const handler of this.handlers[channel]) {
+          if (channel === "notifications" || channel === "messages" || channel === "messages_read") {
+            for (const handler of this.handlers[channel as ChannelName]) {
               handler(payload);
             }
           }
@@ -64,6 +65,9 @@ export class RedisPubSubService implements OnModuleDestroy {
   }
 
   on(channel: ChannelName, handler: Handler): void {
+    if (!this.handlers[channel]) {
+      this.handlers[channel] = [];
+    }
     this.handlers[channel].push(handler);
   }
 

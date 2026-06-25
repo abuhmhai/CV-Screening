@@ -44,12 +44,13 @@ export function formatScore(value?: string | number | null): string {
 export function statusLabel(status: string): string {
   const labels: Record<string, string> = {
     APPLIED: "Đã ứng tuyển",
-    AI_SCREENING: "AI đang sàng lọc",
-    HR_REVIEW: "HR đang xem xét",
+    AI_SCREENING: "AI đang chấm",
+    HR_REVIEW: "HR đang xem",
     INTERVIEW: "Phỏng vấn",
     OFFER: "Đề nghị nhận việc",
     HIRED: "Đã tuyển",
-    REJECTED: "Từ chối"
+    REJECTED: "Từ chối",
+    WITHDRAWN: "Đã rút đơn"
   };
   return labels[status] ?? status.replace(/_/g, " ");
 }

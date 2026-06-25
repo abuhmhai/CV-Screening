@@ -24,6 +24,11 @@ export class ExternalJobsController {
     return this.externalJobsService.getOne(id);
   }
 
+  @Get(":id/summary")
+  summarize(@Param("id") id: string) {
+    return this.externalJobsService.summarize(id);
+  }
+
   @Post(":id/screen")
   @UseGuards(JwtAuthGuard)
   screen(

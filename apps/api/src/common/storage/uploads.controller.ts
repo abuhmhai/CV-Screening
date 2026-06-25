@@ -13,7 +13,17 @@ import { RequestUser } from "../auth/request-user.type";
 import { requireUser } from "../auth/require-user";
 import { StorageService } from "./storage.service";
 
-const ALLOWED = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+const ALLOWED = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+  "application/pdf",
+  "text/plain",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+];
+const MAX_BYTES = 8 * 1024 * 1024;
 
 @Controller("uploads")
 @UseGuards(JwtAuthGuard)
@@ -31,10 +41,10 @@ export class UploadsController {
       throw new BadRequestException("No file uploaded");
     }
     if (!ALLOWED.includes(file.mimetype)) {
-      throw new BadRequestException("Only image files are allowed");
+      throw new BadRequestException("File type not allowed. Use images, PDF, or Word documents.");
     }
-    if (file.size > 8 * 1024 * 1024) {
-      throw new BadRequestException("Media size exceeds 8MB limit");
+    if (file.size > MAX_BYTES) {
+      throw new BadRequestException("File size exceeds 8MB limit");
     }
 
     const uploaded = await this.storage.upload({
@@ -44,6 +54,11 @@ export class UploadsController {
       contentType: file.mimetype
     });
 
-    return { url: uploaded.url };
+    return {
+      url: uploaded.url,
+      name: file.originalname,
+      mimeType: file.mimetype,
+      size: uploaded.size
+    };
   }
 }

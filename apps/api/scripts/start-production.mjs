@@ -12,9 +12,28 @@ if (process.env.DATABASE_URL) {
       cwd: apiRoot,
       stdio: "inherit",
       env: process.env,
-      timeout: 30000
+      timeout: 60000
     });
     console.log("[Production Startup] Prisma migrations completed successfully.");
+
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prismaClient = new PrismaClient();
+      const count = await prismaClient.job.count().catch(() => 0);
+      if (count === 0) {
+        console.log("[Production Startup] Database has 0 jobs. Auto-seeding initial jobs and data...");
+        execSync("npx ts-node --transpile-only prisma/seed.ts", {
+          cwd: apiRoot,
+          stdio: "inherit",
+          env: process.env,
+          timeout: 60000
+        });
+        console.log("[Production Startup] Database seeded successfully.");
+      }
+      await prismaClient.$disconnect().catch(() => undefined);
+    } catch (seedErr) {
+      console.warn("[Production Startup] Seed notice:", seedErr?.message ?? seedErr);
+    }
   } catch (error) {
     console.warn(
       "[Production Startup] Migration warning (proceeding to start API server anyway):",

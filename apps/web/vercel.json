@@ -1,7 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "installCommand": "bash -lc \"cd ../.. && npm ci\"",
   "buildCommand": "npm run build",
   "env": {
     "NEXT_PUBLIC_APP_URL": "https://cv-screening-ai-service.vercel.app",

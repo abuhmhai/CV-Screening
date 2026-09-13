@@ -224,3 +224,65 @@ html[data-reduce-motion="true"] *::after {
   transition-duration: 0.001ms !important;
   scroll-behavior: auto !important;
 }
+
+/* Light Mode Theme */
+html[data-theme="light"],
+html.light {
+  /* Brand & Accent */
+  --colors-primary: #0f172a;
+  --colors-primary-on: #ffffff;
+  --colors-surface-light: #ffffff;
+
+  /* Surface */
+  --colors-canvas: #f8fafc;
+  --colors-surface-card: #ffffff;
+  --colors-surface-elevated: #f1f5f9;
+  --colors-surface-deep: #e2e8f0;
+  --colors-hairline: rgba(0, 0, 0, 0.08);
+  --colors-hairline-strong: rgba(0, 0, 0, 0.16);
+  --colors-divider-soft: rgba(0, 0, 0, 0.04);
+
+  /* Text */
+  --colors-ink: #0f172a;
+  --colors-body: #334155;
+  --colors-charcoal: #475569;
+  --colors-mute: #64748b;
+  --colors-ash: #94a3b8;
+  --colors-stone: #cbd5e1;
+  --colors-on-light: #0f172a;
+  --colors-on-light-mute: rgba(15, 23, 42, 0.7);
+
+  /* Semantic - adjusted for optimal contrast on light canvas */
+  --colors-accent-orange: #ea580c;
+  --colors-accent-orange-glow: rgba(234, 88, 12, 0.15);
+  --colors-accent-yellow: #d97706;
+  --colors-accent-blue: #0284c7;
+  --colors-accent-blue-glow: rgba(2, 132, 199, 0.15);
+  --colors-accent-green: #059669;
+  --colors-accent-green-glow: rgba(5, 150, 105, 0.15);
+  --colors-accent-red: #dc2626;
+  --colors-accent-red-glow: rgba(220, 38, 38, 0.15);
+  --colors-link: #0284c7;
+
+  /* Negative/Positive states */
+  --colors-positive: #059669;
+  --colors-positive-deep: #047857;
+  --colors-negative: #dc2626;
+  --colors-warning: #d97706;
+
+  /* Legacy aliases */
+  --colors-on-primary: var(--colors-primary-on);
+  --colors-canvas-soft: var(--colors-surface-elevated);
+  --colors-primary-active: #0284c7;
+  --colors-primary-neutral: var(--colors-surface-elevated);
+  --colors-primary-pale: var(--colors-accent-green-glow);
+  --colors-ink-deep: var(--colors-ink);
+}
+
+html[data-theme="light"][data-high-contrast="true"],
+html.light[data-high-contrast="true"] {
+  --colors-hairline: rgba(0, 0, 0, 0.2);
+  --colors-hairline-strong: rgba(0, 0, 0, 0.35);
+  --colors-body: #0f172a;
+}
+

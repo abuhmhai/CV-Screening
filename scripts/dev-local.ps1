@@ -10,14 +10,24 @@ if (Test-Path (Join-Path $localNode "npm.cmd")) {
 Set-Location $Root
 Write-Host "==> CV Screening - Local dev (no Docker)" -ForegroundColor Cyan
 
-# 1) Require local PostgreSQL on 5432 (skip embedded-postgres)
+# 1) Ensure PostgreSQL on 5432
 $dbRunning = Get-NetTCPConnection -LocalPort 5432 -State Listen -ErrorAction SilentlyContinue
 if (-not $dbRunning) {
+  $svc = Get-Service "postgresql-cv" -ErrorAction SilentlyContinue
+  if ($svc) {
+    Write-Host "==> Starting PostgreSQL Windows Service (postgresql-cv)..." -ForegroundColor Yellow
+    Start-Service "postgresql-cv" -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 3
+    $dbRunning = Get-NetTCPConnection -LocalPort 5432 -State Listen -ErrorAction SilentlyContinue
+  }
+}
+
+if (-not $dbRunning) {
   Write-Host "ERROR: PostgreSQL is not listening on port 5432." -ForegroundColor Red
-  Write-Host "Start PostgreSQL service, then run this script again."
+  Write-Host "Start PostgreSQL, then run this script again."
   exit 1
 }
-Write-Host "==> Using existing PostgreSQL on port 5432"
+Write-Host "==> PostgreSQL is ready on port 5432"
 
 # Load apps/api/.env into process env for scripts
 $envFile = Join-Path $Root "apps\api\.env"
@@ -29,17 +39,11 @@ Get-Content $envFile | ForEach-Object {
   if ($_ -match '^\s*([^#=]+)=(.*)$') {
     $name = $matches[1].Trim()
     $value = $matches[2].Trim()
+    if (($value.StartsWith('"') -and $value.EndsWith('"')) -or ($value.StartsWith("'") -and $value.EndsWith("'"))) {
+      $value = $value.Substring(1, $value.Length - 2)
+    }
     Set-Item -Path "env:$name" -Value $value
   }
-}
-
-if ([string]::IsNullOrWhiteSpace($env:PGPASSWORD)) {
-  Write-Host ""
-  Write-Host "ERROR: PGPASSWORD is empty in apps/api/.env" -ForegroundColor Red
-  Write-Host "Set your DataGrip password for user 'root', for example:"
-  Write-Host "  PGPASSWORD=your_password"
-  Write-Host "  DATABASE_URL=postgresql://root:your_password@127.0.0.1:5432/cvscreening"
-  exit 1
 }
 
 # 2) Ensure cvscreening database exists
@@ -53,11 +57,18 @@ npm run prisma:generate -w apps/api
 npm run prisma:deploy -w apps/api
 npm run prisma:seed -w apps/api
 
+# Locate npm executable
+$npmCmd = Join-Path $localNode "npm.cmd"
+if (-not (Test-Path $npmCmd)) {
+  $npmCmd = (Get-Command npm -ErrorAction SilentlyContinue).Source
+  if (-not $npmCmd) { $npmCmd = "npm" }
+}
+
 # 4) Start API (background)
 $apiRunning = Get-NetTCPConnection -LocalPort 4000 -State Listen -ErrorAction SilentlyContinue
 if (-not $apiRunning) {
   Write-Host "==> Starting API on http://localhost:4000 ..."
-  Start-Process -FilePath "npm" -ArgumentList "run","dev","-w","apps/api" -WindowStyle Hidden
+  Start-Process -FilePath $npmCmd -ArgumentList "run","dev","-w","apps/api" -WindowStyle Hidden
   Start-Sleep -Seconds 6
 } else {
   Write-Host "==> API already running on port 4000"
@@ -67,7 +78,7 @@ if (-not $apiRunning) {
 $webRunning = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue
 if (-not $webRunning) {
   Write-Host "==> Starting Web on http://localhost:3000 ..."
-  Start-Process -FilePath "npm" -ArgumentList "run","dev","-w","apps/web" -WindowStyle Hidden
+  Start-Process -FilePath $npmCmd -ArgumentList "run","dev","-w","apps/web" -WindowStyle Hidden
   Start-Sleep -Seconds 5
 } else {
   Write-Host "==> Web already running on port 3000"

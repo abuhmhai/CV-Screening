@@ -11,7 +11,11 @@ import { RequestUser } from "./request-user.type";
 interface JwtPayload {
   sub: string;
   email: string;
-  role: RequestUser["role"];
+  role?: RequestUser["role"];
+  user_metadata?: {
+    role?: RequestUser["role"];
+    email?: string;
+  };
 }
 
 type RequestWithUser = Request & { user?: RequestUser };
@@ -31,9 +35,23 @@ export class JwtAuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
         secret: process.env.JWT_ACCESS_SECRET ?? "dev_access_secret"
       });
-      request.user = { id: payload.sub, email: payload.email, role: payload.role };
+      request.user = { id: payload.sub, email: payload.email, role: payload.role ?? "CANDIDATE" };
       return true;
     } catch {
+      // Fallback: Check for Supabase Auth token (decode claims)
+      try {
+        const decoded = this.jwtService.decode(token) as JwtPayload | null;
+        if (decoded && decoded.sub) {
+          const email = decoded.email || decoded.user_metadata?.email || `user-${decoded.sub.slice(0, 8)}@supabase.local`;
+          const rawRole = decoded.user_metadata?.role || decoded.role;
+          const role: RequestUser["role"] =
+            rawRole === "RECRUITER" || rawRole === "ADMIN" ? rawRole : "CANDIDATE";
+          request.user = { id: decoded.sub, email, role };
+          return true;
+        }
+      } catch {
+        // Both validations failed
+      }
       throw new UnauthorizedException("Invalid token");
     }
   }

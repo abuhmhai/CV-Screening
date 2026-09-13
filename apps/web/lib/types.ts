@@ -28,6 +28,7 @@ export interface NotificationPrefs {
 }
 
 export interface AppearancePrefs {
+  theme?: "dark" | "light" | "system";
   fontSize: "default" | "large";
   compactMode: boolean;
   reduceMotion: boolean;

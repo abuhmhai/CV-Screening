@@ -10,6 +10,7 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Bell, Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { ThemeToggle } from "./ui/theme-toggle";
 
 const publicNav = [
   { href: "/", label: "Trang chủ" },
@@ -20,6 +21,7 @@ const publicNav = [
 
 const candidateNav = [
   { href: "/applications", label: "Ứng tuyển" },
+  { href: "/goals", label: "Mục tiêu" },
   { href: "/saved-jobs", label: "Đã lưu" },
   { href: "/feed", label: "Bảng tin" },
   { href: "/network", label: "Mạng lưới" },
@@ -120,6 +122,7 @@ export function AppShellClient({ children }: { children: ReactNode }) {
             </nav>
 
             <div className="flex items-center gap-2 shrink-0">
+              <ThemeToggle />
               {!loading && user ? (
                 <>
                   <Link
@@ -232,6 +235,10 @@ export function AppShellClient({ children }: { children: ReactNode }) {
                     ))
                   : null}
               </div>
+              <div className="border-t border-hairline p-3 flex items-center justify-between bg-surface-card/50">
+                <span className="text-xs text-mute font-medium">Chế độ giao diện</span>
+                <ThemeToggle showLabel />
+              </div>
             </motion.div>
           </>
         ) : null}
@@ -261,6 +268,11 @@ export function AppShellClient({ children }: { children: ReactNode }) {
                 <li>
                   <Link href="/applications" className="hover:text-primary transition-colors">
                     Đơn ứng tuyển
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/goals" className="hover:text-primary transition-colors">
+                    Mục tiêu nghề nghiệp
                   </Link>
                 </li>
                 <li>

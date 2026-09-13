@@ -5,6 +5,9 @@
   "buildCommand": "npm run build",
   "env": {
     "NEXT_PUBLIC_APP_URL": "https://cv-screening-ai-service.vercel.app",
-    "NEXT_PUBLIC_API_URL": "https://cv-screening-api.vercel.app"
+    "NEXT_PUBLIC_API_URL": "https://cv-screening-api.vercel.app",
+    "NEXT_PUBLIC_WS_URL": "wss://cv-screening-api.vercel.app",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://juskajexvtgedtwvqfrp.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_LvOBOGf4aHAxZ0OFQad49A_Y_VEcymM"
   }
 }

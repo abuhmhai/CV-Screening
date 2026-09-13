@@ -42,6 +42,44 @@ export default function AppearanceSettingsPage() {
         <p className="mt-1 text-sm text-mute">Tùy chỉnh cách hiển thị nội dung trên thiết bị này.</p>
       </div>
 
+      <SettingsSection icon={Palette} title="Chủ đề hiển thị">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 px-1">
+          {[
+            { id: "dark", label: "Tối (Dark)", desc: "Dịu mắt, tối ưu màn hình OLED" },
+            { id: "light", label: "Sáng (Light)", desc: "Tươi sáng, độ tương phản cao" },
+            { id: "system", label: "Hệ thống", desc: "Tự động đổi theo thiết bị" }
+          ].map((item) => {
+            const isSelected = (prefs.theme || "dark") === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  const updated: AppearancePrefs = { ...prefs, theme: item.id as AppearancePrefs["theme"] };
+                  setPrefs(updated);
+                  saveAppearancePrefs(updated);
+                  setInitial(updated);
+                  toast.success(`Đã chuyển sang giao diện ${item.label}`);
+                }}
+                className={`flex flex-col items-start p-3.5 rounded-lg border text-left transition-all ${
+                  isSelected
+                    ? "border-primary bg-surface-elevated ring-1 ring-primary shadow-sm"
+                    : "border-hairline bg-surface-card hover:bg-surface-elevated hover:border-hairline-strong"
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-semibold text-sm text-ink">{item.label}</span>
+                  {isSelected ? (
+                    <span className="h-2 w-2 rounded-full bg-primary" />
+                  ) : null}
+                </div>
+                <span className="text-xs text-mute mt-1.5">{item.desc}</span>
+              </button>
+            );
+          })}
+        </div>
+      </SettingsSection>
+
       <SettingsSection
         icon={Type}
         title="Chữ & bố cục"
@@ -84,7 +122,7 @@ export default function AppearanceSettingsPage() {
         </div>
       </SettingsSection>
 
-      <SettingsSection icon={Palette} title="Chuyển động & độ tương phản">
+      <SettingsSection icon={Contrast} title="Chuyển động & độ tương phản">
         <Toggle
           label="Giảm chuyển động"
           description="Tắt hầu hết hiệu ứng chuyển cảnh và animation."

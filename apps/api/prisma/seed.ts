@@ -20,6 +20,16 @@ const SEED_PASSWORD_HASH = bcrypt.hashSync(SEED_PASSWORD, 10);
 
 async function main() {
   await prisma.$transaction([
+    prisma.offer.deleteMany(),
+    prisma.savedJob.deleteMany(),
+    prisma.jobAlert.deleteMany(),
+    prisma.companyFollower.deleteMany(),
+    prisma.generatedCv.deleteMany(),
+    prisma.certification.deleteMany(),
+    prisma.project.deleteMany(),
+    prisma.moderationReport.deleteMany(),
+    prisma.privacySettings.deleteMany(),
+    prisma.externalJob.deleteMany(),
     prisma.notification.deleteMany(),
     prisma.message.deleteMany(),
     prisma.conversationParticipant.deleteMany(),

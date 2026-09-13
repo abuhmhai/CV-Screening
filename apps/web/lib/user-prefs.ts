@@ -14,6 +14,7 @@ export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
 };
 
 export const DEFAULT_APPEARANCE_PREFS: AppearancePrefs = {
+  theme: "dark",
   fontSize: "default",
   compactMode: false,
   reduceMotion: false,
@@ -53,9 +54,43 @@ export function saveAppearancePrefs(prefs: AppearancePrefs) {
   applyAppearancePrefs(prefs);
 }
 
+export function getResolvedTheme(themePreference?: "dark" | "light" | "system"): "dark" | "light" {
+  const pref = themePreference || loadAppearancePrefs().theme || "dark";
+  if (pref === "system") {
+    if (typeof window !== "undefined" && window.matchMedia) {
+      return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    }
+    return "dark";
+  }
+  return pref;
+}
+
+export function toggleTheme(): "dark" | "light" {
+  const currentPrefs = loadAppearancePrefs();
+  const currentResolved = getResolvedTheme(currentPrefs.theme);
+  const nextTheme: "dark" | "light" = currentResolved === "dark" ? "light" : "dark";
+  const updatedPrefs: AppearancePrefs = {
+    ...currentPrefs,
+    theme: nextTheme
+  };
+  saveAppearancePrefs(updatedPrefs);
+  return nextTheme;
+}
+
 export function applyAppearancePrefs(prefs: AppearancePrefs) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
+  
+  const resolved = getResolvedTheme(prefs.theme);
+  root.dataset.theme = resolved;
+  if (resolved === "light") {
+    root.classList.add("light");
+    root.classList.remove("dark");
+  } else {
+    root.classList.add("dark");
+    root.classList.remove("light");
+  }
+
   root.dataset.fontSize = prefs.fontSize;
   root.dataset.compact = prefs.compactMode ? "true" : "false";
   root.dataset.reduceMotion = prefs.reduceMotion ? "true" : "false";

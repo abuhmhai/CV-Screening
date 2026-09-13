@@ -5,7 +5,7 @@
     "buildCommand": "npm run build -w apps/api"
   },
   "deploy": {
-    "startCommand": "npm run prisma:deploy -w apps/api && npm run start:prod -w apps/api",
+    "startCommand": "node apps/api/scripts/start-production.mjs",
     "healthcheckPath": "/api/v1/health",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE"

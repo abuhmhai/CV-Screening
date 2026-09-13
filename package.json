@@ -11,7 +11,7 @@
     "dev": "npm run dev -w apps/web & npm run dev -w apps/api",
     "dev:local": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-local.ps1",
     "db:local": "node apps/api/scripts/embedded-db.mjs",
-    "start": "npm run start:prod -w apps/api",
+    "start": "node apps/api/scripts/start-production.mjs",
     "build": "npm run build -w apps/web && npm run build -w apps/api && npm run build -w packages/ui && npm run build -w packages/types",
     "vercel-build": "npm run build -w apps/web",
     "test": "npm run test -w apps/api",

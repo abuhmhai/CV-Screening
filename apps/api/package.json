@@ -8,7 +8,7 @@
     "start": "node dist/main.js",
     "start:prod": "node dist/main.js",
     "test": "jest --config jest.config.ts",
-    "prisma:generate": "prisma generate",
+    "prisma:generate": "node node_modules/prisma/build/index.js generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "ts-node --transpile-only prisma/seed.ts",

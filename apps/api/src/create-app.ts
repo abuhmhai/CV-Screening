@@ -11,7 +11,23 @@ export async function createNestApp(expressAdapter?: ExpressAdapter): Promise<IN
     : await NestFactory.create(AppModule, { logger: new JsonLogger("Nest") });
 
   app.setGlobalPrefix("api/v1");
-  app.enableCors();
+  app.enableCors({
+    origin: (origin, callback) => {
+      // Allow any origin, reflecting it back in Access-Control-Allow-Origin header
+      callback(null, true);
+    },
+    credentials: true,
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+      "Range"
+    ],
+    exposedHeaders: ["Content-Range", "X-Content-Range"]
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

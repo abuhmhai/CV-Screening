@@ -8,9 +8,9 @@
     "start": "node dist/main.js",
     "start:prod": "node dist/main.js",
     "test": "jest --config jest.config.ts",
-    "prisma:generate": "node node_modules/prisma/build/index.js generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy",
+    "prisma:generate": "npx --no-install prisma generate",
+    "prisma:migrate": "npx --no-install prisma migrate dev",
+    "prisma:deploy": "npx --no-install prisma migrate deploy",
     "prisma:seed": "ts-node --transpile-only prisma/seed.ts",
     "db:local": "node scripts/embedded-db.mjs"
   },

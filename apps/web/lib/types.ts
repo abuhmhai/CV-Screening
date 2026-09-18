@@ -80,7 +80,7 @@ export interface Job {
 
 export interface ExternalJob {
   id: string;
-  source: "topcv" | "vietnamworks" | "linkedin";
+  source: "topcv" | "vietnamworks" | "itviec" | "careerviet" | "linkedin" | string;
   title: string;
   company: string;
   salary?: string | null;

@@ -39,6 +39,7 @@ import { toast } from "sonner";
 
 function ProfileContent() {
   const { token, user } = useAuth();
+  const isRecruiter = user?.role === "RECRUITER" || user?.role === "ADMIN";
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [checklist, setChecklist] = useState<OnboardingChecklist | null>(null);
   const [insights, setInsights] = useState<ProfileInsights | null>(null);
@@ -90,6 +91,62 @@ function ProfileContent() {
     }
   };
 
+  const handleNavigateToSection = (key: string) => {
+    if (key === "cv") {
+      if (editing) {
+        setEditing(false);
+      }
+      setTimeout(() => {
+        const target = document.getElementById("section-cv-manager");
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+          target.classList.add("ring-2", "ring-primary", "ring-offset-4", "ring-offset-canvas", "transition-all", "duration-500");
+          setTimeout(() => {
+            target.classList.remove("ring-2", "ring-primary", "ring-offset-4", "ring-offset-canvas", "transition-all", "duration-500");
+          }, 2000);
+        }
+      }, editing ? 120 : 30);
+      return;
+    }
+
+    const fieldMap: Record<string, { sectionId: string; inputId?: string }> = {
+      full_name: { sectionId: "editor-section-basic", inputId: "editor-field-fullname" },
+      headline: { sectionId: "editor-section-basic", inputId: "editor-field-headline" },
+      about: { sectionId: "editor-section-basic", inputId: "editor-field-about" },
+      avatar: { sectionId: "editor-section-basic", inputId: "editor-section-avatar" },
+      experience: { sectionId: "editor-section-experience", inputId: "editor-field-exp-position" },
+      education: { sectionId: "editor-section-education", inputId: "editor-field-edu-school" },
+      skills: { sectionId: "editor-section-skills", inputId: "editor-field-skill-name" },
+      projects: { sectionId: "editor-section-projects", inputId: "editor-field-project-title" },
+      certifications: { sectionId: "editor-section-certifications", inputId: "editor-field-cert-name" },
+      languages: { sectionId: "editor-section-languages", inputId: "editor-field-lang-name" },
+      links: { sectionId: "editor-section-links", inputId: "editor-field-link-github" }
+    };
+
+    const targetInfo = fieldMap[key] || { sectionId: `editor-section-${key}` };
+    const wasEditing = editing;
+    if (!editing) {
+      setEditing(true);
+    }
+
+    setTimeout(() => {
+      const sectionEl = document.getElementById(targetInfo.sectionId);
+      if (sectionEl) {
+        sectionEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        sectionEl.classList.add("ring-2", "ring-primary", "ring-offset-4", "ring-offset-canvas", "transition-all", "duration-500");
+        setTimeout(() => {
+          sectionEl.classList.remove("ring-2", "ring-primary", "ring-offset-4", "ring-offset-canvas", "transition-all", "duration-500");
+        }, 2000);
+      }
+      if (targetInfo.inputId) {
+        const inputEl = document.getElementById(targetInfo.inputId);
+        if (inputEl) {
+          inputEl.focus();
+        }
+      }
+    }, wasEditing ? 50 : 150);
+  };
+
   if (loading) return <LoadingBlock />;
   if (!profile) return <ErrorBlock message="Không tải được hồ sơ" />;
 
@@ -132,7 +189,12 @@ function ProfileContent() {
       </div>
 
       {editing ? (
-        <ProfileEditor profile={profile} onChange={loadProfile} />
+        <div className="space-y-6">
+          {!isRecruiter ? (
+            <CompletenessCard checklist={checklist} onItemClick={handleNavigateToSection} />
+          ) : null}
+          <ProfileEditor profile={profile} onChange={loadProfile} />
+        </div>
       ) : (
         <>
           <Card className="overflow-hidden p-0">
@@ -171,7 +233,9 @@ function ProfileContent() {
             </div>
           </Card>
 
-          <CompletenessCard checklist={checklist} />
+          {!isRecruiter ? (
+            <CompletenessCard checklist={checklist} onItemClick={handleNavigateToSection} />
+          ) : null}
 
           <div className="grid gap-6 lg:grid-cols-2">
             <InsightsCard insights={insights} />

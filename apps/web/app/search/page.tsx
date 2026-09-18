@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
 import { apiFetch } from "../../lib/api-client";
 import { SearchResult } from "../../lib/types";
@@ -14,7 +15,15 @@ import { JobCard } from "../../components/job-card";
 import { EmptyState } from "../../components/ui/states";
 
 function SearchContent() {
-  const { token } = useAuth();
+  const { token, user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && (user?.role === "RECRUITER" || user?.role === "ADMIN")) {
+      router.replace("/recruiter/dashboard");
+    }
+  }, [user, authLoading, router]);
+
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SearchResult | null>(null);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiFetch } from "../../lib/api-client";
 import { useAuth } from "../../lib/auth-context";
 import { Job, JobFacets, Paginated } from "../../lib/types";
@@ -37,7 +38,15 @@ const emptyFilters: Filters = {
 };
 
 export default function JobsPage() {
-  const { token } = useAuth();
+  const { token, user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && (user?.role === "RECRUITER" || user?.role === "ADMIN")) {
+      router.replace("/recruiter/dashboard");
+    }
+  }, [user, authLoading, router]);
+
   const [jobs, setJobs] = useState<Job[]>([]);
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   const [facets, setFacets] = useState<JobFacets | null>(null);

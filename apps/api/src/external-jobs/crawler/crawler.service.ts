@@ -9,6 +9,9 @@ import { SEED_EXTERNAL_JOBS } from "./seed-jobs";
 import { TopCvCrawler } from "./topcv.crawler";
 import { VietnamWorksCrawler } from "./vietnamworks.crawler";
 
+import { ItViecCrawler } from "./itviec.crawler";
+import { CareerVietCrawler } from "./careerviet.crawler";
+
 export interface CrawlSummary {
   crawled: number;
   saved: number;
@@ -23,18 +26,21 @@ export class CrawlerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly topCvCrawler: TopCvCrawler,
-    private readonly vietnamWorksCrawler: VietnamWorksCrawler
+    private readonly vietnamWorksCrawler: VietnamWorksCrawler,
+    private readonly itViecCrawler: ItViecCrawler,
+    private readonly careerVietCrawler: CareerVietCrawler
   ) {}
 
   /**
    * Runs every crawler for every keyword. Crawlers run with `Promise.allSettled`
-   * so one failing source never blocks the others. If nothing was collected
-   * (offline / blocked), a bundled seed set is used so the demo always has data.
+   * so one failing source never blocks the others.
    */
   async crawlAll(keywords: string[]): Promise<CrawlSummary> {
     const settled = await Promise.allSettled([
       this.runCrawler("TopCV", (keyword) => this.topCvCrawler.crawl(keyword), keywords),
-      this.runCrawler("VietnamWorks", (keyword) => this.vietnamWorksCrawler.crawl(keyword), keywords)
+      this.runCrawler("VietnamWorks", (keyword) => this.vietnamWorksCrawler.crawl(keyword), keywords),
+      this.runCrawler("ITviec", (keyword) => this.itViecCrawler.crawl(keyword), keywords),
+      this.runCrawler("CareerViet", (keyword) => this.careerVietCrawler.crawl(keyword), keywords)
     ]);
 
     const collected: RawJob[] = [];
@@ -49,9 +55,12 @@ export class CrawlerService {
       this.logger.warn("All crawlers returned no jobs — using seed fallback data");
       jobs = SEED_EXTERNAL_JOBS;
       usedFallback = true;
+    } else {
+      // Hybrid merge: ensure seed jobs are present alongside live scraped jobs
+      jobs = [...SEED_EXTERNAL_JOBS, ...collected];
     }
 
-    const { saved, skipped } = await this.deduplicateAndSave(jobs, usedFallback);
+    const { saved, skipped } = await this.deduplicateAndSave(jobs, true);
     return { crawled: jobs.length, saved, skipped, usedFallback };
   }
 

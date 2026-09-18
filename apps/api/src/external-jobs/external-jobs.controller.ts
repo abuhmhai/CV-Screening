@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { UserRole } from "@prisma/client";
 import { CurrentUser } from "../common/auth/current-user.decorator";
 import { JwtAuthGuard } from "../common/auth/jwt-auth.guard";
+import { OptionalJwtAuthGuard } from "../common/auth/optional-jwt-auth.guard";
 import { RequestUser } from "../common/auth/request-user.type";
 import { requireUser } from "../common/auth/require-user";
 import { Roles } from "../common/auth/roles.decorator";
@@ -15,8 +16,39 @@ export class ExternalJobsController {
   constructor(private readonly externalJobsService: ExternalJobsService) {}
 
   @Get()
-  list(@Query() query: QueryJobsDto) {
-    return this.externalJobsService.list(query);
+  @UseGuards(OptionalJwtAuthGuard)
+  list(
+    @Query() query: QueryJobsDto,
+    @CurrentUser() user: RequestUser | undefined
+  ) {
+    return this.externalJobsService.list(query, user?.id);
+  }
+
+  @Get("saved/ids")
+  @UseGuards(JwtAuthGuard)
+  getSavedIds(@CurrentUser() user: RequestUser | undefined) {
+    const currentUser = requireUser(user);
+    return this.externalJobsService.getSavedIds(currentUser.id);
+  }
+
+  @Post(":id/save")
+  @UseGuards(JwtAuthGuard)
+  toggleSave(
+    @Param("id") id: string,
+    @CurrentUser() user: RequestUser | undefined
+  ) {
+    const currentUser = requireUser(user);
+    return this.externalJobsService.toggleSave(currentUser.id, id);
+  }
+
+  @Delete(":id/save")
+  @UseGuards(JwtAuthGuard)
+  unsave(
+    @Param("id") id: string,
+    @CurrentUser() user: RequestUser | undefined
+  ) {
+    const currentUser = requireUser(user);
+    return this.externalJobsService.unsave(currentUser.id, id);
   }
 
   @Get(":id")
@@ -44,6 +76,12 @@ export class ExternalJobsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   crawl(@Body("keywords") keywords?: string[]) {
+    return this.externalJobsService.triggerCrawl(keywords);
+  }
+
+  @Post("sync")
+  @UseGuards(OptionalJwtAuthGuard)
+  sync(@Body("keywords") keywords?: string[]) {
     return this.externalJobsService.triggerCrawl(keywords);
   }
 }

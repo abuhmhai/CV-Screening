@@ -434,13 +434,14 @@ export class UserService {
   }
 
   async getDashboard(userId: string): Promise<ProfileDashboard> {
-    const [grouped, savedJobs, recent] = await Promise.all([
+    const [grouped, savedJobs, savedExternalJobs, recent] = await Promise.all([
       this.prisma.application.groupBy({
         by: ["status"],
         where: { candidateId: userId },
         _count: { _all: true }
       }),
       this.prisma.savedJob.count({ where: { userId } }),
+      this.prisma.savedExternalJob.count({ where: { userId } }),
       this.prisma.application.findMany({
         where: { candidateId: userId },
         orderBy: { appliedAt: "desc" },
@@ -459,7 +460,7 @@ export class UserService {
     return {
       totalApplications,
       applicationsByStatus,
-      savedJobs,
+      savedJobs: savedJobs + savedExternalJobs,
       recentApplications: recent.map((app) => ({
         id: app.id,
         status: app.status,

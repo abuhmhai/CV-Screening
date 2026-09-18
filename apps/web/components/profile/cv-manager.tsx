@@ -66,7 +66,7 @@ export function CvManager({ profile, onChange }: { profile: UserProfile; onChang
   };
 
   return (
-    <Card className="space-y-4">
+    <Card id="section-cv-manager" className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-lg font-semibold text-ink">CV của tôi</h2>
         <input

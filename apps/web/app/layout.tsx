@@ -1,5 +1,5 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ReactNode } from "react";
 import { AppShellClient } from "../components/app-shell-client";
 import { Providers } from "../components/providers";
@@ -10,9 +10,15 @@ export const metadata: Metadata = {
   description: "AI-powered recruitment with professional networking"
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5
+};
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html lang="vi" suppressHydrationWarning className="max-w-full overflow-x-hidden">
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -40,7 +46,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           }}
         />
       </head>
-      <body className="antialiased">
+      <body className="antialiased max-w-full overflow-x-hidden">
         <Providers>
           <AppShellClient>{children}</AppShellClient>
           <Toaster

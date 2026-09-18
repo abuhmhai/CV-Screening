@@ -96,9 +96,47 @@ export function buildVietnamWorksJobUrl(fields: {
   return normalizeVietnamWorksJobUrl(`https://www.vietnamworks.com/viec-lam-${id}-jv`);
 }
 
+const ITVIEC_HOSTS = new Set(["www.itviec.com", "itviec.com"]);
+const CAREERVIET_HOSTS = new Set(["www.careerviet.vn", "careerviet.vn", "www.careerbuilder.vn", "careerbuilder.vn"]);
+
+export function normalizeItViecJobUrl(href?: string | null): string | null {
+  if (!href?.trim()) return null;
+  try {
+    const trimmed = href.trim();
+    const absolute = trimmed.startsWith("http")
+      ? trimmed
+      : `https://itviec.com${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
+    const url = new URL(absolute);
+    if (!ITVIEC_HOSTS.has(url.hostname)) return null;
+    if (!url.pathname.includes("/it-jobs/")) return null;
+    // Strip query parameters
+    return `${url.origin}${url.pathname}`;
+  } catch {
+    return null;
+  }
+}
+
+export function normalizeCareerVietJobUrl(href?: string | null): string | null {
+  if (!href?.trim()) return null;
+  try {
+    const trimmed = href.trim();
+    const absolute = trimmed.startsWith("http")
+      ? trimmed
+      : `https://careerviet.vn${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
+    const url = new URL(absolute);
+    if (!CAREERVIET_HOSTS.has(url.hostname)) return null;
+    if (!url.pathname.endsWith(".html")) return null;
+    return `${url.origin}${url.pathname}`;
+  } catch {
+    return null;
+  }
+}
+
 export function normalizeJobUrl(url: string, source: JobSource): string | null {
   if (source === "topcv") return normalizeTopCvJobUrl(url);
   if (source === "vietnamworks") return normalizeVietnamWorksJobUrl(url);
+  if (source === "itviec") return normalizeItViecJobUrl(url);
+  if (source === "careerviet") return normalizeCareerVietJobUrl(url);
   return null;
 }
 

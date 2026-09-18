@@ -276,7 +276,44 @@ function FeedContent() {
     if (!token) return;
 
     const previous = userReactions[postId];
-    if (previous === reactionType) return;
+    const isTogglingOff = previous === reactionType;
+
+    if (isTogglingOff) {
+      // Optimistically remove reaction
+      setUserReactions((prev) => {
+        const next = { ...prev };
+        delete next[postId];
+        return next;
+      });
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId ? { ...post, likeCount: Math.max(0, (post.likeCount ?? 1) - 1) } : post
+        )
+      );
+
+      const res = await apiFetch<FeedPost & { removed?: boolean }>(`/social/posts/${postId}/reactions`, {
+        method: "POST",
+        token,
+        body: JSON.stringify({ reactionType })
+      });
+
+      if (res.ok && res.data) {
+        setPosts((prev) =>
+          prev.map((post) => (post.id === postId ? { ...post, likeCount: res.data!.likeCount } : post))
+        );
+        return;
+      }
+
+      // Revert if failed
+      setUserReactions((prev) => ({ ...prev, [postId]: previous }));
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId ? { ...post, likeCount: (post.likeCount ?? 0) + 1 } : post
+        )
+      );
+      toast.error(res.error ?? "Không thể gỡ cảm xúc.");
+      return;
+    }
 
     const isNew = !previous;
     setUserReactions((prev) => ({ ...prev, [postId]: reactionType }));

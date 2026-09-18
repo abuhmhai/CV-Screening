@@ -107,6 +107,7 @@ model User {
   messages               Message[]
   notifications          Notification[]
   savedJobs              SavedJob[]
+  savedExternalJobs      SavedExternalJob[]
   jobAlerts              JobAlert[]
   companyFollows         CompanyFollower[]
   generatedCvs           GeneratedCv[]
@@ -347,6 +348,7 @@ model ExternalJob {
   skills    Json     @default("[]")
   isActive  Boolean  @default(true) @map("is_active")
   crawledAt DateTime @default(now()) @map("crawled_at")
+  savedBy   SavedExternalJob[]
 
   @@index([source], map: "external_jobs_source_idx")
   @@index([crawledAt], map: "external_jobs_crawled_at_idx")
@@ -579,6 +581,19 @@ model SavedJob {
   @@index([userId, createdAt], map: "saved_jobs_user_created_idx")
   @@index([jobId], map: "saved_jobs_job_id_idx")
   @@map("saved_jobs")
+}
+
+model SavedExternalJob {
+  userId        String      @map("user_id") @db.Uuid
+  externalJobId String      @map("external_job_id") @db.Uuid
+  createdAt     DateTime    @default(now()) @map("created_at")
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  externalJob   ExternalJob @relation(fields: [externalJobId], references: [id], onDelete: Cascade)
+
+  @@id([userId, externalJobId])
+  @@index([userId, createdAt], map: "saved_external_jobs_user_created_idx")
+  @@index([externalJobId], map: "saved_external_jobs_job_id_idx")
+  @@map("saved_external_jobs")
 }
 
 model JobAlert {

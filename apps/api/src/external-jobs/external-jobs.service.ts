@@ -17,7 +17,19 @@ import { ScreenCvDto } from "./dto/screen-cv.dto";
 const LIST_CACHE_TTL_SEC = 30 * 60; // 30 minutes
 const VERSION_TTL_SEC = 30 * 24 * 60 * 60; // 30 days
 const VERSION_KEY = "external-jobs:cache-version";
-const CRAWL_KEYWORDS = ["react", "nodejs", "fullstack", "python", "devops", "java"];
+const CRAWL_KEYWORDS = [
+  "react",
+  "nodejs",
+  "frontend",
+  "backend",
+  "fullstack",
+  "python",
+  "ai",
+  "devops",
+  "java",
+  "mobile",
+  "golang"
+];
 
 /** Condensed, readable digest of a crawled job posting. */
 export interface ExternalJobSummary {
@@ -69,8 +81,8 @@ export class ExternalJobsService implements OnApplicationBootstrap {
     void this.runScheduledCrawl("startup");
   }
 
-  /** Crawl every source every 5 minutes. */
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  /** Crawl every source every 30 minutes. */
+  @Cron(CronExpression.EVERY_30_MINUTES)
   async scheduledCrawl(): Promise<void> {
     await this.runScheduledCrawl("cron");
   }
@@ -98,10 +110,16 @@ export class ExternalJobsService implements OnApplicationBootstrap {
 
   // ─── Reads ──────────────────────────────────────────────────────────────────
 
-  async list(query: QueryJobsDto) {
+  async list(query: QueryJobsDto, userId?: string) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 12;
     const skip = (page - 1) * limit;
+
+    // User-specific saved jobs filter skips shared public cache
+    if (query.savedOnly && userId) {
+      const result = await this.queryDb(query, skip, limit, page, userId);
+      return { ...result, cached: false };
+    }
 
     const version = await this.getCacheVersion();
     const cacheKey = `external-jobs:v${version}:${CacheService.hashKey([
@@ -123,7 +141,7 @@ export class ExternalJobsService implements OnApplicationBootstrap {
     return { ...result, cached: false };
   }
 
-  private async queryDb(query: QueryJobsDto, skip: number, limit: number, page: number) {
+  private async queryDb(query: QueryJobsDto, skip: number, limit: number, page: number, userId?: string) {
     const where: Prisma.ExternalJobWhereInput = { isActive: true };
     const and: Prisma.ExternalJobWhereInput[] = [];
 
@@ -141,6 +159,9 @@ export class ExternalJobsService implements OnApplicationBootstrap {
     // `level` is not a stored column on external jobs; match it loosely against the title.
     if (query.level) {
       and.push({ title: { contains: query.level, mode: "insensitive" } });
+    }
+    if (query.savedOnly && userId) {
+      where.savedBy = { some: { userId } };
     }
     if (and.length > 0) where.AND = and;
 
@@ -171,6 +192,44 @@ export class ExternalJobsService implements OnApplicationBootstrap {
       throw new NotFoundException("External job not found");
     }
     return job;
+  }
+
+  // ─── Bookmarks / Saved External Jobs ─────────────────────────────────────────
+
+  async toggleSave(userId: string, externalJobId: string): Promise<{ saved: boolean }> {
+    const job = await this.prisma.externalJob.findUnique({ where: { id: externalJobId } });
+    if (!job) {
+      throw new NotFoundException("External job not found");
+    }
+    const existing = await this.prisma.savedExternalJob.findUnique({
+      where: { userId_externalJobId: { userId, externalJobId } }
+    });
+    if (existing) {
+      await this.prisma.savedExternalJob.delete({
+        where: { userId_externalJobId: { userId, externalJobId } }
+      });
+      return { saved: false };
+    } else {
+      await this.prisma.savedExternalJob.create({
+        data: { userId, externalJobId }
+      });
+      return { saved: true };
+    }
+  }
+
+  async unsave(userId: string, externalJobId: string): Promise<{ saved: boolean }> {
+    await this.prisma.savedExternalJob.deleteMany({
+      where: { userId, externalJobId }
+    });
+    return { saved: false };
+  }
+
+  async getSavedIds(userId: string): Promise<string[]> {
+    const rows = await this.prisma.savedExternalJob.findMany({
+      where: { userId },
+      select: { externalJobId: true }
+    });
+    return rows.map((r) => r.externalJobId);
   }
 
   // ─── Job summary ──────────────────────────────────────────────────────────────
@@ -355,7 +414,7 @@ export class ExternalJobsService implements OnApplicationBootstrap {
 
   async triggerCrawl(keywords?: string[]): Promise<CrawlSummary> {
     const summary = await this.crawler.crawlAll(
-      keywords && keywords.length ? keywords : ["react", "nodejs", "fullstack", "python", "devops", "java"]
+      keywords && keywords.length ? keywords : CRAWL_KEYWORDS
     );
     await this.bumpCacheVersion();
     return summary;

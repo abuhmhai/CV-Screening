@@ -295,10 +295,10 @@ export function ProfileEditor({
 
   return (
     <div className="space-y-6">
-      <Card className="space-y-4">
+      <Card id="editor-section-basic" className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-ink">Thông tin cơ bản</h2>
-          <div className="flex items-center gap-2">
+          <div id="editor-section-avatar" className="flex items-center gap-2">
             <input
               ref={fileRef}
               type="file"
@@ -331,24 +331,24 @@ export function ProfileEditor({
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <FieldLabel label="Họ tên">
-            <Input value={info.fullName} onChange={(e) => setInfo({ ...info, fullName: e.target.value })} />
+            <Input id="editor-field-fullname" value={info.fullName} onChange={(e) => setInfo({ ...info, fullName: e.target.value })} />
           </FieldLabel>
           <FieldLabel label="Chức danh">
-            <Input value={info.headline} onChange={(e) => setInfo({ ...info, headline: e.target.value })} />
+            <Input id="editor-field-headline" value={info.headline} onChange={(e) => setInfo({ ...info, headline: e.target.value })} />
           </FieldLabel>
           <FieldLabel label="Địa điểm">
-            <Input value={info.location} onChange={(e) => setInfo({ ...info, location: e.target.value })} />
+            <Input id="editor-field-location" value={info.location} onChange={(e) => setInfo({ ...info, location: e.target.value })} />
           </FieldLabel>
         </div>
         <FieldLabel label="Giới thiệu">
-          <Textarea value={info.about} onChange={(e) => setInfo({ ...info, about: e.target.value })} />
+          <Textarea id="editor-field-about" value={info.about} onChange={(e) => setInfo({ ...info, about: e.target.value })} />
         </FieldLabel>
         <Button variant="primary" onClick={saveInfo} className="min-h-10 px-5 py-2">
           Lưu thông tin
         </Button>
       </Card>
 
-      <Card className="space-y-4">
+      <Card id="editor-section-experience" className="space-y-4">
         <h2 className="text-lg font-semibold text-ink">Kinh nghiệm</h2>
         <div className="space-y-2">
           {(profile.workExperiences ?? []).map((e) => (
@@ -363,7 +363,7 @@ export function ProfileEditor({
           ))}
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Input placeholder="Vị trí" value={exp.position} onChange={(e) => setExp({ ...exp, position: e.target.value })} />
+          <Input id="editor-field-exp-position" placeholder="Vị trí" value={exp.position} onChange={(e) => setExp({ ...exp, position: e.target.value })} />
           <Input placeholder="Công ty" value={exp.company} onChange={(e) => setExp({ ...exp, company: e.target.value })} />
           <Input type="date" value={exp.startDate} onChange={(e) => setExp({ ...exp, startDate: e.target.value })} />
           <Input type="date" value={exp.endDate} onChange={(e) => setExp({ ...exp, endDate: e.target.value })} />
@@ -374,7 +374,7 @@ export function ProfileEditor({
         </Button>
       </Card>
 
-      <Card className="space-y-4">
+      <Card id="editor-section-education" className="space-y-4">
         <h2 className="text-lg font-semibold text-ink">Học vấn</h2>
         <div className="space-y-2">
           {(profile.educations ?? []).map((e) => (
@@ -389,7 +389,7 @@ export function ProfileEditor({
           ))}
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Input placeholder="Trường" value={edu.school} onChange={(e) => setEdu({ ...edu, school: e.target.value })} />
+          <Input id="editor-field-edu-school" placeholder="Trường" value={edu.school} onChange={(e) => setEdu({ ...edu, school: e.target.value })} />
           <Input placeholder="Bằng cấp" value={edu.degree} onChange={(e) => setEdu({ ...edu, degree: e.target.value })} />
           <Input placeholder="Chuyên ngành" value={edu.major} onChange={(e) => setEdu({ ...edu, major: e.target.value })} />
           <div className="grid grid-cols-2 gap-2">
@@ -402,7 +402,7 @@ export function ProfileEditor({
         </Button>
       </Card>
 
-      <Card className="space-y-4">
+      <Card id="editor-section-skills" className="space-y-4">
         <h2 className="text-lg font-semibold text-ink">Kỹ năng</h2>
         <div className="flex flex-wrap gap-2">
           {(profile.userSkills ?? []).map((s) => (
@@ -416,7 +416,7 @@ export function ProfileEditor({
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Input placeholder="Kỹ năng" value={skill.name} onChange={(e) => setSkill({ ...skill, name: e.target.value })} className="max-w-xs" />
+          <Input id="editor-field-skill-name" placeholder="Kỹ năng" value={skill.name} onChange={(e) => setSkill({ ...skill, name: e.target.value })} className="max-w-xs" />
           <Select value={skill.level} onChange={(e) => setSkill({ ...skill, level: e.target.value })} className="w-44">
             <option value="BEGINNER">Beginner</option>
             <option value="INTERMEDIATE">Intermediate</option>
@@ -429,7 +429,7 @@ export function ProfileEditor({
         </div>
       </Card>
 
-      <Card className="space-y-4">
+      <Card id="editor-section-projects" className="space-y-4">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-ink">
           <FolderGit2 size={18} className="text-primary" /> Dự án
         </h2>
@@ -447,7 +447,7 @@ export function ProfileEditor({
           ))}
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Input placeholder="Tên dự án" value={project.title} onChange={(e) => setProject({ ...project, title: e.target.value })} />
+          <Input id="editor-field-project-title" placeholder="Tên dự án" value={project.title} onChange={(e) => setProject({ ...project, title: e.target.value })} />
           <Input placeholder="Liên kết (tuỳ chọn)" value={project.url} onChange={(e) => setProject({ ...project, url: e.target.value })} />
         </div>
         <Input placeholder="Kỹ năng (phân tách bởi dấu phẩy)" value={project.skills} onChange={(e) => setProject({ ...project, skills: e.target.value })} />
@@ -457,7 +457,7 @@ export function ProfileEditor({
         </Button>
       </Card>
 
-      <Card className="space-y-4">
+      <Card id="editor-section-certifications" className="space-y-4">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-ink">
           <Award size={18} className="text-primary" /> Chứng chỉ
         </h2>
@@ -474,7 +474,7 @@ export function ProfileEditor({
           ))}
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Input placeholder="Tên chứng chỉ" value={cert.name} onChange={(e) => setCert({ ...cert, name: e.target.value })} />
+          <Input id="editor-field-cert-name" placeholder="Tên chứng chỉ" value={cert.name} onChange={(e) => setCert({ ...cert, name: e.target.value })} />
           <Input placeholder="Đơn vị cấp" value={cert.issuer} onChange={(e) => setCert({ ...cert, issuer: e.target.value })} />
           <Input type="date" value={cert.issueDate} onChange={(e) => setCert({ ...cert, issueDate: e.target.value })} />
           <Input placeholder="Liên kết xác thực (tuỳ chọn)" value={cert.credentialUrl} onChange={(e) => setCert({ ...cert, credentialUrl: e.target.value })} />
@@ -484,7 +484,7 @@ export function ProfileEditor({
         </Button>
       </Card>
 
-      <Card className="space-y-4">
+      <Card id="editor-section-languages" className="space-y-4">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-ink">
           <Languages size={18} className="text-primary" /> Ngôn ngữ
         </h2>
@@ -500,7 +500,7 @@ export function ProfileEditor({
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Input placeholder="Ngôn ngữ" value={lang.name} onChange={(e) => setLang({ ...lang, name: e.target.value })} className="max-w-xs" />
+          <Input id="editor-field-lang-name" placeholder="Ngôn ngữ" value={lang.name} onChange={(e) => setLang({ ...lang, name: e.target.value })} className="max-w-xs" />
           <Select value={lang.proficiency} onChange={(e) => setLang({ ...lang, proficiency: e.target.value })} className="w-44">
             <option value="">Trình độ</option>
             <option value="Cơ bản">Cơ bản</option>
@@ -514,13 +514,13 @@ export function ProfileEditor({
         </div>
       </Card>
 
-      <Card className="space-y-4">
+      <Card id="editor-section-links" className="space-y-4">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-ink">
           <Globe size={18} className="text-primary" /> Liên kết
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <FieldLabel label="GitHub">
-            <Input placeholder="https://github.com/..." value={links.github} onChange={(e) => setLinks({ ...links, github: e.target.value })} />
+            <Input id="editor-field-link-github" placeholder="https://github.com/..." value={links.github} onChange={(e) => setLinks({ ...links, github: e.target.value })} />
           </FieldLabel>
           <FieldLabel label="LinkedIn">
             <Input placeholder="https://linkedin.com/in/..." value={links.linkedin} onChange={(e) => setLinks({ ...links, linkedin: e.target.value })} />

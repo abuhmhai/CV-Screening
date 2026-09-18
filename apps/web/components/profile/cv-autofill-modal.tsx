@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Wand2, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -30,7 +31,25 @@ export function CvAutofillModal({
   onApplied: () => void;
 }) {
   const { token } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [applying, setApplying] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const open = Boolean(cv);
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   const parsed = useMemo(() => parseCv(cv?.extractedText), [cv?.extractedText]);
   const [selectedSkills, setSelectedSkills] = useState<Set<string>>(new Set());
@@ -99,25 +118,27 @@ export function CvAutofillModal({
     }
   };
 
-  const open = Boolean(cv);
   const nothingDetected =
     parsed.skills.length === 0 && parsed.languages.length === 0 && parsed.certifications.length === 0;
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
         >
           <motion.div
-            className="max-h-[85vh] w-full max-w-lg overflow-auto rounded-lg border border-hairline-strong bg-surface-card p-6 shadow-lg"
-            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            className="relative my-auto max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-hairline-strong bg-surface-card p-6 shadow-[0_24px_64px_rgba(0,0,0,0.65)]"
+            initial={{ opacity: 0, y: 16, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.98 }}
+            exit={{ opacity: 0, y: 16, scale: 0.96 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-3">
@@ -189,7 +210,8 @@ export function CvAutofillModal({
           </motion.div>
         </motion.div>
       ) : null}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 

@@ -33,7 +33,9 @@ export function DashboardCard({ dashboard }: { dashboard: ProfileDashboard | nul
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Stat label="Đơn ứng tuyển" value={dashboard.totalApplications} icon={<Send size={14} />} />
-        <Stat label="Việc đã lưu" value={dashboard.savedJobs} icon={<Bookmark size={14} />} />
+        <Link href="/external-jobs?savedOnly=true" className="block rounded-lg transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" title="Xem danh sách việc làm đã lưu">
+          <Stat label="Việc đã lưu" value={dashboard.savedJobs} icon={<Bookmark size={14} />} />
+        </Link>
       </div>
 
       {statuses.length > 0 ? (

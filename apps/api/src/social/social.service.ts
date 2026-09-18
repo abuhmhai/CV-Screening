@@ -47,6 +47,40 @@ export class SocialService {
   }
 
   async reactToPost(userId: string, postId: string, reactionType: ReactionType = ReactionType.LIKE) {
+    const existing = await this.prisma.reaction.findUnique({
+      where: {
+        userId_targetType_targetId: {
+          userId,
+          targetType: ReactionTargetType.POST,
+          targetId: postId
+        }
+      }
+    });
+
+    if (existing && existing.reactionType === reactionType) {
+      // Toggle off / remove reaction
+      await this.prisma.reaction.delete({
+        where: {
+          userId_targetType_targetId: {
+            userId,
+            targetType: ReactionTargetType.POST,
+            targetId: postId
+          }
+        }
+      });
+      const totalReactions = await this.prisma.reaction.count({
+        where: {
+          targetType: ReactionTargetType.POST,
+          targetId: postId
+        }
+      });
+      const updatedPost = await this.prisma.post.update({
+        where: { id: postId },
+        data: { likeCount: totalReactions }
+      });
+      return { ...updatedPost, userReaction: null, removed: true };
+    }
+
     await this.prisma.reaction.upsert({
       where: {
         userId_targetType_targetId: {
@@ -71,23 +105,51 @@ export class SocialService {
       }
     });
 
-    return this.prisma.post.update({
+    const updatedPost = await this.prisma.post.update({
       where: { id: postId },
       data: { likeCount: totalReactions }
     });
+    return { ...updatedPost, userReaction: reactionType, removed: false };
   }
 
-  createConnection(requesterId: string, payload: CreateConnectionDto) {
+  async createConnection(requesterId: string, payload: CreateConnectionDto) {
     if (requesterId === payload.addresseeId) {
       throw new ForbiddenException("Cannot connect to yourself");
     }
-    return this.prisma.connection.create({
+    const connection = await this.prisma.connection.create({
       data: {
         requesterId,
         addresseeId: payload.addresseeId,
         status: ConnectionStatus.PENDING
+      },
+      include: {
+        requester: { include: { profile: true } }
       }
     });
+
+    try {
+      const requesterName =
+        connection.requester?.profile?.fullName ||
+        connection.requester?.email?.split("@")[0] ||
+        "Một người dùng";
+      await this.prisma.notification.create({
+        data: {
+          userId: payload.addresseeId,
+          type: "CONNECTION_REQUEST",
+          title: "Lời mời kết nối mới",
+          body: `${requesterName} đã gửi cho bạn một lời mời kết nối.`,
+          data: {
+            connectionId: connection.id,
+            requesterId,
+            url: "/network"
+          }
+        }
+      });
+    } catch {
+      // Ignore notification failure to not block connection creation
+    }
+
+    return connection;
   }
 
   listConnections(userId: string) {
@@ -109,7 +171,11 @@ export class SocialService {
     status: ConnectionStatus
   ) {
     const existing = await this.prisma.connection.findUnique({
-      where: { id: connectionId }
+      where: { id: connectionId },
+      include: {
+        addressee: { include: { profile: true } },
+        requester: { include: { profile: true } }
+      }
     });
     if (!existing) {
       throw new ForbiddenException("Connection request not found");
@@ -118,9 +184,50 @@ export class SocialService {
       throw new ForbiddenException("Not allowed to update this connection");
     }
 
-    return this.prisma.connection.update({
+    const updated = await this.prisma.connection.update({
       where: { id: connectionId },
       data: { status }
+    });
+
+    if (status === ConnectionStatus.ACCEPTED) {
+      try {
+        const accepter = existing.addresseeId === userId ? existing.addressee : existing.requester;
+        const targetUserId =
+          existing.addresseeId === userId ? existing.requesterId : existing.addresseeId;
+        const accepterName =
+          accepter?.profile?.fullName || accepter?.email?.split("@")[0] || "Người dùng";
+        await this.prisma.notification.create({
+          data: {
+            userId: targetUserId,
+            type: "CONNECTION_ACCEPTED",
+            title: "Kết nối thành công",
+            body: `${accepterName} đã chấp nhận lời mời kết nối của bạn.`,
+            data: {
+              connectionId,
+              url: "/network"
+            }
+          }
+        });
+      } catch {
+        // Ignore notification failure
+      }
+    }
+
+    return updated;
+  }
+
+  async removeConnection(userId: string, connectionId: string) {
+    const existing = await this.prisma.connection.findUnique({
+      where: { id: connectionId }
+    });
+    if (!existing) {
+      throw new ForbiddenException("Connection not found");
+    }
+    if (existing.requesterId !== userId && existing.addresseeId !== userId) {
+      throw new ForbiddenException("Not allowed to remove this connection");
+    }
+    return this.prisma.connection.delete({
+      where: { id: connectionId }
     });
   }
 

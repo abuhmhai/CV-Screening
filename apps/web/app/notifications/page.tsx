@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Bell, CalendarClock, CheckCircle2, Sparkles, XCircle } from "lucide-react";
+import { Bell, CalendarClock, CheckCircle2, Sparkles, UserCheck, UserPlus, XCircle } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
 import { apiFetch } from "../../lib/api-client";
 import { NotificationItem } from "../../lib/types";
@@ -23,6 +23,12 @@ function notificationVisual(item: NotificationItem): NotificationVisual {
   const payload = item.data ?? item.payload ?? {};
   const status = typeof payload.toStatus === "string" ? payload.toStatus : "";
 
+  if (item.type === "CONNECTION_REQUEST") {
+    return { icon: <UserPlus size={18} />, ring: "bg-accent-blue/15 text-accent-blue" };
+  }
+  if (item.type === "CONNECTION_ACCEPTED") {
+    return { icon: <UserCheck size={18} />, ring: "bg-accent-green/15 text-accent-green" };
+  }
   if (item.type === "AI_SCREENING_DONE") {
     return { icon: <Sparkles size={18} />, ring: "bg-primary-pale text-ink-deep" };
   }
@@ -98,11 +104,15 @@ function NotificationsContent() {
         items.map((item, idx) => {
           const payload = item.data ?? item.payload ?? {};
           const applicationId = typeof payload.applicationId === "string" ? payload.applicationId : null;
-          const href = applicationId
-            ? user?.role === "CANDIDATE"
-              ? `/applications/${applicationId}`
-              : `/ai-score/${applicationId}`
-            : null;
+          const targetUrl = typeof payload.url === "string" ? payload.url : null;
+          const href = targetUrl
+            ? targetUrl
+            : applicationId
+              ? user?.role === "CANDIDATE"
+                ? `/applications/${applicationId}`
+                : `/ai-score/${applicationId}`
+              : null;
+          const actionLabel = targetUrl === "/network" ? "Đến Mạng lưới" : "Xem chi tiết";
           const visual = notificationVisual(item);
 
           return (
@@ -130,7 +140,7 @@ function NotificationsContent() {
               <div className="flex flex-wrap gap-2">
                 {href ? (
                   <Link href={href} onClick={() => void markRead(item.id)}>
-                    <Button variant="primary" className="px-4 py-2 text-sm">Xem hồ sơ</Button>
+                    <Button variant="primary" className="px-4 py-2 text-sm">{actionLabel}</Button>
                   </Link>
                 ) : null}
                 {!item.isRead ? (

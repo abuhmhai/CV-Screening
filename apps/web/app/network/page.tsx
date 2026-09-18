@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { toast } from "sonner";
 import { useAuth } from "../../lib/auth-context";
 import { apiFetch } from "../../lib/api-client";
 import { ConnectionItem, UserProfile } from "../../lib/types";
@@ -10,7 +12,7 @@ import { Avatar } from "../../components/ui/avatar";
 import { Badge } from "../../components/ui/badge";
 import { EmptyState, LoadingBlock } from "../../components/ui/states";
 import { Button } from "../../components/ui/button";
-import { Users, UserPlus, Check, X, Clock, MessageSquare, Search } from "lucide-react";
+import { Users, UserPlus, UserMinus, Check, X, Clock, MessageSquare, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { Input } from "../../components/ui/input";
 
@@ -44,6 +46,20 @@ function NetworkContent() {
       body: JSON.stringify({ status })
     });
     await loadAll();
+  }
+
+  async function removeConnection(connectionId: string) {
+    if (!token) return;
+    const res = await apiFetch(`/social/connections/${connectionId}`, {
+      method: "DELETE",
+      token
+    });
+    if (res.ok) {
+      toast.success("Đã gỡ kết nối thành công");
+      await loadAll();
+    } else {
+      toast.error(res.error ?? "Không thể gỡ kết nối");
+    }
   }
 
   async function connect(addresseeId: string) {
@@ -83,11 +99,15 @@ function NetworkContent() {
           <Card className="p-0 overflow-hidden">
             <div className="divide-y divide-ink/5">
               {suggestions.slice(0, 8).map((person, i) => {
-                const isPending = connections.some(c => 
-                  (c.addresseeId === person.id && c.requesterId === user?.id) ||
-                  (c.requesterId === person.id && c.addresseeId === user?.id)
+                const pendingSentConn = connections.find(
+                  (c) => c.addresseeId === person.id && c.requesterId === user?.id && c.status === "PENDING"
                 );
-                
+                const isPending = connections.some(
+                  (c) =>
+                    (c.addresseeId === person.id && c.requesterId === user?.id) ||
+                    (c.requesterId === person.id && c.addresseeId === user?.id)
+                );
+
                 return (
                   <motion.div
                     key={person.id}
@@ -103,16 +123,48 @@ function NetworkContent() {
                         size="lg"
                       />
                       <div className="min-w-0">
-                        <p className="text-[15px] font-bold text-ink truncate">{person.profile?.fullName ?? person.email.split('@')[0]}</p>
-                        <p className="text-xs font-medium text-body truncate">{person.profile?.headline ?? "Professional"}</p>
+                        <p className="text-[15px] font-bold text-ink truncate">
+                          {person.profile?.fullName ?? person.email.split("@")[0]}
+                        </p>
+                        <p className="text-xs font-medium text-body truncate">
+                          {person.profile?.headline ?? "Professional"}
+                        </p>
                       </div>
                     </div>
-                    {isPending ? (
-                      <Button variant="secondary" className="px-4 py-1.5 text-xs w-full sm:w-auto" disabled leftIcon={<Clock size={14} />}>
-                        Đã gửi
+                    {pendingSentConn ? (
+                      <div className="flex w-full sm:w-auto items-center gap-2">
+                        <Button
+                          variant="secondary"
+                          className="px-3 py-1.5 text-xs flex-1 sm:flex-none"
+                          disabled
+                          leftIcon={<Clock size={14} />}
+                        >
+                          Đã gửi
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="px-2.5 py-1.5 text-xs text-mute hover:text-negative hover:bg-canvas-soft"
+                          onClick={() => removeConnection(pendingSentConn.id)}
+                          title="Thu hồi lời mời kết nối"
+                        >
+                          Thu hồi
+                        </Button>
+                      </div>
+                    ) : isPending ? (
+                      <Button
+                        variant="secondary"
+                        className="px-4 py-1.5 text-xs w-full sm:w-auto"
+                        disabled
+                        leftIcon={<Clock size={14} />}
+                      >
+                        Đang chờ
                       </Button>
                     ) : (
-                      <Button variant="secondary" className="w-full px-4 py-1.5 text-body-sm sm:w-auto" onClick={() => connect(person.id)}>
+                      <Button
+                        variant="secondary"
+                        className="w-full px-4 py-1.5 text-body-sm sm:w-auto"
+                        onClick={() => connect(person.id)}
+                      >
                         Kết nối
                       </Button>
                     )}
@@ -224,13 +276,43 @@ function NetworkContent() {
                             </Button>
                           </>
                         ) : isAccepted ? (
-                          <Button variant="secondary" className="w-full py-1.5 text-xs h-auto" leftIcon={<MessageSquare size={14} />}>
-                            Nhắn tin
-                          </Button>
+                          <div className="flex w-full items-center gap-2">
+                            <Link href="/messages" className="flex-1">
+                              <Button
+                                variant="secondary"
+                                className="w-full py-1.5 text-xs h-auto"
+                                leftIcon={<MessageSquare size={14} />}
+                              >
+                                Nhắn tin
+                              </Button>
+                            </Link>
+                            <Button
+                              variant="ghost"
+                              className="px-2.5 py-1.5 text-xs h-auto text-mute hover:text-negative hover:bg-canvas"
+                              onClick={() => removeConnection(conn.id)}
+                              title="Gỡ kết nối"
+                            >
+                              <UserMinus size={14} />
+                            </Button>
+                          </div>
                         ) : isRequester && isPending ? (
-                          <Button variant="ghost" className="w-full py-1.5 text-xs h-auto" disabled leftIcon={<Clock size={14} />}>
-                            Đã gửi lời mời
-                          </Button>
+                          <div className="flex w-full items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              className="flex-1 py-1.5 text-xs h-auto justify-start"
+                              disabled
+                              leftIcon={<Clock size={14} />}
+                            >
+                              Đã gửi lời mời
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              className="py-1.5 px-3 text-xs h-auto text-negative hover:border-negative/40"
+                              onClick={() => removeConnection(conn.id)}
+                            >
+                              Thu hồi
+                            </Button>
+                          </div>
                         ) : null}
                       </div>
                     </Card>

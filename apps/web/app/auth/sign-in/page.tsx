@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "../../../lib/auth-context";
 import { demoAccounts } from "../../../lib/demo-accounts";
 import { Card, PageHeader } from "../../../components/ui/card";
@@ -70,6 +71,11 @@ export default function SignInPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </FieldLabel>
+          <div className="flex justify-end">
+            <Link href="/auth/forgot-password" className="text-xs text-accent-blue hover:underline font-medium">
+              Quên mật khẩu?
+            </Link>
+          </div>
           {error ? <p className="text-sm text-negative">{error}</p> : null}
           <Button type="submit" fullWidth disabled={loading}>
             {loading ? "Đang đăng nhập..." : "Đăng nhập"}
@@ -95,6 +101,13 @@ export default function SignInPage() {
           ))}
         </div>
       </Card>
+
+      <p className="mt-4 text-center text-sm text-body">
+        Chưa có tài khoản?{" "}
+        <Link href="/auth/sign-up" className="font-semibold text-accent-blue hover:underline">
+          Đăng ký ngay
+        </Link>
+      </p>
     </div>
   );
 }

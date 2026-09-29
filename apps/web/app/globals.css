@@ -24,12 +24,12 @@ video {
   --colors-surface-light: #f1f7fe;
 
   /* Surface */
-  --colors-canvas: #000000;
-  --colors-surface-card: #0a0a0c;
-  --colors-surface-elevated: #101012;
-  --colors-surface-deep: #06060a;
-  --colors-hairline: rgba(255, 255, 255, 0.06);
-  --colors-hairline-strong: rgba(255, 255, 255, 0.14);
+  --colors-canvas: #0d0d0f;
+  --colors-surface-card: #141417;
+  --colors-surface-elevated: #1a1a1e;
+  --colors-surface-deep: #08080a;
+  --colors-hairline: rgba(255, 255, 255, 0.08);
+  --colors-hairline-strong: rgba(255, 255, 255, 0.16);
   --colors-divider-soft: rgba(255, 255, 255, 0.04);
 
   /* Text */

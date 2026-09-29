@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { Send } from "lucide-react";
 
 interface MessageItem {
   id: string;
@@ -29,11 +30,20 @@ export function MessagesClient({ initialConversations }: MessagesClientProps) {
   const [conversations, setConversations] = useState<ConversationItem[]>(initialConversations);
   const [selectedId, setSelectedId] = useState<string>(initialConversations[0]?.id ?? "");
   const [draft, setDraft] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLUListElement>(null);
 
   const selectedConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === selectedId) ?? conversations[0],
     [conversations, selectedId]
   );
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [selectedConversation?.messages]);
 
   const submitMessage = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -60,10 +70,13 @@ export function MessagesClient({ initialConversations }: MessagesClientProps) {
   };
 
   return (
-    <section className="grid gap-4 lg:grid-cols-[320px_1fr]">
-      <aside className="rounded-xl bg-canvas p-4">
-        <h2 className="px-2 text-sm font-semibold text-ink">Conversations</h2>
-        <div className="mt-3 space-y-2">
+    <section className="grid gap-4 lg:grid-cols-[300px_1fr]" style={{ height: "calc(100vh - 8rem)", minHeight: "500px" }}>
+      {/* Conversation List */}
+      <aside className="flex flex-col rounded-xl bg-surface-card border border-hairline overflow-hidden">
+        <div className="px-4 py-3 border-b border-hairline">
+          <h2 className="text-sm font-bold text-ink">Tin nhắn</h2>
+        </div>
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {conversations.map((conversation) => {
             const latest = conversation.messages[conversation.messages.length - 1];
             const active = conversation.id === selectedConversation?.id;
@@ -73,59 +86,114 @@ export function MessagesClient({ initialConversations }: MessagesClientProps) {
                 key={conversation.id}
                 type="button"
                 onClick={() => setSelectedId(conversation.id)}
-                className={`w-full rounded-xl px-3 py-3 text-left transition ${
-                  active ? "bg-primary-pale" : "bg-canvas-soft hover:bg-primary-pale"
+                className={`w-full rounded-xl px-3 py-3 text-left transition-all ${
+                  active
+                    ? "bg-accent-blue/10 border border-accent-blue/20"
+                    : "hover:bg-surface-elevated border border-transparent"
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-ink">{conversation.title}</p>
-                  <span className={`h-2.5 w-2.5 rounded-full ${conversation.online ? "bg-positive" : "bg-mute"}`} />
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="relative shrink-0">
+                      <div className="h-9 w-9 rounded-full bg-surface-elevated flex items-center justify-center text-xs font-bold text-ink">
+                        {conversation.title.slice(0, 2).toUpperCase()}
+                      </div>
+                      <span
+                        className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-surface-card ${
+                          conversation.online ? "bg-positive" : "bg-mute"
+                        }`}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-ink truncate">{conversation.title}</p>
+                      {latest ? (
+                        <p className="mt-0.5 line-clamp-1 text-xs text-mute">{latest.content}</p>
+                      ) : (
+                        <p className="mt-0.5 text-xs text-mute italic">Chưa có tin nhắn</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                {latest ? <p className="mt-1 line-clamp-1 text-xs text-body">{latest.content}</p> : null}
               </button>
             );
           })}
         </div>
       </aside>
 
-      <article className="rounded-xl bg-canvas p-6">
-        <div className="flex items-center justify-between border-b border-ink/10 pb-4">
-          <div>
-            <h2 className="text-sm font-semibold text-ink">{selectedConversation?.title ?? "Live Chat"}</h2>
-            <p className="mt-1 text-xs text-body">
-              {selectedConversation?.online ? "Online now" : "Offline"} • Mock realtime thread
-            </p>
+      {/* Chat Window */}
+      <article className="flex flex-col rounded-xl bg-surface-card border border-hairline overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="h-9 w-9 rounded-full bg-surface-elevated flex items-center justify-center text-xs font-bold text-ink">
+                {(selectedConversation?.title ?? "?").slice(0, 2).toUpperCase()}
+              </div>
+              <span
+                className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-surface-card ${
+                  selectedConversation?.online ? "bg-positive" : "bg-mute"
+                }`}
+              />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-ink">{selectedConversation?.title ?? "Live Chat"}</h2>
+              <p className="text-xs text-mute">
+                {selectedConversation?.online ? "Đang hoạt động" : "Ngoại tuyến"}
+              </p>
+            </div>
           </div>
-          <span className={`h-3 w-3 rounded-full ${selectedConversation?.online ? "bg-positive" : "bg-mute"}`} />
         </div>
 
-        <ul className="mt-4 space-y-3">
+        {/* Messages */}
+        <ul
+          ref={messagesContainerRef}
+          className="flex-1 overflow-y-auto px-5 py-4 space-y-3"
+        >
           {selectedConversation?.messages.map((message) => (
             <li
               key={message.id}
-              className={`max-w-[85%] rounded-xl px-4 py-3 text-sm ${
-                message.sender === "self" ? "ml-auto bg-primary text-ink" : "bg-canvas-soft text-body"
-              }`}
+              className={`flex ${message.sender === "self" ? "justify-end" : "justify-start"}`}
             >
-              <p>{message.content}</p>
-              <p className="mt-1 text-[10px] text-mute">{timeFormatter.format(new Date(message.sentAt))}</p>
+              <div
+                className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
+                  message.sender === "self"
+                    ? "bg-accent-blue text-white rounded-br-sm"
+                    : "bg-surface-elevated text-ink rounded-bl-sm"
+                }`}
+              >
+                <p className="leading-relaxed">{message.content}</p>
+                <p className={`mt-1 text-[10px] ${message.sender === "self" ? "text-white/60" : "text-mute"}`}>
+                  {timeFormatter.format(new Date(message.sentAt))}
+                </p>
+              </div>
             </li>
           ))}
+          <div ref={messagesEndRef} />
         </ul>
 
-        <form onSubmit={submitMessage} className="mt-6 flex gap-2">
+        {/* Input */}
+        <form onSubmit={submitMessage} className="border-t border-hairline p-3 flex gap-2">
           <input
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            className="flex-1 rounded-xl border border-ink/20 px-4 py-3 text-sm outline-none transition focus:border-ink"
-            placeholder="Type your message..."
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                if (draft.trim()) {
+                  const form = e.currentTarget.closest("form");
+                  form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+                }
+              }
+            }}
+            className="flex-1 rounded-xl border border-hairline bg-surface-elevated px-4 py-2.5 text-sm text-ink outline-none transition focus:border-accent-blue placeholder:text-mute"
+            placeholder="Nhập tin nhắn... (Enter để gửi)"
           />
           <button
             type="submit"
             disabled={!selectedConversation || !draft.trim()}
-            className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-ink transition hover:bg-primary-active disabled:cursor-not-allowed disabled:bg-primary-neutral"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-blue text-white transition hover:bg-accent-blue/90 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Send
+            <Send size={16} />
           </button>
         </form>
       </article>

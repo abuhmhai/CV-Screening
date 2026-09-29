@@ -198,19 +198,24 @@ function ProfileContent() {
       ) : (
         <>
           <Card className="overflow-hidden p-0">
-            <div className="h-32 bg-gradient-to-r from-primary to-primary-neutral">
+            {/* Cover Photo — taller, Facebook-style */}
+            <div className="relative h-52 sm:h-64 bg-gradient-to-r from-surface-elevated via-accent-blue/20 to-positive-deep/20">
               {p?.coverUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={p.coverUrl} alt="cover" className="h-full w-full object-cover" />
               ) : null}
             </div>
+            {/* Profile Info */}
             <div className="relative px-6 pb-6">
-              <div className="-mt-10 flex flex-wrap items-end gap-4">
-                <Avatar name={p?.fullName} email={profile.email} src={p?.avatarUrl} size="xl" />
-                <div className="min-w-0">
-                  <h1 className="text-2xl font-black text-ink">{p?.fullName ?? profile.email}</h1>
-                  <p className="text-body">{p?.headline ?? "Professional profile"}</p>
-                  <p className="text-sm text-mute">{p?.location ?? "—"}</p>
+              <div className="-mt-14 flex flex-wrap items-end gap-4">
+                <div className="ring-4 ring-canvas rounded-full shrink-0">
+                  <Avatar name={p?.fullName} email={profile.email} src={p?.avatarUrl} size="xl"
+                    className="h-24 w-24 text-2xl font-black" />
+                </div>
+                <div className="min-w-0 pb-2">
+                  <h1 className="text-2xl font-black text-ink leading-tight">{p?.fullName ?? profile.email}</h1>
+                  <p className="text-body mt-0.5">{p?.headline ?? "Professional profile"}</p>
+                  <p className="text-sm text-mute mt-0.5">{p?.location ?? "—"}</p>
                 </div>
               </div>
               {p?.about ? <p className="mt-6 text-body-md text-body">{p.about}</p> : null}

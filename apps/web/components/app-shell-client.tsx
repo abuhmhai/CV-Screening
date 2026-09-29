@@ -417,7 +417,7 @@ export function AppShellClient({ children }: { children: ReactNode }) {
                     <span>Đăng tin</span>
                   </Link>
 
-                  <Link
+                   <Link
                     href="/recruiter/analytics"
                     className={`flex items-center gap-1.5 px-3 py-1.5 text-body-sm font-medium rounded-lg transition-all ${
                       pathname === "/recruiter/analytics" ? "bg-surface-elevated text-ink font-semibold border border-hairline" : "text-body hover:text-ink hover:bg-surface-card"
@@ -425,26 +425,6 @@ export function AppShellClient({ children }: { children: ReactNode }) {
                   >
                     <BarChart3 size={16} className={pathname === "/recruiter/analytics" ? "text-primary" : "text-mute"} />
                     <span>Analytics</span>
-                  </Link>
-
-                  <Link
-                    href="/feed"
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-body-sm font-medium rounded-lg transition-all ${
-                      pathname === "/feed" ? "bg-surface-elevated text-ink font-semibold border border-hairline" : "text-body hover:text-ink hover:bg-surface-card"
-                    }`}
-                  >
-                    <Rss size={16} className={pathname === "/feed" ? "text-primary" : "text-mute"} />
-                    <span>Bảng tin</span>
-                  </Link>
-
-                  <Link
-                    href="/network"
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-body-sm font-medium rounded-lg transition-all ${
-                      pathname === "/network" ? "bg-surface-elevated text-ink font-semibold border border-hairline" : "text-body hover:text-ink hover:bg-surface-card"
-                    }`}
-                  >
-                    <Users size={16} className={pathname === "/network" ? "text-primary" : "text-mute"} />
-                    <span>Mạng lưới</span>
                   </Link>
 
                   <Link
@@ -817,26 +797,6 @@ export function AppShellClient({ children }: { children: ReactNode }) {
                     >
                       <BarChart3 size={18} className="text-mute" />
                       <span>Analytics</span>
-                    </Link>
-                    <Link
-                      href="/feed"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-body-sm font-semibold transition ${
-                        pathname === "/feed" ? "bg-surface-elevated text-ink" : "text-body hover:bg-surface-card"
-                      }`}
-                    >
-                      <Rss size={18} className="text-mute" />
-                      <span>Bảng tin</span>
-                    </Link>
-                    <Link
-                      href="/network"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-body-sm font-semibold transition ${
-                        pathname === "/network" ? "bg-surface-elevated text-ink" : "text-body hover:bg-surface-card"
-                      }`}
-                    >
-                      <Users size={18} className="text-mute" />
-                      <span>Mạng lưới</span>
                     </Link>
                     <Link
                       href="/messages"

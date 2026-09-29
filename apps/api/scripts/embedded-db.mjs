@@ -21,7 +21,7 @@ async function ensureDatabase() {
   });
   await client.connect();
   try {
-    await client.query(`CREATE DATABASE ${DB_NAME}`);
+    await client.query(`CREATE DATABASE ${DB_NAME} ENCODING 'UTF8'`);
     console.log(`Created database "${DB_NAME}"`);
   } catch (error) {
     if (error.code !== "42P04") {
@@ -39,7 +39,8 @@ async function main() {
     user: DB_USER,
     password: DB_PASS,
     port: DB_PORT,
-    persistent: true
+    persistent: true,
+    initdbFlags: ["-E", "UTF8", "--locale=C"]
   });
 
   console.log("Initialising embedded PostgreSQL...");

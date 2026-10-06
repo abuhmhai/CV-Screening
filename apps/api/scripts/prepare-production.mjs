@@ -14,6 +14,18 @@ export function prepareProduction({ env = process.env, run = execFileSync } = {}
     cwd: apiRoot,
     env: migrationEnv,
     stdio: "inherit",
-    timeout: 180_000
+    timeout: 45_000
   });
+}
+
+export async function startProduction({ prepare = prepareProduction, start = () => import("../dist/main.js"), log = console } = {}) {
+  log.log("[Production Startup] Applying database migrations...");
+  try {
+    prepare();
+    log.log("[Production Startup] Migrations completed.");
+  } catch {
+    log.error("[Production Startup] Migration failed; check DATABASE_URL, DIRECT_URL and Prisma logs. Starting API so existing schema-compatible endpoints remain available.");
+  }
+  log.log("[Production Startup] Starting NestJS API...");
+  await start();
 }

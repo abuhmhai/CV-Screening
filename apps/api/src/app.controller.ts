@@ -10,6 +10,7 @@ export class AppController {
     let dbStatus = "ok";
     let dbError: string | null = null;
     let jobCount = 0;
+    let schemaStatus = "not_checked";
     const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
 
     if (!hasDatabaseUrl) {
@@ -18,6 +19,12 @@ export class AppController {
     } else {
       try {
         jobCount = await this.prisma.job.count();
+        try {
+          await this.prisma.user.findFirst({ select: { username: true, phone: true } });
+          schemaStatus = "ok";
+        } catch (schemaError) {
+          schemaStatus = (schemaError as { code?: string })?.code === "P2022" ? "migration_required" : "error";
+        }
       } catch (err) {
         dbStatus = "error";
         dbError = err instanceof Error ? err.message : String(err);
@@ -27,10 +34,12 @@ export class AppController {
     return {
       status: "ok",
       service: "api",
+      revision: process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
       database: {
         status: dbStatus,
         hasDatabaseUrl,
         jobCount,
+        schemaStatus,
         error: dbError
       },
       timestamp: new Date().toISOString()

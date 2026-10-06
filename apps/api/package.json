@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "build": "npm run prisma:generate && tsc -p tsconfig.json",
-    "start": "node dist/main.js",
-    "start:prod": "node dist/main.js",
+    "start": "node scripts/start-production.mjs",
+    "start:prod": "node scripts/start-production.mjs",
     "test": "jest --config jest.config.ts",
     "prisma:generate": "npx --no-install prisma generate",
     "prisma:migrate": "npx --no-install prisma migrate dev",

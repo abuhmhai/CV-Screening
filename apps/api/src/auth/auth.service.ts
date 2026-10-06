@@ -118,8 +118,12 @@ export class AuthService {
   }
 
   async demoLogin(email: string): Promise<AccessTokenPayload> {
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) {
+    if (typeof email !== "string" || !email.trim()) throw new BadRequestException("Vui lòng chọn tài khoản demo");
+    const user = await this.prisma.user.findUnique({
+      where: { email: email.trim().toLowerCase() },
+      select: { id: true, email: true, role: true, deletedAt: true }
+    });
+    if (!user || user.deletedAt) {
       throw new UnauthorizedException("User not found");
     }
     return this.issueTokens(user);
@@ -286,7 +290,7 @@ export class AuthService {
     return { email: info.email, name: info.name, avatarUrl: info.picture };
   }
 
-  private async issueTokens(user: User): Promise<AccessTokenPayload> {
+  private async issueTokens(user: Pick<User, "id" | "email" | "role">): Promise<AccessTokenPayload> {
     const accessExpires = process.env.JWT_ACCESS_EXPIRES_IN ?? "15m";
     const refreshExpires = process.env.JWT_REFRESH_EXPIRES_IN ?? "30d";
 

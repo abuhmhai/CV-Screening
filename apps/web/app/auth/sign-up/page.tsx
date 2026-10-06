@@ -18,6 +18,8 @@ export default function SignUpPage() {
   const { login } = useAuth();
   const router = useRouter();
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -41,7 +43,7 @@ export default function SignUpPage() {
 
     const res = await apiFetch<LoginResponse>("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, password, fullName, role })
+      body: JSON.stringify({ email: email.trim().toLowerCase(), password, fullName, role, username, phone })
     });
 
     if (!res.ok || !res.data) {
@@ -51,7 +53,7 @@ export default function SignUpPage() {
     }
 
     // Auto-login after register
-    const loginErr = await login(email, password);
+    const loginErr = await login(email.trim().toLowerCase(), password);
     setLoading(false);
     if (loginErr) {
       setError(loginErr);
@@ -124,6 +126,13 @@ export default function SignUpPage() {
               />
             </FieldLabel>
 
+            <FieldLabel label="Tên tài khoản">
+              <Input required minLength={3} maxLength={30} pattern="[a-zA-Z0-9_]{3,30}" autoComplete="username" placeholder="nguyenvana" value={username} onChange={e => setUsername(e.target.value)} />
+              <p className="mt-1 text-xs text-mute">3–30 ký tự: chữ, số và dấu gạch dưới.</p>
+            </FieldLabel>
+            <FieldLabel label="Số điện thoại">
+              <Input required type="tel" autoComplete="tel" pattern="[+0-9 -]{8,20}" placeholder="0901 234 567" value={phone} onChange={e => setPhone(e.target.value)} />
+            </FieldLabel>
             <FieldLabel label="Email">
               <Input
                 type="email"

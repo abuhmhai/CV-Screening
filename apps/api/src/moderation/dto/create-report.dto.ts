@@ -16,3 +16,8 @@ export class CreateReportDto {
   @MaxLength(1500)
   detail?: string;
 }
+
+export class ResolveReportDto {
+  @IsIn(["KEEP", "DELETE"])
+  action!: "KEEP" | "DELETE";
+}

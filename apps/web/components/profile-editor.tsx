@@ -21,6 +21,7 @@ export function ProfileEditor({
   const p = profile.profile;
   const fileRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const [info, setInfo] = useState({
     fullName: p?.fullName ?? "",
@@ -58,37 +59,30 @@ export function ProfileEditor({
     }
   };
 
-  const uploadAvatar = async (file: File) => {
-    if (!token) return;
+  const uploadImage = async (file: File, kind: "avatar" | "cover") => {
+    if (!token || uploadingImage) return;
+    if (file.size > 10 * 1024 * 1024) return void toast.error("Ảnh tối đa 10 MB");
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) return void toast.error("Chọn ảnh PNG, JPEG hoặc WEBP");
+    setUploadingImage(true);
     const form = new FormData();
     form.append("file", file);
-    const resp = await fetch(`${getApiBase()}/api/v1/users/me/avatar`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: form
-    });
-    if (resp.ok) {
-      toast.success("Đã cập nhật ảnh đại diện");
-      onChange();
-    } else {
-      toast.error("Tải ảnh thất bại");
-    }
-  };
-
-  const uploadCover = async (file: File) => {
-    if (!token) return;
-    const form = new FormData();
-    form.append("file", file);
-    const resp = await fetch(`${getApiBase()}/api/v1/users/me/cover`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: form
-    });
-    if (resp.ok) {
-      toast.success("Đã cập nhật ảnh bìa");
-      onChange();
-    } else {
-      toast.error("Tải ảnh bìa thất bại");
+    try {
+      const resp = await fetch(`${getApiBase()}/api/v1/users/me/${kind}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: form
+      });
+      if (resp.ok) {
+        toast.success(kind === "avatar" ? "Đã cập nhật ảnh đại diện" : "Đã cập nhật ảnh bìa");
+        onChange();
+      } else {
+        const error = await resp.json().catch(() => null);
+        toast.error(error?.message ?? "Tải ảnh thất bại");
+      }
+    } catch {
+      toast.error("Không kết nối được máy chủ tải ảnh. Vui lòng thử lại.");
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -306,7 +300,7 @@ export function ProfileEditor({
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                if (f) void uploadAvatar(f);
+                if (f) void uploadImage(f, "avatar");
                 e.target.value = "";
               }}
             />
@@ -317,18 +311,19 @@ export function ProfileEditor({
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                if (f) void uploadCover(f);
+                if (f) void uploadImage(f, "cover");
                 e.target.value = "";
               }}
             />
-            <Button variant="ghost" onClick={() => fileRef.current?.click()} leftIcon={<Camera size={16} />} className="min-h-9 px-3 py-1.5 text-body-sm">
+            <Button disabled={uploadingImage} variant="ghost" onClick={() => fileRef.current?.click()} leftIcon={<Camera size={16} />} className="min-h-9 px-3 py-1.5 text-body-sm">
               Đổi ảnh
             </Button>
-            <Button variant="ghost" onClick={() => coverRef.current?.click()} leftIcon={<ImagePlus size={16} />} className="min-h-9 px-3 py-1.5 text-body-sm">
+            <Button disabled={uploadingImage} variant="ghost" onClick={() => coverRef.current?.click()} leftIcon={<ImagePlus size={16} />} className="min-h-9 px-3 py-1.5 text-body-sm">
               Ảnh bìa
             </Button>
           </div>
         </div>
+        {uploadingImage ? <p role="status" className="text-sm text-body">Đang tải ảnh...</p> : null}
         <div className="grid gap-4 sm:grid-cols-2">
           <FieldLabel label="Họ tên">
             <Input id="editor-field-fullname" value={info.fullName} onChange={(e) => setInfo({ ...info, fullName: e.target.value })} />

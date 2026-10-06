@@ -9,6 +9,7 @@ import {
 import { OnModuleInit } from "@nestjs/common";
 import { Server, Socket } from "socket.io";
 import { RedisPubSubService } from "./redis-pubsub.service";
+import { PrismaService } from "../prisma/prisma.service";
 
 @WebSocketGateway({
   namespace: "/messages",
@@ -21,7 +22,8 @@ export class MessageGateway implements OnModuleInit {
 
   constructor(
     private readonly jwtService: JwtService,
-    private readonly pubSub: RedisPubSubService
+    private readonly pubSub: RedisPubSubService,
+    private readonly prisma: PrismaService
   ) {}
 
   onModuleInit(): void {
@@ -53,6 +55,7 @@ export class MessageGateway implements OnModuleInit {
         secret: process.env.JWT_ACCESS_SECRET ?? "dev_access_secret"
       });
       this.socketPresence.set(client.id, payload.sub);
+      client.data.userId = payload.sub;
       this.server.emit("presence_update", {
         userId: payload.sub,
         online: true
@@ -73,19 +76,21 @@ export class MessageGateway implements OnModuleInit {
   }
 
   @SubscribeMessage("join_conversation")
-  joinConversation(
+  async joinConversation(
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: { conversationId: string }
-  ): { ok: true } {
-    client.join(`conversation:${payload.conversationId}`);
+  ): Promise<{ ok: boolean }> {
+    if (!await this.isParticipant(client, payload.conversationId)) return { ok: false };
+    await client.join(`conversation:${payload.conversationId}`);
     return { ok: true };
   }
 
   @SubscribeMessage("typing")
-  typing(
+  async typing(
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: { conversationId: string; isTyping: boolean }
-  ): { ok: true } {
+  ): Promise<{ ok: boolean }> {
+    if (!await this.isParticipant(client, payload.conversationId)) return { ok: false };
     const userId = this.socketPresence.get(client.id);
     if (!userId) {
       return { ok: true };
@@ -116,5 +121,11 @@ export class MessageGateway implements OnModuleInit {
       return header.replace(/^Bearer\s+/i, "");
     }
     return null;
+  }
+
+  private async isParticipant(client: Socket, conversationId: string): Promise<boolean> {
+    const userId = client.data.userId;
+    if (!userId || !/^[0-9a-f-]{36}$/i.test(conversationId ?? "")) return false;
+    return Boolean(await this.prisma.conversationParticipant.findUnique({ where: { conversationId_userId: { conversationId, userId } } }));
   }
 }

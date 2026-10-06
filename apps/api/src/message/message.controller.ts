@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { CurrentUser } from "../common/auth/current-user.decorator";
 import { JwtAuthGuard } from "../common/auth/jwt-auth.guard";
 import { RequestUser } from "../common/auth/request-user.type";
@@ -20,10 +20,12 @@ export class MessageController {
   @Get("conversations/:conversationId")
   listConversationMessages(
     @CurrentUser() user: RequestUser | undefined,
-    @Param("conversationId") conversationId: string
+    @Param("conversationId") conversationId: string,
+    @Query("q") query?: string,
+    @Query("before") before?: string
   ) {
     const currentUser = requireUser(user);
-    return this.messageService.listConversationMessages(currentUser.id, conversationId);
+    return this.messageService.listConversationMessages(currentUser.id, conversationId, query, before);
   }
 
   @Post()

@@ -306,6 +306,7 @@ export class UserService {
 
     return {
       slug: profile.publicSlug ?? userId,
+      userId,
       fullName: user.profile?.fullName ?? "Member",
       headline: user.profile?.headline ?? null,
       about: user.profile?.about ?? null,

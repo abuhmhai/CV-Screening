@@ -24,10 +24,10 @@ video {
   --colors-surface-light: #f1f7fe;
 
   /* Surface */
-  --colors-canvas: #0d0d0f;
-  --colors-surface-card: #141417;
-  --colors-surface-elevated: #1a1a1e;
-  --colors-surface-deep: #08080a;
+  --colors-canvas: #151b27;
+  --colors-surface-card: #1e293b;
+  --colors-surface-elevated: #29364a;
+  --colors-surface-deep: #111827;
   --colors-hairline: rgba(255, 255, 255, 0.08);
   --colors-hairline-strong: rgba(255, 255, 255, 0.16);
   --colors-divider-soft: rgba(255, 255, 255, 0.04);
@@ -36,8 +36,8 @@ video {
   --colors-ink: #fcfdff;
   --colors-body: rgba(252, 253, 255, 0.86);
   --colors-charcoal: rgba(252, 253, 255, 0.7);
-  --colors-mute: #a1a4a5;
-  --colors-ash: #888e90;
+  --colors-mute: #b8c4d6;
+  --colors-ash: #b8c4d6;
   --colors-stone: #464a4d;
   --colors-on-light: #000000;
   --colors-on-light-mute: rgba(0, 0, 51, 0.7);
@@ -260,7 +260,7 @@ html.light {
   --colors-body: #334155;
   --colors-charcoal: #475569;
   --colors-mute: #64748b;
-  --colors-ash: #94a3b8;
+  --colors-ash: #64748b;
   --colors-stone: #cbd5e1;
   --colors-on-light: #0f172a;
   --colors-on-light-mute: rgba(15, 23, 42, 0.7);
@@ -269,13 +269,13 @@ html.light {
   --colors-accent-orange: #ea580c;
   --colors-accent-orange-glow: rgba(234, 88, 12, 0.15);
   --colors-accent-yellow: #d97706;
-  --colors-accent-blue: #0284c7;
+  --colors-accent-blue: #0369a1;
   --colors-accent-blue-glow: rgba(2, 132, 199, 0.15);
   --colors-accent-green: #059669;
   --colors-accent-green-glow: rgba(5, 150, 105, 0.15);
   --colors-accent-red: #dc2626;
   --colors-accent-red-glow: rgba(220, 38, 38, 0.15);
-  --colors-link: #0284c7;
+  --colors-link: #0369a1;
 
   /* Negative/Positive states */
   --colors-positive: #059669;

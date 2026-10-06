@@ -1,4 +1,6 @@
 "use client";
+import Link from "next/link";
+import { CommentThread } from "../../components/feed/comment-thread";
 
 import { ChangeEvent, FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -97,10 +99,11 @@ function FeedContent() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [content, setContent] = useState("");
+  const [visibility, setVisibility] = useState<"PUBLIC" | "CONNECTIONS" | "PRIVATE">("PUBLIC");
   const [activeComposerChip, setActiveComposerChip] = useState("update");
   const [commentDraftByPost, setCommentDraftByPost] = useState<Record<string, string>>({});
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
-  const [userReactions, setUserReactions] = useState<Record<string, PostReactionType>>({});
+  const [userReactions, setUserReactions] = useState<Record<string, PostReactionType | null>>({});
   const [reportedPostIds, setReportedPostIds] = useState<Set<string>>(new Set());
   const [reportConfirmPostId, setReportConfirmPostId] = useState<string | null>(null);
   const [connectingIds, setConnectingIds] = useState<Set<string>>(new Set());
@@ -131,6 +134,7 @@ function FeedContent() {
         return [...prev, ...nextPage];
       });
       setHasMore(feedRes.data.length === PAGE_SIZE);
+      setUserReactions(prev => ({ ...prev, ...Object.fromEntries(feedRes.data!.map(p => [p.id, p.userReaction ?? null])) }));
     } else if (!append) {
       setPosts([]);
       setHasMore(false);
@@ -256,7 +260,7 @@ function FeedContent() {
       token,
       body: JSON.stringify({
         content: `${prefix}${body}`.trim(),
-        visibility: "PUBLIC",
+        visibility,
         mediaUrls: attachments.map((item) => item.url)
       })
     });
@@ -352,39 +356,6 @@ function FeedContent() {
       );
     }
     toast.error(res.error ?? "Không thể gửi cảm xúc.");
-  }
-
-  async function addComment(postId: string) {
-    if (!token) return;
-    const draft = commentDraftByPost[postId]?.trim();
-    if (!draft) return;
-
-    setCommentDraftByPost((prev) => ({ ...prev, [postId]: "" }));
-    setExpandedComments((prev) => ({ ...prev, [postId]: true }));
-
-    const result = await apiFetch<NonNullable<FeedPost["comments"]>[number]>(`/social/posts/${postId}/comments`, {
-      method: "POST",
-      token,
-      body: JSON.stringify({ content: draft })
-    });
-
-    if (!result.ok || !result.data) {
-      setCommentDraftByPost((prev) => ({ ...prev, [postId]: draft }));
-      toast.error(result.error ?? "Không gửi được bình luận.");
-      return;
-    }
-
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              commentCount: (post.commentCount ?? 0) + 1,
-              comments: [result.data!, ...(post.comments ?? [])]
-            }
-          : post
-      )
-    );
   }
 
   async function reportPost(postId: string) {
@@ -552,6 +523,9 @@ function FeedContent() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3 bg-canvas-soft px-5 py-3">
+                <select aria-label="Ai có thể xem bài viết" value={visibility} onChange={e => setVisibility(e.target.value as typeof visibility)} className="rounded-lg border border-hairline-strong bg-surface-card px-3 py-2 text-sm text-ink">
+                  <option value="PUBLIC">🌐 Công khai</option><option value="CONNECTIONS">👥 Bạn bè</option><option value="PRIVATE">🔒 Chỉ mình tôi</option>
+                </select>
                 <p className={`text-xs font-semibold ${content.length > POST_LIMIT * 0.9 ? "text-warning" : "text-mute"}`}>
                   {content.length}/{POST_LIMIT} ký tự
                   {attachments.length ? ` · ${attachments.length} file` : ""}
@@ -609,9 +583,7 @@ function FeedContent() {
             <div className="space-y-4">
               <AnimatePresence>
                 {visiblePosts.map((post, index) => {
-                  const comments = post.comments ?? [];
                   const isExpanded = expandedComments[post.id] ?? false;
-                  const shownComments = isExpanded ? comments : comments.slice(0, 2);
                   const userReaction = userReactions[post.id];
                   const isReported = reportedPostIds.has(post.id);
 
@@ -626,17 +598,19 @@ function FeedContent() {
                       <Card hover className="p-5">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex min-w-0 gap-3">
+                            <Link href={`/u/${post.author?.id}`} aria-label={`Xem trang cá nhân ${authorName(post)}`}>
                             <Avatar
                               name={post.author?.profile?.fullName}
                               src={post.author?.profile?.avatarUrl}
                               size="md"
                             />
+                            </Link>
                             <div className="min-w-0">
-                              <p className="truncate text-sm font-bold text-ink">{authorName(post)}</p>
+                              <Link href={`/u/${post.author?.id}`} className="block truncate text-sm font-bold text-ink hover:underline">{authorName(post)}</Link>
                               <p className="truncate text-xs text-body">
                                 {post.author?.profile?.headline ?? "Professional community member"}
                               </p>
-                              <p className="mt-0.5 text-xs text-mute">{formatDateTime(post.createdAt)}</p>
+                              <p className="mt-0.5 text-xs text-mute">{formatDateTime(post.createdAt)} · {post.visibility === "PRIVATE" ? "Chỉ mình tôi" : post.visibility === "CONNECTIONS" ? "Bạn bè" : "Công khai"}</p>
                             </div>
                           </div>
                           <div className="relative">
@@ -707,7 +681,7 @@ function FeedContent() {
 
                         <div className="mt-4 flex flex-wrap items-center gap-2 border-b border-hairline-strong pb-3">
                           <Badge tone="primary">Score {(post.feedScore ?? 0).toFixed(1)}</Badge>
-                          <Badge tone="default">{post.likeCount ?? 0} likes</Badge>
+                          <Badge tone="default">{post.likeCount ?? 0} cảm xúc</Badge>
                           <Badge tone="default">{post.commentCount ?? 0} bình luận</Badge>
                           {post.mediaUrls?.length ? <Badge tone="positive">Media</Badge> : null}
                         </div>
@@ -738,60 +712,7 @@ function FeedContent() {
                           </button>
                         </div>
 
-                        <div className="rounded-xl bg-canvas-soft p-3">
-                          {comments.length ? (
-                            <div className="mb-3 space-y-2">
-                              {shownComments.map((comment) => (
-                                <div key={comment.id} className="flex gap-2 rounded-lg bg-surface-card p-3">
-                                  <Avatar
-                                    name={comment.author?.profile?.fullName}
-                                    src={comment.author?.profile?.avatarUrl}
-                                    size="sm"
-                                  />
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-bold text-ink">
-                                      {comment.author?.profile?.fullName ?? "Member"}
-                                    </p>
-                                    <p className="mt-1 text-sm text-body">{comment.content}</p>
-                                    <p className="mt-1 text-[11px] text-mute">{formatDateTime(comment.createdAt)}</p>
-                                  </div>
-                                </div>
-                              ))}
-                              {comments.length > 2 ? (
-                                <button
-                                  type="button"
-                                  onClick={() => setExpandedComments((prev) => ({ ...prev, [post.id]: !isExpanded }))}
-                                  className="inline-flex items-center gap-1 text-xs font-semibold text-link hover:underline"
-                                >
-                                  <ChevronDown size={14} className={isExpanded ? "rotate-180 transition" : "transition"} />
-                                  {isExpanded ? "Thu gọn bình luận" : `Xem thêm ${comments.length - 2} bình luận`}
-                                </button>
-                              ) : null}
-                            </div>
-                          ) : null}
-
-                          <div className="flex flex-col gap-2 sm:flex-row">
-                            <Input
-                              className="!mt-0"
-                              placeholder="Viết bình luận chuyên nghiệp..."
-                              value={commentDraftByPost[post.id] ?? ""}
-                              onChange={(e) =>
-                                setCommentDraftByPost((prev) => ({
-                                  ...prev,
-                                  [post.id]: e.target.value
-                                }))
-                              }
-                            />
-                            <Button
-                              className="px-3 py-2 text-xs"
-                              rightIcon={<Send size={13} />}
-                              onClick={() => void addComment(post.id)}
-                              disabled={!commentDraftByPost[post.id]?.trim()}
-                            >
-                              Gửi
-                            </Button>
-                          </div>
-                        </div>
+                        <CommentThread post={post} token={token} expanded={isExpanded} onChange={comments => setPosts(prev => prev.map(p => p.id === post.id ? { ...p, comments, commentCount: comments.length } : p))} />
                       </Card>
                     </motion.article>
                   );

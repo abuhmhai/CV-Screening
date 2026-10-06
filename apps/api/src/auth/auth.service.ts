@@ -4,7 +4,7 @@ import { User, UserRole } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 import { PrismaService } from "../prisma/prisma.service";
 import { LoginDto } from "./dto/login.dto";
-import { RegisterDto } from "./dto/register.dto";
+import { RegisterDto, ForgotPasswordDto } from "./dto/register.dto";
 
 export interface AccessTokenPayload {
   accessToken: string;
@@ -42,14 +42,18 @@ export class AuthService {
   }
 
   async register(payload: RegisterDto): Promise<AccessTokenPayload> {
-    const existing = await this.prisma.user.findUnique({ where: { email: payload.email } });
+    const email = payload.email.trim().toLowerCase();
+    const username = payload.username.trim().toLowerCase();
+    const existing = await this.prisma.user.findFirst({ where: { OR: [{ email }, { username }] } });
     if (existing) {
-      throw new UnauthorizedException("Email already registered");
+      throw new BadRequestException("Email hoặc tên tài khoản đã được sử dụng");
     }
     const passwordHash = await bcrypt.hash(payload.password, BCRYPT_ROUNDS);
     const user = await this.prisma.user.create({
       data: {
-        email: payload.email,
+        email,
+        username,
+        phone: payload.phone.replace(/[\s-]/g, ""),
         passwordHash,
         role: payload.role ?? UserRole.CANDIDATE,
         isVerified: false,
@@ -63,6 +67,15 @@ export class AuthService {
       }
     });
     return this.issueTokens(user);
+  }
+
+  async forgotPassword(payload: ForgotPasswordDto) {
+    if (!payload.email && !payload.phone) throw new BadRequestException("Vui lòng nhập email hoặc số điện thoại");
+    await this.prisma.passwordRecoveryRequest.create({ data: {
+      email: payload.email?.trim().toLowerCase(),
+      phone: payload.phone?.replace(/[\s-]/g, "")
+    } });
+    return { ok: true };
   }
 
   /**

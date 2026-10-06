@@ -1,7 +1,7 @@
 import { HandHeart, Lightbulb, PartyPopper, ThumbsUp } from "lucide-react";
 import { createElement, type ReactNode } from "react";
 
-export type PostReactionType = "LIKE" | "CELEBRATE" | "SUPPORT" | "INSIGHTFUL";
+export type PostReactionType = "LIKE" | "LOVE" | "HAHA" | "WOW" | "SAD" | "ANGRY" | "CELEBRATE" | "SUPPORT" | "INSIGHTFUL";
 
 export const POST_REACTIONS: Array<{
   type: PostReactionType;
@@ -42,7 +42,8 @@ export const POST_REACTIONS: Array<{
     bg: "bg-accent-orange",
     ring: "ring-accent-orange-glow",
     icon: createElement(Lightbulb, { size: 20, strokeWidth: 2.4 })
-  }
+  },
+  ...([["LOVE", "Yêu thích", "❤️"], ["HAHA", "Haha", "😆"], ["WOW", "Wow", "😮"], ["SAD", "Buồn", "😢"], ["ANGRY", "Phẫn nộ", "😡"]] as const).map(([type, label, emoji]) => ({ type, label, hoverLabel: label, bg: "bg-surface-elevated", ring: "ring-accent-blue", icon: createElement("span", { className: "text-2xl", "aria-hidden": true }, emoji) }))
 ];
 
 export function reactionMeta(type?: PostReactionType | null) {

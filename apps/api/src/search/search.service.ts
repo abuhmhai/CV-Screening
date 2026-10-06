@@ -73,6 +73,7 @@ export class SearchService {
         ? this.prisma.post.findMany({
             where: {
               deletedAt: null,
+              visibility: "PUBLIC",
               content: { contains: q, mode: "insensitive" }
             },
             include: {

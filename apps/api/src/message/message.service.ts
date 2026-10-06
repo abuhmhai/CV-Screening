@@ -62,7 +62,7 @@ export class MessageService {
     return message;
   }
 
-  async listConversationMessages(userId: string, conversationId: string) {
+  async listConversationMessages(userId: string, conversationId: string, query?: string, before?: string) {
     const participant = await this.prisma.conversationParticipant.findUnique({
       where: {
         conversationId_userId: {
@@ -75,11 +75,14 @@ export class MessageService {
       throw new ForbiddenException("You are not a participant in this conversation");
     }
 
-    return this.prisma.message.findMany({
-      where: { conversationId, deletedAt: null },
-      orderBy: { sentAt: "asc" },
+    const rows = await this.prisma.message.findMany({
+      where: { conversationId, deletedAt: null, ...(query?.trim() ? { content: { contains: query.trim(), mode: "insensitive" as const } } : {}) },
+      orderBy: [{ sentAt: "desc" }, { id: "desc" }],
+      cursor: before ? { id: before } : undefined,
+      skip: before ? 1 : 0,
       take: 100
     });
+    return rows.reverse();
   }
 
   async markConversationRead(userId: string, conversationId: string) {

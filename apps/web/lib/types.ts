@@ -414,6 +414,7 @@ export interface ProfileDashboard {
 }
 
 export interface PublicProfile {
+  userId: string;
   slug: string;
   fullName: string;
   headline?: string | null;
@@ -455,6 +456,8 @@ export interface PublicProfile {
 }
 
 export interface FeedPost {
+  visibility?: "PUBLIC" | "CONNECTIONS" | "PRIVATE";
+  userReaction?: import("./reactions").PostReactionType | null;
   id: string;
   content: string;
   mediaUrls?: string[];
@@ -467,6 +470,8 @@ export interface FeedPost {
     profile?: { fullName?: string | null; headline?: string | null; avatarUrl?: string | null } | null;
   } | null;
   comments?: Array<{
+    parentId?: string | null;
+    userReaction?: import("./reactions").PostReactionType | null;
     id: string;
     content: string;
     createdAt: string;

@@ -207,12 +207,12 @@ function ProfileContent() {
             </div>
             {/* Profile Info */}
             <div className="relative px-6 pb-6">
-              <div className="-mt-14 flex flex-wrap items-end gap-4">
-                <div className="ring-4 ring-canvas rounded-full shrink-0">
+              <div className="flex flex-wrap items-end gap-4">
+                <div className="-mt-14 ring-4 ring-canvas rounded-full shrink-0">
                   <Avatar name={p?.fullName} email={profile.email} src={p?.avatarUrl} size="xl"
                     className="h-24 w-24 text-2xl font-black" />
                 </div>
-                <div className="min-w-0 pb-2">
+                <div className="min-w-0 pt-4 pb-2">
                   <h1 className="text-2xl font-black text-ink leading-tight">{p?.fullName ?? profile.email}</h1>
                   <p className="text-body mt-0.5">{p?.headline ?? "Professional profile"}</p>
                   <p className="text-sm text-mute mt-0.5">{p?.location ?? "—"}</p>

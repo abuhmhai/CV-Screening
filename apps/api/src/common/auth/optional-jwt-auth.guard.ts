@@ -33,18 +33,7 @@ export class OptionalJwtAuthGuard implements CanActivate {
       request.user = { id: payload.sub, email: payload.email, role: payload.role ?? "CANDIDATE" };
       return true;
     } catch {
-      try {
-        const decoded = this.jwtService.decode(token) as JwtPayload | null;
-        if (decoded && decoded.sub) {
-          const email = decoded.email || decoded.user_metadata?.email || `user-${decoded.sub.slice(0, 8)}@supabase.local`;
-          const rawRole = decoded.user_metadata?.role || decoded.role;
-          const role: RequestUser["role"] =
-            rawRole === "RECRUITER" || rawRole === "ADMIN" ? rawRole : "CANDIDATE";
-          request.user = { id: decoded.sub, email, role };
-        }
-      } catch {
-        // Ignore invalid token in optional guard
-      }
+      // Invalid credentials receive only the anonymous public projection.
       return true;
     }
   }

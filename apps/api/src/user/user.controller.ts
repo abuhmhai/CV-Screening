@@ -71,7 +71,7 @@ export class UserController {
 
   @Post("me/cv")
   @Roles(UserRole.CANDIDATE)
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(FileInterceptor("file", { limits: { fileSize: 5 * 1024 * 1024 } }))
   async uploadCv(
     @CurrentUser() user: RequestUser | undefined,
     @UploadedFile() file: Express.Multer.File
@@ -93,7 +93,7 @@ export class UserController {
 
   @Post("me/avatar")
   @Roles(UserRole.ADMIN, UserRole.RECRUITER, UserRole.CANDIDATE)
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(FileInterceptor("file", { limits: { fileSize: 10 * 1024 * 1024 } }))
   async uploadAvatar(
     @CurrentUser() user: RequestUser | undefined,
     @UploadedFile() file: Express.Multer.File
@@ -105,8 +105,8 @@ export class UserController {
     if (!["image/png", "image/jpeg", "image/webp"].includes(file.mimetype)) {
       throw new BadRequestException("Only PNG, JPEG or WEBP images are allowed");
     }
-    if (file.size > 3 * 1024 * 1024) {
-      throw new BadRequestException("Image size exceeds 3MB limit");
+    if (file.size > 10 * 1024 * 1024) {
+      throw new BadRequestException("Ảnh tối đa 10 MB");
     }
 
     return this.userService.uploadAvatar(currentUser.id, file);
@@ -114,7 +114,7 @@ export class UserController {
 
   @Post("me/cover")
   @Roles(UserRole.ADMIN, UserRole.RECRUITER, UserRole.CANDIDATE)
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(FileInterceptor("file", { limits: { fileSize: 10 * 1024 * 1024 } }))
   async uploadCover(
     @CurrentUser() user: RequestUser | undefined,
     @UploadedFile() file: Express.Multer.File
@@ -126,8 +126,8 @@ export class UserController {
     if (!["image/png", "image/jpeg", "image/webp"].includes(file.mimetype)) {
       throw new BadRequestException("Only PNG, JPEG or WEBP images are allowed");
     }
-    if (file.size > 5 * 1024 * 1024) {
-      throw new BadRequestException("Image size exceeds 5MB limit");
+    if (file.size > 10 * 1024 * 1024) {
+      throw new BadRequestException("Ảnh tối đa 10 MB");
     }
 
     return this.userService.uploadCover(currentUser.id, file);

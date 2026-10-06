@@ -7,7 +7,7 @@ import { RequestUser } from "../common/auth/request-user.type";
 import { requireUser } from "../common/auth/require-user";
 import { LoginDto } from "./dto/login.dto";
 import { RefreshTokenDto } from "./dto/refresh-token.dto";
-import { RegisterDto } from "./dto/register.dto";
+import { RegisterDto, ForgotPasswordDto } from "./dto/register.dto";
 import { AuthService } from "./auth.service";
 
 @UseGuards(AuthRateLimitGuard)
@@ -28,6 +28,11 @@ export class AuthController {
   @Post("refresh")
   refresh(@Body() payload: RefreshTokenDto) {
     return this.authService.refresh(payload.refreshToken);
+  }
+
+  @Post("forgot-password")
+  forgotPassword(@Body() payload: ForgotPasswordDto) {
+    return this.authService.forgotPassword(payload);
   }
 
   @Post("logout")

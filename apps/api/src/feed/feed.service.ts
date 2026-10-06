@@ -1,47 +1,39 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { visiblePosts } from "../social/post-access";
 
 @Injectable()
 export class FeedService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async loadFeed(userId: string, cursor?: string, limit = 20) {
-    const acceptedConnections = await this.prisma.connection.findMany({
-      where: {
-        status: "ACCEPTED",
-        OR: [{ requesterId: userId }, { addresseeId: userId }]
-      },
-      select: { requesterId: true, addresseeId: true }
-    });
-
-    const authorIds = new Set<string>([userId]);
-    for (const item of acceptedConnections) {
-      authorIds.add(item.requesterId);
-      authorIds.add(item.addresseeId);
-    }
-
+  async loadFeed(userId?: string, cursor?: string, limit = 20, authorId?: string) {
     const posts = await this.prisma.post.findMany({
       where: {
-        deletedAt: null,
-        authorId: { in: Array.from(authorIds) }
+        ...visiblePosts(userId),
+        ...(authorId ? { authorId } : {})
       },
       include: {
-        author: { include: { profile: true } },
+        author: { select: { id: true, profile: true } },
         company: true,
         comments: {
           where: { deletedAt: null },
-          include: { author: { include: { profile: true } } },
-          take: 3,
-          orderBy: { createdAt: "desc" }
+          include: { author: { select: { id: true, profile: true } } },
+          orderBy: { createdAt: "asc" }
         }
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       cursor: cursor ? { id: cursor } : undefined,
       skip: cursor ? 1 : 0,
-      take: limit
+      take: Math.min(50, Math.max(1, limit))
     });
 
     const now = Date.now();
+    const reactions = userId ? await this.prisma.reaction.findMany({
+      where: { userId, OR: [
+        { targetType: "POST", targetId: { in: posts.map(p => p.id) } },
+        { targetType: "COMMENT", targetId: { in: posts.flatMap(p => p.comments.map(c => c.id)) } }
+      ] }
+    }) : [];
     return posts
       .map((post) => {
         const ageHours = (now - new Date(post.createdAt).getTime()) / (1000 * 60 * 60);
@@ -50,9 +42,10 @@ export class FeedService {
         const score = Number((freshness * 50 + engagementScore).toFixed(2));
         return {
           ...post,
+          userReaction: reactions.find(r => r.targetType === "POST" && r.targetId === post.id)?.reactionType ?? null,
+          comments: post.comments.map(c => ({ ...c, userReaction: reactions.find(r => r.targetType === "COMMENT" && r.targetId === c.id)?.reactionType ?? null })),
           feedScore: score
         };
-      })
-      .sort((a, b) => b.feedScore - a.feedScore);
+      });
   }
 }

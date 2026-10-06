@@ -73,8 +73,7 @@ export default function ForgotPasswordPage() {
               <CheckCircle2 size={48} className="mx-auto text-positive mb-4" />
               <h2 className="text-xl font-bold text-ink mb-2">Yêu cầu đã gửi!</h2>
               <p className="text-body text-sm mb-6">
-                Nếu email / số điện thoại tồn tại trong hệ thống, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu.
-                Kiểm tra hòm thư (cả mục Spam).
+                Yêu cầu của bạn đã được chuyển đến quản trị viên. Quản trị viên sẽ kiểm tra thông tin và hỗ trợ khôi phục tài khoản.
               </p>
               <Link href="/auth/sign-in">
                 <Button variant="secondary" leftIcon={<ArrowLeft size={16} />}>

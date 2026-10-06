@@ -63,6 +63,11 @@ enum ReactionTargetType {
 
 enum ReactionType {
   LIKE
+  LOVE
+  HAHA
+  WOW
+  SAD
+  ANGRY
   CELEBRATE
   SUPPORT
   INSIGHTFUL
@@ -82,6 +87,8 @@ enum ConversationType {
 model User {
   id                     String                     @id @default(uuid()) @db.Uuid
   email                  String                     @unique
+  username               String?                    @unique
+  phone                  String?
   passwordHash           String                     @map("password_hash")
   role                   UserRole
   isVerified             Boolean                    @default(false) @map("is_verified")
@@ -115,12 +122,33 @@ model User {
   projects               Project[]
   moderationReports      ModerationReport[]         @relation("ModerationReporter")
   privacySettings        PrivacySettings?
+  following              UserFollow[]               @relation("Follower")
+  followers              UserFollow[]               @relation("Followed")
 
   @@index([role], map: "users_role_idx")
   @@index([isVerified], map: "users_is_verified_idx")
   @@index([createdAt], map: "users_created_at_idx")
   @@index([deletedAt], map: "users_deleted_at_idx")
   @@map("users")
+}
+
+model UserFollow {
+  followerId String @db.Uuid @map("follower_id")
+  followedId String @db.Uuid @map("followed_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  follower User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followed User @relation("Followed", fields: [followedId], references: [id], onDelete: Cascade)
+  @@id([followerId, followedId])
+  @@map("user_follows")
+}
+
+model PasswordRecoveryRequest {
+  id String @id @default(uuid()) @db.Uuid
+  email String?
+  phone String?
+  status String @default("PENDING")
+  createdAt DateTime @default(now()) @map("created_at")
+  @@map("password_recovery_requests")
 }
 
 model UserProfile {

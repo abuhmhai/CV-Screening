@@ -67,7 +67,7 @@ export function ReactionPicker({ activeReaction, disabled, onReact }: ReactionPi
             onMouseEnter={clearCloseTimer}
             onMouseLeave={scheduleClose}
           >
-            <div className="flex items-end gap-1 rounded-full border border-hairline-strong bg-surface-card px-2 py-2 shadow-[0_12px_40px_rgba(0,0,0,0.45)]">
+            <div className="flex w-72 max-w-[90vw] flex-wrap items-end justify-center gap-1 rounded-2xl border border-hairline-strong bg-surface-card px-2 py-2 shadow-lg">
               {POST_REACTIONS.map((reaction, index) => {
                 const isHovered = hoveredType === reaction.type;
                 return (
@@ -105,7 +105,7 @@ export function ReactionPicker({ activeReaction, disabled, onReact }: ReactionPi
       <button
         type="button"
         disabled={disabled}
-        onClick={() => onReact(activeReaction ?? "LIKE")}
+        onClick={() => { if (open) onReact(activeReaction ?? "LIKE"); else handleOpen(); }}
         className={`inline-flex w-full items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition disabled:cursor-default ${
           activeReaction
             ? "bg-surface-elevated"

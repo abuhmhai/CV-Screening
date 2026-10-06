@@ -133,7 +133,7 @@ export function AppShellClient({ children }: { children: ReactNode }) {
               </button>
 
               <Link href={user ? (isRecruiter ? "/recruiter/dashboard" : "/feed") : "/"} className="group flex items-center gap-2.5">
-                <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-deep text-ink font-black text-sm shadow-sm transition-transform group-hover:scale-105">
+                <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-on font-black text-sm shadow-sm transition-transform group-hover:scale-105">
                   TF
                 </div>
                 <div className="hidden sm:block">
@@ -495,7 +495,7 @@ export function AppShellClient({ children }: { children: ReactNode }) {
                                     : "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400"
                                 }`}
                               >
-                                {isRecruiter ? "Nhà tuyển dụng" : "Ứng viên"}
+                                {user.role === "ADMIN" ? "Quản trị viên" : isRecruiter ? "Nhà tuyển dụng" : "Ứng viên"}
                               </span>
                             </div>
                           </div>
@@ -518,6 +518,7 @@ export function AppShellClient({ children }: { children: ReactNode }) {
                             <span>Cài đặt tài khoản</span>
                           </Link>
 
+                          {user.role === "ADMIN" ? <Link href="/admin/moderation" onClick={() => setProfileMenuOpen(false)} className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-body-sm text-body hover:bg-surface-elevated"><Settings size={16} /><span>Quản trị nội dung</span></Link> : null}
                           <div className="my-1 border-t border-hairline" />
 
                           <button
@@ -569,7 +570,7 @@ export function AppShellClient({ children }: { children: ReactNode }) {
               {/* Drawer Header */}
               <div className="flex items-center justify-between border-b border-hairline-strong p-4">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-ink font-bold text-xs">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-on font-bold text-xs">
                     TF
                   </div>
                   <span className="font-extrabold text-ink">TalentFlow</span>

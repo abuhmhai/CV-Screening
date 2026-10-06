@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { SocialActivity } from "../../../components/profile/social-activity";
 import { apiFetch } from "../../../lib/api-client";
 import { PublicProfile } from "../../../lib/types";
 import { formatDate } from "../../../lib/format";
@@ -21,8 +22,8 @@ import {
   Briefcase
 } from "lucide-react";
 
-export default function PublicProfilePage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params);
+export default function PublicProfilePage({ params }: { params: { slug: string } }) {
+  const { slug } = params;
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -51,16 +52,16 @@ export default function PublicProfilePage({ params }: { params: Promise<{ slug: 
   return (
     <div className="space-y-6">
       <Card className="overflow-hidden p-0">
-        <div className="h-36 bg-gradient-to-r from-primary to-primary-neutral">
+        <div className="h-52 sm:h-72 bg-gradient-to-r from-accent-blue/20 to-primary-neutral">
           {profile.coverUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={profile.coverUrl} alt="cover" className="h-full w-full object-cover" />
           ) : null}
         </div>
         <div className="relative px-6 pb-6">
-          <div className="-mt-10 flex flex-wrap items-end gap-4">
-            <Avatar name={profile.fullName} src={profile.avatarUrl} size="xl" />
-            <div className="min-w-0">
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="-mt-14 shrink-0"><Avatar name={profile.fullName} src={profile.avatarUrl} size="xl" /></div>
+            <div className="min-w-0 pt-4">
               <h1 className="text-2xl font-black text-ink">{profile.fullName}</h1>
               {profile.headline ? <p className="text-body">{profile.headline}</p> : null}
               <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-mute">
@@ -97,6 +98,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ slug: 
         </div>
       </Card>
 
+      <SocialActivity userId={profile.userId} />
       {profile.skills.length > 0 ? (
         <Card>
           <h2 className="text-lg font-semibold">Kỹ năng</h2>

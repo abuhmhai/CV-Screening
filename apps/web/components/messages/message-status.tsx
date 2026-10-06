@@ -17,12 +17,7 @@ export function deliveryStatusLabel(status: MessageDeliveryStatus): string {
 }
 
 export function MessageStatusBadge({ status }: { status: MessageDeliveryStatus }) {
-  const tone =
-    status === "seen"
-      ? "text-accent-green"
-      : status === "sending"
-        ? "text-ink/60 italic"
-        : "text-ink/50";
+  const tone = status === "sending" ? "opacity-90 italic" : "";
 
   return (
     <span className={`text-[10px] font-medium ${tone}`}>{deliveryStatusLabel(status)}</span>

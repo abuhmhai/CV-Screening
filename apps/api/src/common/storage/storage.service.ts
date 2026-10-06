@@ -67,7 +67,9 @@ export class StorageService implements OnModuleInit {
   }
 
   async upload(input: UploadInput): Promise<UploadResult> {
-    const safeName = input.originalName.replace(/[^a-zA-Z0-9._-]/g, "_");
+    let safeName = input.originalName.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const imageExtension: Record<string, string> = { "image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp", "image/gif": ".gif" };
+    if (imageExtension[input.contentType] && !/\.(png|jpe?g|webp|gif)$/i.test(safeName)) safeName += imageExtension[input.contentType];
     const key = `${input.folder}/${randomUUID()}-${safeName}`;
     const size = input.buffer.length;
 

@@ -47,6 +47,26 @@ export class SocialController {
     return this.socialService.createConnection(currentUser.id, payload);
   }
 
+  @Post("comments/:id/reactions")
+  reactToComment(@CurrentUser() user: RequestUser | undefined, @Param("id") id: string, @Body() payload: ReactPostDto) {
+    return this.socialService.reactToComment(requireUser(user).id, id, payload.reactionType);
+  }
+
+  @Get("users/:id/follow")
+  followStatus(@CurrentUser() user: RequestUser | undefined, @Param("id") id: string) {
+    return this.socialService.followStatus(requireUser(user).id, id);
+  }
+
+  @Post("users/:id/follow")
+  follow(@CurrentUser() user: RequestUser | undefined, @Param("id") id: string) {
+    return this.socialService.follow(requireUser(user).id, id);
+  }
+
+  @Delete("users/:id/follow")
+  unfollow(@CurrentUser() user: RequestUser | undefined, @Param("id") id: string) {
+    return this.socialService.unfollow(requireUser(user).id, id);
+  }
+
   @Get("connections")
   listConnections(@CurrentUser() user: RequestUser | undefined) {
     const currentUser = requireUser(user);

@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 
 type AvatarSize = "sm" | "md" | "lg" | "xl";
 
@@ -16,7 +17,7 @@ const sizeClasses: Record<string, string> = {
   sm: "h-8 w-8 text-xs",
   md: "h-10 w-10 text-sm",
   lg: "h-14 w-14 text-base",
-  xl: "h-16 w-16 text-lg"
+  xl: "h-28 w-28 text-2xl"
 };
 
 const onlineIndicatorClasses: Record<string, string> = {
@@ -53,6 +54,9 @@ export function Avatar({
   online,
   className = ""
 }: AvatarProps) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+  const showImage = Boolean(src) && !failed;
   let displayInitials = initials;
   if (!displayInitials) {
     if (name) {
@@ -72,13 +76,13 @@ export function Avatar({
       <div
         className={`flex items-center justify-center overflow-hidden rounded-full ring-2 ring-primary-pale ${sizeClasses[size]}`}
         style={
-          !src
+          !showImage
             ? { backgroundColor: bgColor, color: textColor, fontWeight: 600 }
             : undefined
         }
       >
-        {src ? (
-          <img src={src} alt={displayInitials} className="h-full w-full object-cover" />
+        {showImage ? (
+          <img src={src!} alt={name ?? displayInitials} onError={() => setFailed(true)} className="h-full w-full object-cover" />
         ) : (
           displayInitials
         )}

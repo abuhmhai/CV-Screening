@@ -1,0 +1,63 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: cvscreening
+      MYSQL_USER: cvuser
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql_php_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost --silent"]
+      interval: 5s
+      retries: 20
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/php/Dockerfile
+    environment: &php_environment
+      APP_URL: http://localhost:8080
+      DB_DSN: mysql:host=mysql;dbname=cvscreening;charset=utf8mb4
+      DB_USER: cvuser
+      DB_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET of at least 32 characters}
+      AI_SERVICE_URL: http://ai-service:8000
+    command: ["php", "bin/console.php", "migrate"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+  web:
+    build:
+      context: .
+      dockerfile: apps/php/Dockerfile
+    environment: *php_environment
+    ports: ["127.0.0.1:8080:80"]
+    volumes: ["php_files:/var/www/platform/storage"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  worker:
+    build:
+      context: .
+      dockerfile: apps/php/Dockerfile
+    environment: *php_environment
+    command: ["php", "bin/console.php", "worker"]
+    volumes: ["php_files:/var/www/platform/storage"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      ai-service:
+        condition: service_started
+  ai-service:
+    build:
+      context: .
+      dockerfile: apps/ai-service/Dockerfile.php
+    environment:
+      CACHE_DRIVER: file
+      CACHE_DIR: /app/.screening-cache
+    volumes: ["ai_php_cache:/app/.screening-cache"]
+volumes:
+  mysql_php_data:
+  php_files:
+  ai_php_cache:

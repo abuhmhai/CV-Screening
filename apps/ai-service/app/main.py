@@ -6,7 +6,7 @@ from redis import Redis
 
 from app.routers.screening import router as screening_router
 from app.schemas import ScreenRequest, ScreeningResponse
-from app.services.cache import ScreeningCache
+from app.services.cache import FileScreeningCache, ScreeningCache
 from app.services.extraction import extract_text
 from app.services.screening import build_cache_key, screen_candidate
 
@@ -16,7 +16,11 @@ app.include_router(screening_router)
 redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 cache_ttl = int(os.getenv("CACHE_TTL_SECONDS", "86400"))
 redis_client = Redis.from_url(redis_url, decode_responses=True)
-screen_cache = ScreeningCache(redis_client, cache_ttl)
+screen_cache = (
+    FileScreeningCache(os.getenv("CACHE_DIR", ".screening-cache"), cache_ttl)
+    if os.getenv("CACHE_DRIVER", "redis") == "file"
+    else ScreeningCache(redis_client, cache_ttl)
+)
 
 
 def _decode_upload(content: bytes, filename: str) -> str:
@@ -40,6 +44,23 @@ def _validate_upload(file: UploadFile, content: bytes) -> None:
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok", "service": "ai-service"}
+
+
+@app.post("/extract")
+async def extract(cv_file: Optional[UploadFile] = File(default=None), file: Optional[UploadFile] = File(default=None)) -> dict:
+    upload = cv_file or file
+    if upload is None:
+        raise HTTPException(status_code=400, detail="No CV uploaded")
+    # Read at most one byte past the limit rather than buffering arbitrary input.
+    content = await upload.read(5 * 1024 * 1024 + 1)
+    _validate_upload(upload, content)
+    try:
+        text = extract_text(content, upload.filename or "candidate_cv.pdf", strict=True)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    if not text.strip():
+        raise HTTPException(status_code=422, detail="No text found in CV")
+    return {"text": text}
 
 
 @app.get("/status/{job_id}")

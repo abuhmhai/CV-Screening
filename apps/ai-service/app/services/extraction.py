@@ -10,7 +10,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def extract_text(content: bytes, filename: str) -> str:
+def extract_text(content: bytes, filename: str, strict: bool = False) -> str:
     name = (filename or "").lower()
     try:
         if name.endswith(".pdf"):
@@ -18,7 +18,12 @@ def extract_text(content: bytes, filename: str) -> str:
         if name.endswith(".docx"):
             return _extract_docx(content)
     except Exception as exc:  # pragma: no cover - defensive
+        if strict:
+            raise ValueError("CV document could not be parsed") from exc
         logger.warning("Extraction failed for %s: %s", filename, exc)
+
+    if strict:
+        raise ValueError("Unsupported CV extension")
 
     return content.decode("utf-8", errors="ignore")
 

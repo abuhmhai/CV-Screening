@@ -1,5 +1,9 @@
 # Local toolchain (setup.ps1)
 .tools/
+apps/php/vendor/
+apps/php/storage/
+apps/ai-service/.screening-cache/
+.screening-cache/
 
 # Node
 node_modules/
@@ -37,6 +41,7 @@ Thumbs.db
 .vscode/
 
 # Logs
+.env.php
 *.log
 npm-debug.log*
 yarn-debug.log*

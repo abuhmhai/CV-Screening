@@ -1,0 +1,11 @@
+# Local PHP runtime: optional NLP packages remain available in requirements.txt.
+fastapi==0.111.1
+uvicorn==0.30.3
+pydantic==2.8.2
+python-multipart==0.0.9
+pdfminer.six==20240706
+python-docx==1.1.2
+redis==5.0.7
+anthropic==0.39.0
+pytest==8.3.2
+httpx==0.28.1

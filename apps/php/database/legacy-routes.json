@@ -1,0 +1,627 @@
+[
+    {
+        "method": "GET",
+        "path": "/api/v1/health",
+        "source": "app.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/metrics",
+        "source": "app.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/applications",
+        "source": "application/application.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/applications/me",
+        "source": "application/application.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/applications/:id",
+        "source": "application/application.controller.ts"
+    },
+    {
+        "method": "DELETE",
+        "path": "/api/v1/applications/:id",
+        "source": "application/application.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/applications/:id/reapply",
+        "source": "application/application.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/applications/job/:jobId",
+        "source": "application/application.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/applications/job/:jobId/export",
+        "source": "application/application.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/applications/:id/status",
+        "source": "application/application.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/applications/:id/rescreen",
+        "source": "application/application.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/applications/:id/schedule-interview",
+        "source": "application/application.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/applications/:id/offer",
+        "source": "application/application.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/applications/:id/offer/respond",
+        "source": "application/application.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/auth/login",
+        "source": "auth/auth.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/auth/register",
+        "source": "auth/auth.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/auth/refresh",
+        "source": "auth/auth.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/auth/forgot-password",
+        "source": "auth/auth.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/auth/logout",
+        "source": "auth/auth.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/auth/demo-login",
+        "source": "auth/auth.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/auth/me",
+        "source": "auth/auth.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/auth/request-verification",
+        "source": "auth/auth.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/auth/verify-email",
+        "source": "auth/auth.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/auth/:provider",
+        "source": "auth/auth.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/auth/:provider/callback",
+        "source": "auth/auth.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/files/*",
+        "source": "common/storage/files.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/uploads/media",
+        "source": "common/storage/uploads.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/companies/:id",
+        "source": "company/company-public.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/companies/:id/follow",
+        "source": "company/company-public.controller.ts"
+    },
+    {
+        "method": "DELETE",
+        "path": "/api/v1/companies/:id/follow",
+        "source": "company/company-public.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/companies/:id/following",
+        "source": "company/company-public.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/companies",
+        "source": "company/company.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/companies",
+        "source": "company/company.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/companies/:id/analytics",
+        "source": "company/company.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/external-jobs",
+        "source": "external-jobs/external-jobs.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/external-jobs/saved/ids",
+        "source": "external-jobs/external-jobs.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/external-jobs/:id/save",
+        "source": "external-jobs/external-jobs.controller.ts"
+    },
+    {
+        "method": "DELETE",
+        "path": "/api/v1/external-jobs/:id/save",
+        "source": "external-jobs/external-jobs.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/external-jobs/:id",
+        "source": "external-jobs/external-jobs.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/external-jobs/:id/summary",
+        "source": "external-jobs/external-jobs.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/external-jobs/:id/screen",
+        "source": "external-jobs/external-jobs.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/external-jobs/crawl",
+        "source": "external-jobs/external-jobs.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/external-jobs/sync",
+        "source": "external-jobs/external-jobs.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/feed",
+        "source": "feed/feed.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users/me/generated-cv",
+        "source": "generated-cv/generated-cv.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users/me/generated-cv/:id",
+        "source": "generated-cv/generated-cv.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/users/me/generated-cv",
+        "source": "generated-cv/generated-cv.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/users/me/generated-cv/:id",
+        "source": "generated-cv/generated-cv.controller.ts"
+    },
+    {
+        "method": "DELETE",
+        "path": "/api/v1/users/me/generated-cv/:id",
+        "source": "generated-cv/generated-cv.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users/me/generated-cv/:id/export",
+        "source": "generated-cv/generated-cv.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/jobs",
+        "source": "job/job.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/jobs/search",
+        "source": "job/job.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/jobs/facets",
+        "source": "job/job.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/jobs/:id",
+        "source": "job/job.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/jobs",
+        "source": "job/job.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/job-alerts",
+        "source": "job-alert/job-alert.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/job-alerts",
+        "source": "job-alert/job-alert.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/job-alerts/:id",
+        "source": "job-alert/job-alert.controller.ts"
+    },
+    {
+        "method": "DELETE",
+        "path": "/api/v1/job-alerts/:id",
+        "source": "job-alert/job-alert.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/messages/conversations",
+        "source": "message/message.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/messages/conversations/:conversationId",
+        "source": "message/message.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/messages",
+        "source": "message/message.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/messages/conversations/:conversationId/read",
+        "source": "message/message.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/messages/unread-summary",
+        "source": "message/message.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/moderation/reports",
+        "source": "moderation/moderation.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/moderation/reports",
+        "source": "moderation/moderation.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/moderation/reports/:id",
+        "source": "moderation/moderation.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/moderation/recovery-requests",
+        "source": "moderation/moderation.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/moderation/recovery-requests/:id",
+        "source": "moderation/moderation.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/notifications",
+        "source": "notification/notification.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/notifications/:id/read",
+        "source": "notification/notification.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/notifications/read-all",
+        "source": "notification/notification.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/privacy/settings",
+        "source": "privacy/privacy.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/privacy/settings",
+        "source": "privacy/privacy.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/recommendations/jobs",
+        "source": "recommendation/recommendation.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/recommendations/people",
+        "source": "recommendation/recommendation.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/jobs/:id/save",
+        "source": "saved-job/saved-job.controller.ts"
+    },
+    {
+        "method": "DELETE",
+        "path": "/api/v1/jobs/:id/save",
+        "source": "saved-job/saved-job.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users/me/saved-jobs",
+        "source": "saved-job/saved-job.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users/me/saved-jobs/ids",
+        "source": "saved-job/saved-job.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/search",
+        "source": "search/search.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/social/posts",
+        "source": "social/social.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/social/posts/:postId/comments",
+        "source": "social/social.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/social/posts/:postId/reactions",
+        "source": "social/social.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/social/connections",
+        "source": "social/social.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/social/comments/:id/reactions",
+        "source": "social/social.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/social/users/:id/follow",
+        "source": "social/social.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/social/users/:id/follow",
+        "source": "social/social.controller.ts"
+    },
+    {
+        "method": "DELETE",
+        "path": "/api/v1/social/users/:id/follow",
+        "source": "social/social.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/social/connections",
+        "source": "social/social.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/social/connections/:id/status",
+        "source": "social/social.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/social/connections/suggestions",
+        "source": "social/social.controller.ts"
+    },
+    {
+        "method": "DELETE",
+        "path": "/api/v1/social/connections/:id",
+        "source": "social/social.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/public/users/:slug",
+        "source": "user/public-user.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users/:id/profile",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users/me/onboarding-checklist",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users/me/insights",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users/me/dashboard",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/users/me/public-slug",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/users/me/profile",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/users/me/cv",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/users/me/avatar",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/users/me/cover",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/users/me/cv/:id/primary",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "DELETE",
+        "path": "/api/v1/users/me/cv/:id",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users/me/experiences",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/users/me/experiences",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/users/me/experiences/:id",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "DELETE",
+        "path": "/api/v1/users/me/experiences/:id",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users/me/educations",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/users/me/educations",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/users/me/educations/:id",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "DELETE",
+        "path": "/api/v1/users/me/educations/:id",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users/me/skills",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/users/me/skills",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "DELETE",
+        "path": "/api/v1/users/me/skills/:skillId",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users/me/certifications",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/users/me/certifications",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/users/me/certifications/:id",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "DELETE",
+        "path": "/api/v1/users/me/certifications/:id",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "GET",
+        "path": "/api/v1/users/me/projects",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "POST",
+        "path": "/api/v1/users/me/projects",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "PATCH",
+        "path": "/api/v1/users/me/projects/:id",
+        "source": "user/user.controller.ts"
+    },
+    {
+        "method": "DELETE",
+        "path": "/api/v1/users/me/projects/:id",
+        "source": "user/user.controller.ts"
+    }
+]

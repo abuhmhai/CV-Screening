@@ -1,0 +1,1 @@
+<div class="history-timeline section"><?php foreach($data['statusHistory'] as $h): ?><article><strong><?= e($labels[$h['toStatus']]??$h['toStatus']) ?></strong><p class="muted"><?= e(date('d/m/Y H:i',strtotime($h['changedAt']))) ?></p><?php if($h['note']): ?><p><?= e($h['note']) ?></p><?php endif; ?></article><?php endforeach; ?></div>

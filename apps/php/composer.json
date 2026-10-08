@@ -1,0 +1,8 @@
+{
+  "name": "cv-screening/php-platform",
+  "description": "PHP 7.4 recruitment platform with MySQL and FastAPI screening",
+  "type": "project",
+  "require": {"php": "~7.4.0", "ext-pdo": "*", "ext-pdo_mysql": "*", "ext-json": "*", "ext-mbstring": "*", "ext-curl": "*", "ext-fileinfo": "*", "dompdf/dompdf": "^3.1"},
+  "config": {"platform": {"php": "7.4.33"}, "sort-packages": true},
+  "scripts": {"test": "php tests/run.php", "migrate": "php bin/console.php migrate"}
+}

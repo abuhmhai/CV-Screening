@@ -1,0 +1,10 @@
+.git
+.tools
+**/node_modules
+**/vendor
+**/storage
+**/.env
+**/.env.local
+**/.pgdata
+**/.screening-cache
+**/__pycache__

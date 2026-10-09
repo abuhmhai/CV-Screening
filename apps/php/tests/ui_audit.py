@@ -4,6 +4,7 @@ Imported by browser.py so the same Chrome session and error collection are used.
 The React source is the design reference; this is not a pixel comparison.
 """
 import json
+from pathlib import Path
 from playwright.sync_api import expect
 
 
@@ -44,8 +45,10 @@ def audit(page, context, base, artifacts):
     jobs = api('/jobs/search')['items']
     job_id = jobs[0]['id']
     company_id = jobs[0]['company']['id']
+    user_id = api('/auth/me')['id']
+    recruiter_id = jobs[0]['createdBy']
     candidate_routes = [
-        '/', '/profile', '/profile?edit=true', '/onboarding', '/feed', '/network',
+        '/', '/u/' + user_id, '/profile', '/profile?edit=true', '/onboarding', '/feed', '/network',
         '/jobs', '/jobs/' + job_id, '/external-jobs', '/messages', '/applications',
         '/applications/' + app_id, '/ai-score/' + app_id,
         '/ai-score-detail?applicationId=' + app_id, '/saved-jobs', '/notifications',
@@ -54,8 +57,35 @@ def audit(page, context, base, artifacts):
         '/settings/security', '/settings/appearance', '/settings/notifications',
     ]
     for route in candidate_routes:
-        for mobile in (False, True):
-            screen(route, mobile)
+        for theme in ('dark', 'light'):
+            for mobile in (False, True):
+                screen(route, mobile, theme)
+    page.goto(base + '/ai-score-detail?applicationId=' + app_id)
+    assert page.url == base + '/applications'
+    from social_audit import audit_social, audit_network
+    audit_social(page, context, base, artifacts)
+    audit_network(page, context, base, recruiter_id)
+    from workflow_audit import audit_applications
+    audit_applications(context, base)
+    page.goto(base + '/u/' + recruiter_id)
+    follow = page.locator('[data-user-follow]')
+    initial = follow.get_attribute('aria-pressed')
+    page.evaluate("window.__followMarker='active'")
+    follow.click()
+    expect(follow).to_have_attribute('aria-pressed', 'false' if initial == 'true' else 'true')
+    follow.click()
+    expect(follow).to_have_attribute('aria-pressed', initial)
+    assert page.evaluate('window.__followMarker') == 'active'
+    page.goto(base + '/notifications')
+    page.evaluate("window.__notificationMarker='active'")
+    unread = page.locator('[data-notification-item].unread').count()
+    read_one = page.locator('[data-notification-item] [data-method=PATCH]').first
+    if unread:
+        read_one.click()
+        expect(page.locator('[data-notification-item].unread')).to_have_count(unread - 1)
+    page.locator('[data-action="/notifications/read-all"]').click()
+    expect(page.locator('[data-notification-item].unread')).to_have_count(0)
+    assert page.evaluate('window.__notificationMarker') == 'active'
     page.goto(base + '/applications/' + app_id)
     expect(page.locator('button[data-method=DELETE]')).to_contain_text('Rút hồ sơ')
     assert '01/01/1970' not in page.locator('body').inner_text()
@@ -92,17 +122,22 @@ def audit(page, context, base, artifacts):
     for role, routes in [('recruiter', ['/recruiter/dashboard', '/recruiter/analytics', '/recruiter/jobs/new', '/ai-score/' + app_id]), ('admin', ['/admin/moderation'])]:
         login(role)
         for route in routes:
-            for mobile in (False, True):
-                screen(route, mobile)
+            for theme in ('dark', 'light'):
+                for mobile in (False, True):
+                    screen(route, mobile, theme)
         if role == 'recruiter':
             page.goto(base + '/ai-score/' + app_id)
             expect(page.locator('form[data-api$="/schedule-interview"]')).to_be_visible()
             expect(page.locator('form[data-api$="/offer"]')).to_be_visible()
 
     context.clear_cookies()
-    for route in ['/auth/sign-in', '/auth/sign-up', '/auth/forgot-password']:
-        for mobile in (False, True):
-            screen(route, mobile)
+    screen('/u/' + user_id)
+    expect(page.locator('[data-profile-edit]')).to_have_count(0)
+    expect(page.locator('[data-comment-form] button[type=submit]').first).to_be_disabled() if page.locator('[data-comment-form]').count() else None
+    for route in ['/auth/sign-in', '/auth/sign-up', '/auth/forgot-password', '/auth/oauth-callback']:
+        for theme in ('dark', 'light'):
+            for mobile in (False, True):
+                screen(route, mobile, theme)
     page.goto(base + '/auth/sign-up')
     page.locator('[name=fullName]').fill('UI validation')
     page.locator('[name=username]').fill('ui_validation_only')
@@ -116,5 +151,14 @@ def audit(page, context, base, artifacts):
     page.goto(base + '/auth/forgot-password')
     page.locator('form[data-api] button[type=submit]').click()
     expect(page.locator('.form-error')).to_contain_text('email hoặc số điện thoại')
-    (artifacts / 'ui-audit.json').write_text(json.dumps({'screens': checked, 'count': len(checked)}, ensure_ascii=False, indent=2), encoding='utf-8')
+    inventory = json.loads((Path(__file__).resolve().parents[1] / 'database/legacy-pages.json').read_text(encoding='utf-8'))
+    def normalize(route):
+        route = route.split('?')[0]
+        for prefix, param in [('/jobs/', '[id]'), ('/company/', '[id]'), ('/applications/', '[id]'), ('/ai-score/', '[id]'), ('/u/', '[slug]')]:
+            if route.startswith(prefix):
+                return prefix + param
+        return route
+    covered = {normalize(item['route']) for item in checked}
+    assert not (set(inventory) - covered), ('Uncovered legacy pages', set(inventory) - covered)
+    (artifacts / 'ui-audit.json').write_text(json.dumps({'screens': checked, 'count': len(checked), 'legacyPageCount': len(inventory), 'coveredLegacyPages': sorted(set(inventory) & covered)}, ensure_ascii=False, indent=2), encoding='utf-8')
     print(f'UI audit passed: {len(checked)} desktop/mobile/theme checks, three roles, restored interactions')

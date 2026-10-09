@@ -13,7 +13,10 @@
     const headers = { 'Accept': 'application/json', 'X-CSRF-Token': document.querySelector('meta[name=csrf-token]')?.content || '' };
     if (body && !(body instanceof FormData)) { headers['Content-Type'] = 'application/json'; body = JSON.stringify(body); }
     const response = await fetch('/api/v1' + path, { method, headers, body, credentials: 'same-origin' });
-    const result = await response.json();
+    const raw = await response.text();
+    let result;
+    try { result = raw ? JSON.parse(raw) : {}; }
+    catch { throw new Error('Máy chủ trả về dữ liệu không hợp lệ. Vui lòng thử lại.'); }
     if (response.status === 401 && retry && path !== '/auth/login' && path !== '/auth/refresh') {
       refreshInFlight ||= api('/auth/refresh', 'POST', {}, false).finally(() => { refreshInFlight = null; });
       await refreshInFlight;
@@ -62,7 +65,14 @@
       for (const text of [...(result.strengths || []), ...(result.gaps || []), result.suggestion || '']) { const p = document.createElement('p'); p.textContent = text; node.append(p); }
     } else { const p = document.createElement('pre'); p.textContent = JSON.stringify(result, null, 2); node.append(p); }
   }
+  async function pageDocument(url) {
+    const response=await fetch(url,{credentials:'same-origin',headers:{Accept:'text/html'}});
+    if(!response.ok)throw new Error('Không tải được nội dung. Vui lòng thử lại.');
+    return new DOMParser().parseFromString(await response.text(),'text/html');
+  }
+  const resultHandlers = [];
   async function finish(element, result) {
+    for (const handler of resultHandlers) if (await handler(element, result)) return;
     if (element.dataset.result) showResult(element.dataset.result, result);
     feedback('Đã lưu thành công.');
     if (result.taskId) feedback('Đã đưa vào hàng đợi xử lý.');
@@ -74,7 +84,8 @@
   }
   document.addEventListener('submit', async event => {
     const form = event.target; if (!form.dataset.api && !form.dataset.upload) return;
-    event.preventDefault(); const button = form.querySelector('button[type=submit],button'); if (button) button.disabled = true;
+    event.preventDefault(); if(form.dataset.busy==='true')return;form.dataset.busy='true';
+    const button = event.submitter || form.querySelector('button[type=submit],button'); if (button) button.disabled = true;
     try {
       const errorNode=form.querySelector('.form-error');if(errorNode)errorNode.hidden=true;
       if(form.hasAttribute('data-register')&&form.elements.password.value!==form.elements.confirmPassword.value)throw new Error('Mật khẩu xác nhận không khớp');
@@ -88,15 +99,15 @@
       }
       const result = await api(form.dataset.api || form.dataset.upload, form.dataset.method || 'POST', body); await finish(form, result);
     }
-    catch (error) { feedback(error.message, true);const node=form.querySelector('.form-error');if(node){node.hidden=false;node.textContent=error.message;} } finally { if (button) button.disabled = false; }
+    catch (error) { feedback(error.message, true);const node=form.querySelector('.form-error');if(node){node.hidden=false;node.textContent=error.message;} } finally { delete form.dataset.busy;if (button) button.disabled = false; }
   });
   document.addEventListener('click', async event => {
     const button = event.target.closest('[data-action],[data-oauth]'); if (!button) return;
-    button.disabled = true;
+    if(button.disabled)return;if(button.dataset.confirm&&!window.confirm(button.dataset.confirm))return;button.disabled = true;
     try {
       if (button.dataset.oauth) location.assign((await api('/auth/' + button.dataset.oauth)).url);
       else await finish(button, await api(button.dataset.action, button.dataset.method || 'POST', JSON.parse(button.dataset.body || '{}')));
-    } catch (error) { feedback(error.message, true); } finally { button.disabled = false; }
+    } catch (error) { feedback(error.message, true); } finally { button.disabled = button.hasAttribute('data-completed'); }
   });
   const readPrefs = (key, defaults = {}) => { try { return { ...defaults, ...JSON.parse(localStorage.getItem(key) || '{}') }; } catch { return defaults; } };
   const applyAppearance = () => {
@@ -130,5 +141,5 @@
     poll(async () => { const notifications = await api('/notifications');const unread=notifications.filter(n=>!n.isRead).length;const badge=document.getElementById('notification-count');if(badge)badge.textContent = unread ? String(unread) : ''; }, 3000);
     poll(() => api('/presence/heartbeat', 'POST', {}), 10000);
   }
-  window.TalentFlow = { api, feedback };
+  window.TalentFlow = { api, feedback, pageDocument, onResult: handler => resultHandlers.push(handler) };
 })();

@@ -40,7 +40,13 @@ class Accounts extends Controller {
         $this->route('GET','users',function(){ $this->auth->role(['ADMIN','RECRUITER']); return array_map([$this,'safeUser'],$this->db->records('users','deleted_at IS NULL')); });
         $this->route('GET','users/me/profile',function(){return $this->profile($this->auth->current()['id']);});
         $this->route('GET','users/{id}/profile',function(Request $r,array $p){$this->auth->current();return $this->profile($p['id']);});
-        $this->route('GET','public/users/{slug}',function(Request $r,array $p){$v=$this->db->one('SELECT user_id FROM user_profiles WHERE public_slug=?',[$p['slug']]); if(!$v)throw new Error(404,'Profile not found');return $this->profile($v['user_id']);});
+        $this->route('GET','public/users/{slug}',function(Request $r,array $p){$slug=$p['slug'];$v=$this->db->one('SELECT user_id FROM user_profiles WHERE public_slug=? OR user_id=?',[$slug,$slug]);
+            if(!$v)throw new Error(404,'Profile not found');
+            $settings=$this->db->record('privacy_settings',['userId'=>$v['user_id']]);
+            if($settings&&$settings['profileVisibility']!=='PUBLIC')throw new Error(404,'Profile not found');
+            $viewer=$this->auth->current(false);
+            if($viewer&&(new \Platform\Services\Visibility($this->db))->blocked($viewer['id'],$v['user_id']))throw new Error(404,'Profile not found');
+            $profile=$this->profile($v['user_id']);unset($profile['cvFiles'],$profile['email'],$profile['user']['email']);return $profile;});
         $this->route('PATCH','users/me/profile',function(Request $r){$u=$this->auth->current();$data=$this->only($r->body,['fullName','headline','about','location','socialLinks','languages']);return $this->db->write('user_profiles',$data,['userId'=>$u['id']]);});
         $this->route('POST','users/me/public-slug',function(){ $u=$this->auth->current(); $p=$this->find('user_profiles',['userId'=>$u['id']]); if(!$p['publicSlug'])$p=$this->db->write('user_profiles',['publicSlug'=>($u['username']??'user').'-'.substr($u['id'],0,8)],['userId'=>$u['id']]);return ['slug'=>$p['publicSlug']]; });
         foreach(['experiences'=>'work_experiences','educations'=>'educations','certifications'=>'certifications','projects'=>'projects'] as $path=>$table){

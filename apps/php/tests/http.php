@@ -11,15 +11,15 @@ function request(string $path,string $method='GET',$body=null,string $client='ca
     if($csrf&&$method!=='GET'){[$status,$token]=request('/api/v1/auth/csrf','GET',null,$client);$headers[]='X-CSRF-Token: '.$token['csrfToken'];}
     curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_COOKIEFILE=>$jar,CURLOPT_COOKIEJAR=>$jar,CURLOPT_CUSTOMREQUEST=>$method,CURLOPT_TIMEOUT=>30]);
     if($body!==null){if(!is_array($body)||!isset($body['file'])){$body=json_encode($body,JSON_THROW_ON_ERROR);$headers[]='Content-Type: application/json';}curl_setopt($ch,CURLOPT_POSTFIELDS,$body);}
-    curl_setopt($ch,CURLOPT_HTTPHEADER,$headers);$raw=curl_exec($ch);$status=curl_getinfo($ch,CURLINFO_HTTP_CODE);$error=curl_error($ch);curl_close($ch);if($raw===false)throw new RuntimeException($error);return [$status,json_decode($raw,true)??$raw];
+    curl_setopt($ch,CURLOPT_HTTPHEADER,$headers);$raw=curl_exec($ch);$status=curl_getinfo($ch,CURLINFO_HTTP_CODE);$error=curl_error($ch);$redirect=curl_getinfo($ch,CURLINFO_REDIRECT_URL);curl_close($ch);if($raw===false)throw new RuntimeException($error);return [$status,json_decode($raw,true)??$raw,$redirect];
 }
 try {
     [$status,$health]=request('/api/v1/health');verify($status===200&&$health['status']==='ok','Health endpoint');
     [$status,$html]=request('/');verify($status===200&&strpos($html,'TalentFlow')!==false,'HTML home page');
     [$status]=request('/api/v1/auth/register','POST',['email'=>'bad@example.com'], 'candidate',false);verify($status===403,'Cookie writes require CSRF');
     foreach(['candidate'=>'CANDIDATE','recruiter'=>'RECRUITER','stranger'=>'CANDIDATE'] as $client=>$role){$name=$client.'-'.substr(uuid(),0,8);[$status,$tokens]=request('/api/v1/auth/register','POST',['email'=>$name.'@test.local','username'=>$name,'password'=>'Test-password-123','fullName'=>'Ứng viên Việt','role'=>$role],$client);verify($status===200&&isset($tokens['accessToken']),'Register '.$role);[$status,$me]=request('/api/v1/auth/me','GET',null,$client);$users[]=$me['id'];verify($status===200&&$me['role']===$role,'Cookie login '.$role);}
-    [$status,$c]=request('/api/v1/companies','POST',['name'=>'HTTP Test Company','slug'=>uuid()],'recruiter');verify($status===200,'Create company');$companies[]=$c['id'];
-    [$status,$job]=request('/api/v1/jobs','POST',['companyId'=>$c['id'],'title'=>'PHP Developer','description'=>'PHP MySQL 2 years experience','requiredSkills'=>['PHP','MySQL'],'jobType'=>'FULL_TIME','level'=>'JUNIOR','status'=>'ACTIVE'],'recruiter');verify($status===200,'Publish job with company membership');
+    [$status,$c]=request('/api/v1/companies','POST',['name'=>'HTTP Test Company','slug'=>uuid(),'industry'=>'QA Industry'],'recruiter');verify($status===200,'Create company');$companies[]=$c['id'];
+    [$status,$job]=request('/api/v1/jobs','POST',['companyId'=>$c['id'],'title'=>'PHP Developer','location'=>'Bangkok QA','description'=>'PHP MySQL 2 years experience','requiredSkills'=>['PHP','MySQL'],'jobType'=>'FULL_TIME','level'=>'JUNIOR','status'=>'ACTIVE'],'recruiter');verify($status===200,'Publish job with company membership');
     [$status]=request('/api/v1/jobs','POST',['companyId'=>$c['id'],'title'=>'Intrusion'],'stranger');verify($status===403,'Candidate cannot publish jobs');
     [$status,$search]=request('/api/v1/jobs/search?keyword=PHP');verify($status===200&&!empty($search['items']),'Search jobs');
     $pdf=new Dompdf\Dompdf();$pdf->loadHtml('<meta charset="utf-8"><p>PHP MySQL HTML 3 years experience</p>');$pdf->render();$path=$root.'/cv.pdf';file_put_contents($path,$pdf->output());
@@ -30,7 +30,7 @@ try {
     [$status,$a]=request('/api/v1/applications','POST',['jobId'=>$job['id'],'cvFileId'=>$cv['id']]);verify($status===200&&$a['status']==='APPLIED','Apply and enqueue atomically');
     [$status]=request('/api/v1/applications','POST',['jobId'=>$job['id'],'cvFileId'=>$cv['id']]);verify($status===409,'Duplicate application rejected');
     [$status]=request('/api/v1/applications/'.$a['id'],'GET',null,'stranger');verify($status===403,'Application cannot be read by another candidate');
-    (new Worker($db))->once();[$status,$detail]=request('/api/v1/applications/'.$a['id']);verify($status===200&&$detail['status']==='HR_REVIEW'&&isset($detail['aiResult']['overallScore']),'Worker scores CV and advances to HR_REVIEW');
+    $worker=new Worker($db);for($attempt=0;$attempt<50;$attempt++){if(!$worker->once())break;$current=$db->record('applications',['id'=>$a['id']]);if($current['status']==='HR_REVIEW')break;}[$status,$detail]=request('/api/v1/applications/'.$a['id']);verify($status===200&&$detail['status']==='HR_REVIEW'&&isset($detail['aiResult']['overallScore']),'Worker scores CV and advances to HR_REVIEW');
     [$status]=request('/api/v1/applications/'.$a['id'].'/schedule-interview','POST',['interviewAt'=>'2026-12-01T09:00:00+07:00'],'recruiter');verify($status===200,'Schedule interview');
     [$status,$interview]=request('/api/v1/applications/'.$a['id']);verify($status===200&&strpos($interview['interviewAt'],'2026-12-01')===0,'Interview date is returned from status history');
     [$status,$offer]=request('/api/v1/applications/'.$a['id'].'/offer','POST',['salaryAmount'=>25000000,'salaryCurrency'=>'VND'],'recruiter');verify($status===200&&$offer['status']==='PENDING','Send offer');
@@ -49,7 +49,10 @@ try {
     sort($historyIds);[$status,$older]=request('/api/v1/messages/conversations/'.$conv['id'].'?before='.urlencode($historyIds[30]).'&limit=50');verify($status===200&&count($older)===30&&!in_array($historyIds[30],array_column($older,'id'),true),'UUID history pagination handles messages at the same timestamp');
     [$status]=request('/api/v1/messages/conversations/'.$conv['id'].'?before=invalid-cursor');verify($status===400,'Invalid history cursor is rejected');
     [$status,$companyDetail]=request('/api/v1/companies/'.$c['id']);verify($status===200&&isset($companyDetail['company'],$companyDetail['activeJobs'],$companyDetail['posts']),'Company detail retains legacy UI fields');
+    [$status,$emptySearch]=request('/api/v1/search');verify($status===200&&count(array_filter($emptySearch))===0,'Empty global search returns no records');
     [$status,$globalSearch]=request('/api/v1/search?query=PHP');verify($status===200&&isset($globalSearch['jobs'][0]['company']['name']),'Global job search includes company data');
+    [$status,$locationSearch]=request('/api/v1/search?query=Bangkok%20QA&type=jobs');verify($status===200&&in_array($job['id'],array_column($locationSearch['jobs'],'id'),true),'Global search finds job by location');
+    [$status,$companySearch]=request('/api/v1/search?query=QA%20Industry&type=companies');verify($status===200&&in_array($c['id'],array_column($companySearch['companies'],'id'),true)&&isset($companySearch['companies'][0]['_count']['members']),'Global search finds company by industry and includes member count');
     [$status,$alert]=request('/api/v1/job-alerts','POST',['keyword'=>'PHP','filters'=>['location'=>'Hà Nội'],'frequency'=>'WEEKLY']);verify($status===200&&$alert['filters']['location']==='Hà Nội','Job alert preserves location filter');
     [$status,$alert]=request('/api/v1/job-alerts/'.$alert['id'],'PATCH',['isActive'=>false]);verify($status===200&&!$alert['isActive'],'Job alert can be paused');
     [$status]=request('/api/v1/job-alerts/'.$alert['id'],'DELETE');verify($status===200,'Job alert can be deleted');
@@ -74,7 +77,13 @@ try {
     }
     [$status,$slug]=request('/api/v1/users/me/public-slug','POST',[]);verify($status===200&&isset($slug['slug']),'Generate public profile link');
     [$status,$publicProfile]=request('/api/v1/public/users/'.$slug['slug'],'GET',null,'public');verify($status===200&&$publicProfile['fullName']==='Ứng viên Việt','Public profile is readable');
-    request('/api/v1/privacy/settings','PATCH',['profilePublic'=>false]);[$status]=request('/api/v1/public/users/'.$slug['slug'],'GET',null,'public');verify($status===403,'Private profile link is protected');request('/api/v1/privacy/settings','PATCH',['profilePublic'=>true]);
+    request('/api/v1/users/me/profile','PATCH',['headline'=>'Unique audit headline']);[$status,$headlineSearch]=request('/api/v1/search?query=Unique%20audit%20headline&type=people');verify($status===200&&in_array($users[0],array_column($headlineSearch['people'],'id'),true),'Global search finds profile headline');
+    request('/api/v1/privacy/settings','PATCH',['profilePublic'=>false]);[$status]=request('/api/v1/public/users/'.$slug['slug'],'GET',null,'public');verify($status===404,'Private profile link is protected');request('/api/v1/privacy/settings','PATCH',['profilePublic'=>true]);
+    [$status,$uuidProfile]=request('/api/v1/public/users/'.$users[0],'GET',null,'public');verify($status===200&&$uuidProfile['userId']===$users[0],'Public profile resolves raw user UUID');
+    [$status,$ownerPublic]=request('/api/v1/public/users/'.$users[0]);verify($status===200&&!isset($ownerPublic['cvFiles'])&&!isset($ownerPublic['user']['email']),'Public projection excludes owner CV and email');
+    request('/api/v1/privacy/settings','PATCH',['profileVisibility'=>'CONNECTIONS']);[$status]=request('/api/v1/public/users/'.$users[0]);verify($status===404,'Public profile does not expose connections-only profile even to owner');request('/api/v1/privacy/settings','PATCH',['profileVisibility'=>'PUBLIC']);
+    [$status,$following]=request('/api/v1/social/users/'.$users[1].'/follow','POST',[]);verify($status===200&&$following['following']&&$following['followerCount']===1,'Follow response includes current count');
+    [$status,$following]=request('/api/v1/social/users/'.$users[1].'/follow','DELETE');verify($status===200&&!$following['following']&&$following['followerCount']===0,'Unfollow response includes current count');
     [$status,$connection]=request('/api/v1/social/connections','POST',['addresseeId'=>$users[1]]);verify($status===200&&$connection['status']==='PENDING','Send connection invitation');
     [$status]=request('/api/v1/social/connections/'.$connection['id'].'/status','PATCH',['status'=>'ACCEPTED']);verify($status===403,'Sender cannot accept own invitation');
     [$status,$accepted]=request('/api/v1/social/connections/'.$connection['id'].'/status','PATCH',['status'=>'ACCEPTED'],'recruiter');verify($status===200&&$accepted['status']==='ACCEPTED','Recipient accepts invitation');
@@ -86,11 +95,24 @@ try {
     [$status,$reaction]=request('/api/v1/social/posts/'.$publicPost['id'].'/reactions','POST',['reactionType'=>'LOVE'],'recruiter');verify($status===200&&$reaction['userReaction']===null,'Toggle feed reaction off');
     [$status,$comment]=request('/api/v1/social/posts/'.$publicPost['id'].'/comments','POST',['content'=>'Audit comment'],'recruiter');verify($status===200&&isset($comment['id']),'Comment on feed post');
     [$status,$reply]=request('/api/v1/social/posts/'.$publicPost['id'].'/comments','POST',['content'=>'Audit reply','parentId'=>$comment['id']]);verify($status===200&&$reply['parentId']===$comment['id'],'Reply to comment');
+    verify(isset($comment['author']['profile'])&&$comment['author']['id']===$users[1],'Comment response includes author profile');
+    foreach(['LIKE','LOVE','HAHA','WOW','SAD','ANGRY','CELEBRATE','SUPPORT','INSIGHTFUL'] as $type){[$status,$reaction]=request('/api/v1/social/comments/'.$comment['id'].'/reactions','POST',['reactionType'=>$type]);verify($status===200&&$reaction['userReaction']===$type,'Comment reaction '.$type);}
+    [$status,$reaction]=request('/api/v1/social/comments/'.$comment['id'].'/reactions','POST',['reactionType'=>'INSIGHTFUL']);verify($status===200&&$reaction['userReaction']===null,'Comment reaction toggles off');
+    [$status]=request('/api/v1/social/posts/'.$publicPost['id'].'/comments','POST',['content'=>str_repeat('?',1201)]);verify($status===400,'Reject overlong Unicode comment');
+    [$status,$longComment]=request('/api/v1/social/posts/'.$publicPost['id'].'/comments','POST',['content'=>str_repeat('?',1200)]);verify($status===200,'Accept 1200-character Unicode comment');
+    [$status]=request('/api/v1/social/posts/'.$publicPost['id'].'/comments','POST',['content'=>'Invalid parent','parentId'=>['bad']]);verify($status===400,'Reject malformed comment parent without server error');
+    [$status]=request('/api/v1/social/posts/'.$publicPost['id'].'/comments','POST',['content'=>'Private parent','parentId'=>$post['id']]);verify($status===404,'Missing parent comment rejected');
+    [$status]=request('/api/v1/social/posts','POST',['content'=>str_repeat('a',5001)]);verify($status===400,'Post API enforces legacy 5000-character maximum');
+    [$status,$otherPost]=request('/api/v1/social/posts','POST',['content'=>'Another thread']);
+    [$status]=request('/api/v1/social/posts/'.$otherPost['id'].'/comments','POST',['content'=>'Cross thread reply','parentId'=>$comment['id']]);verify($status===400,'Reply cannot reference another post');request('/api/v1/social/posts/'.$otherPost['id'],'DELETE');
     [$status,$report]=request('/api/v1/moderation/reports','POST',['contentType'=>'MESSAGE','targetId'=>$msg['id'],'reason'=>'Audit report']);verify($status===200&&$report['targetType']==='MESSAGE','Report chat message');
     [$status]=request('/api/v1/moderation/reports/'.$report['id'],'PATCH',['action'=>'DELETE']);verify($status===403,'Candidate cannot moderate reports');
     [$status,$permalink]=request('/feed?post='.$publicPost['id']);verify($status===200&&strpos($permalink,'Audit social interactions')!==false,'Feed permalink opens the selected post');
     [$status]=request('/api/v1/social/posts/'.$publicPost['id'],'DELETE');verify($status===200,'Delete own feed post');
-    foreach(['/profile','/jobs','/external-jobs','/feed','/network','/messages','/notifications','/applications','/saved-jobs','/cv-builder','/settings','/settings/account','/settings/profile','/settings/privacy','/settings/appearance','/settings/security','/settings/notifications','/goals','/onboarding','/search','/search?q=PHP','/applications/'.$a['id'],'/ai-score/'.$a['id'],'/ai-score-detail?applicationId='.$a['id'],'/company/'.$c['id'],'/jobs/'.$job['id']] as $page){[$status,$html]=request($page);verify($status===200&&strpos($html,'<!doctype html>')!==false&&strpos($html,'Warning:')===false&&strpos($html,'Fatal error:')===false,'HTML '.$page);}
+    foreach(['/profile','/jobs','/external-jobs','/feed','/network','/messages','/notifications','/applications','/saved-jobs','/cv-builder','/settings','/settings/account','/settings/profile','/settings/privacy','/settings/appearance','/settings/security','/settings/notifications','/goals','/onboarding','/search','/search?q=PHP','/applications/'.$a['id'],'/ai-score/'.$a['id'],'/company/'.$c['id'],'/jobs/'.$job['id']] as $page){[$status,$html]=request($page);verify($status===200&&strpos($html,'<!doctype html>')!==false&&strpos($html,'Warning:')===false&&strpos($html,'Fatal error:')===false,'HTML '.$page);}
+    [$status,$html,$redirect]=request('/ai-score-detail?applicationId='.$a['id']);verify($status===307&&$redirect===env('TEST_APP_URL','http://127.0.0.1:8080').'/applications','Legacy AI detail redirects to applications');
+    foreach(['/jobs','/external-jobs','/search'] as $candidatePage){[$status,$html,$redirect]=request($candidatePage,'GET',null,'recruiter');verify($status===302&&substr($redirect,-20)==='/recruiter/dashboard','Recruiter redirects from '.$candidatePage);}
+    [$status]=request('/applications','GET',null,'recruiter');verify($status===302,'Applications list is candidate-only');
     [$status]=request('/recruiter/dashboard','GET',null,'candidate');verify($status===403,'Candidate cannot view recruiter dashboard');
     [$status]=request('/recruiter/dashboard','GET',null,'recruiter');verify($status===200,'Recruiter dashboard renders');
     [$status]=request('/api/v1/auth/logout','POST',[]);verify($status===200,'Logout revokes session');[$status]=request('/api/v1/auth/me');verify($status===401,'Logged out session cannot be reused');
@@ -98,7 +120,7 @@ try {
 }catch(Throwable $e){fwrite(STDERR,$e->getMessage()."\n");$failed=true;
 }finally {
     foreach($companies as $id)$db->delete('companies',['id'=>$id]);
-    foreach($users as $id){$db->run('DELETE FROM application_status_history WHERE changed_by=?',[$id]);$db->run('DELETE FROM conversation_participants WHERE user_id=?',[$id]);$db->run('DELETE FROM conversations WHERE id NOT IN (SELECT conversation_id FROM conversation_participants)');$db->delete('users',['id'=>$id]);}
+    foreach($users as $id){$db->run("DELETE FROM task_queue WHERE kind='SCREEN' AND JSON_UNQUOTE(JSON_EXTRACT(payload,'$.applicationId')) IN (SELECT id FROM applications WHERE candidate_id=?)",[$id]);$db->run('DELETE FROM application_status_history WHERE changed_by=?',[$id]);$db->run('DELETE FROM conversation_participants WHERE user_id=?',[$id]);$db->run('DELETE FROM conversations WHERE id NOT IN (SELECT conversation_id FROM conversation_participants)');$db->delete('users',['id'=>$id]);}
     foreach($files as $key){$db->run('DELETE FROM stored_files WHERE storage_key=?',[$key]);$f=Platform\Services\Storage::root().'/'.$key;if(is_file($f))unlink($f);}
 }
 if(!empty($failed))exit(1);

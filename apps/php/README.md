@@ -117,3 +117,7 @@ docker compose --env-file .env.php -f docker-compose.php.yml up --build
 ```
 
 Migrate chạy một lần trước web/worker. Volume MySQL, upload và AI cache được lưu riêng. Seed bằng `docker compose --env-file .env.php -f docker-compose.php.yml exec -e SEED_PASSWORD=your-demo-password web php bin/console.php seed`. Không chạy stack cũ đồng thời trên cùng cổng.
+
+## Tiếp tục refactor giao diện và chức năng
+
+[Báo cáo đối chiếu bản cũ, thay đổi và kiểm tra ngày 09/10/2026](../../docs/php-parity-audit.md). Browser audit hiện đối chiếu đủ 35 đường dẫn, desktop/mobile và light/dark; kiểm tra riêng bình luận, reaction, pagination, mạng lưới, theo dõi và thao tác đơn ứng tuyển không reload.

@@ -43,3 +43,9 @@ Runtime vẫn là PHP 7.4 + HTML/CSS/JavaScript thuần + MySQL. `public/assets/
 Đã phục hồi trang chủ AI, thanh điều hướng/dropdown/menu điện thoại, đăng nhập demo, bộ lọc và thẻ việc làm, panel xem tin/chấm CV, ảnh bìa và trình sửa hồ sơ, bảng tin ba cột, chat hai cột, các trang cài đặt riêng, thống kê ứng tuyển, CV thêm/xóa mục và xem trước trực tiếp, mục tiêu dạng dialog, bộ lọc ứng viên và bảy giai đoạn pipeline. Biểu đồ dùng số liệu thật từ MySQL.
 
 Chrome kiểm tra ba vai trò, các trang ứng viên, dialog, sửa hồ sơ, CV preview, chat, mục tiêu, giao diện lưu qua reload và menu/bộ lọc điện thoại. Ảnh kiểm tra lưu trong `apps/php/storage/reports`. Chưa có nghiệm thu so sánh ảnh React/PHP từng pixel; không coi route coverage là bằng chứng pixel parity.
+
+## Refactor tiếp theo — 09/10/2026
+
+Đã bổ sung bình luận lồng nhau, chín reaction, cập nhật feed/network/thông báo/đơn ứng tuyển tại chỗ, hồ sơ công khai theo UUID và slug, số người theo dõi, nhãn trạng thái/pipeline, báo cáo AI và tìm kiếm theo các trường của bản cũ. Không cần migration MySQL mới.
+
+Kiểm tra lần này: 25 PHP/MySQL checks, 147 HTTP checks, 8 AI tests và 161 Chrome desktop/mobile/theme checks cho đủ 35 đường dẫn trang cũ. Xem [báo cáo refactor và giới hạn nghiệm thu](php-parity-audit.md).

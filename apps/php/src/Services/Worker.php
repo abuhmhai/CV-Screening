@@ -45,7 +45,7 @@ class Worker {
             $old=$this->db->one('SELECT id FROM ai_screening_results WHERE application_id=?',[$a['id']]);$old?$this->db->write('ai_screening_results',$data,$old):$this->db->write('ai_screening_results',array_merge($data,['applicationId'=>$a['id']]));
             $this->db->write('applications',['status'=>'HR_REVIEW'],['id'=>$a['id']]);
             $this->db->write('application_status_history',['applicationId'=>$a['id'],'fromStatus'=>'AI_SCREENING','toStatus'=>'HR_REVIEW','changedBy'=>$a['candidateId'],'note'=>'Screening completed: '.$r['model_version']]);
-            $this->db->write('notifications',['userId'=>$a['candidateId'],'type'=>'AI_SCREENING','title'=>'CV screening completed','body'=>'Score: '.$r['overall_score'],'data'=>['applicationId'=>$a['id']]]);
+            $this->db->write('notifications',['userId'=>$a['candidateId'],'type'=>'AI_SCREENING_DONE','title'=>'CV screening completed','body'=>'Score: '.$r['overall_score'],'data'=>['applicationId'=>$a['id']]]);
         });
     }
     private function alerts(): void {

@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 root = Path(__file__).resolve().parents[3]
 artifacts = root / "apps/php/storage/reports"
 artifacts.mkdir(parents=True, exist_ok=True)

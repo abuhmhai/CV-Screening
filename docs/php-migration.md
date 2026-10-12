@@ -2,7 +2,7 @@
 
 ## Bản chạy mới
 
-PHP 7.4 + PDO/MySQL, HTML/CSS/JavaScript thuần, Python FastAPI cho AI. Không dùng TypeScript/React trong runtime PHP. `apps/web`, `apps/api` và Compose cũ được giữ để đối chiếu và rollback, chưa xóa mã nguồn cũ. [Hướng dẫn chạy](../apps/php/README.md).
+PHP 7.4 + PDO/MySQL, HTML/CSS/JavaScript thuần, Python FastAPI cho AI. Đã hoàn tất loại bỏ hoàn toàn các mã nguồn cũ (TypeScript/React Next.js, NestJS, Prisma, packages monorepo) để hệ thống hoạt động độc lập, chuẩn mực và tinh gọn. [Hướng dẫn chạy](../apps/php/README.md).
 
 | Nhóm | Đã triển khai | Bằng chứng kiểm tra |
 | --- | --- | --- |

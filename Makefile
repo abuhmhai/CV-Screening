@@ -1,41 +1,33 @@
 SHELL := /bin/sh
-PHP_COMPOSE := docker compose --env-file .env.php -f docker-compose.php.yml
+COMPOSE := docker compose
 
-.PHONY: dev build test down logs seed migrate db-reset
+.PHONY: dev build test down logs seed migrate db-reset smoke
 
 dev:
-	$(PHP_COMPOSE) up --build
+	$(COMPOSE) up --build
 
 build:
-	$(PHP_COMPOSE) build
+	$(COMPOSE) build
 
 test:
 	php apps/php/tests/run.php
 	python -m pytest apps/ai-service/tests -q
 
 down:
-	$(PHP_COMPOSE) down
+	$(COMPOSE) down
 
 logs:
-	$(PHP_COMPOSE) logs -f
+	$(COMPOSE) logs -f
 
 # Database helpers
 migrate:
-	$(PHP_COMPOSE) exec web php bin/console.php migrate
+	$(COMPOSE) exec web php bin/console.php migrate
 
 seed:
-	$(PHP_COMPOSE) exec -e SEED_PASSWORD web php bin/console.php seed
+	$(COMPOSE) exec -e SEED_PASSWORD web php bin/console.php seed
 
 db-reset:
 	@echo "Use a separate database for reset/testing; back up data before replacement."
-
-.PHONY: legacy-dev legacy-test
-legacy-dev:
-	docker compose up --build
-
-legacy-test:
-	docker compose run --rm api npm run test -w apps/api
-	docker compose run --rm ai-service pytest tests -q
 
 # Quick smoke-test: demo-login then call AI screen endpoint
 smoke:

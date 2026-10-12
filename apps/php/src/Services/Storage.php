@@ -22,7 +22,9 @@ class Storage {
         $url='/api/v1/files/'.$key;$visibility=in_array($kind,['avatar','cover'],true)?'PUBLIC':'PRIVATE';
         $this->db->run('INSERT INTO stored_files(storage_key,owner_id,original_name,mime_type,size_bytes,sha256,visibility) VALUES(?,?,?,?,?,?,?)',[$key,$user['id'],basename($f['name']),$mime,$f['size'],hash_file('sha256',$path),$visibility]);
         if($kind==='cv') {
-            $text=null;try{$out=(new HttpClient())->request(\env('AI_SERVICE_URL','http://127.0.0.1:8000').'/extract',['file'=>new \CURLFile($path,$mime,$f['name'])],[],30);$text=$out['text'];}catch(\Throwable $e){error_log('CV extraction unavailable: '.$e->getMessage());}
+            $text=null;
+            try{$out=(new HttpClient())->request(\env('AI_SERVICE_URL','http://127.0.0.1:8000').'/extract',['file'=>new \CURLFile($path,$mime,$f['name'])],[],(int)\env('AI_TIMEOUT_SECONDS','10'));$text=$out['text']??null;}catch(\Throwable $e){error_log('Remote CV extraction unavailable: '.$e->getMessage());}
+            if(!$text||trim($text)===''){$text=CvParser::extractFromFile($path,$mime);}
             return $this->db->write('cv_files',['userId'=>$user['id'],'fileUrl'=>$url,'fileName'=>basename($f['name']),'fileSize'=>$f['size'],'extractedText'=>$text,'isPrimary'=>!$this->db->one('SELECT id FROM cv_files WHERE user_id=?',[$user['id']])]);
         }
         if(in_array($kind,['avatar','cover'],true))$this->db->write('user_profiles',[$kind.'Url'=>$url],['userId'=>$user['id']]);

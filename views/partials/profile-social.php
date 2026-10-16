@@ -1,0 +1,7 @@
+<?php
+$profileActivity=true;$feedQuery=['authorId'=>$data['userId'],'limit'=>20];if(!empty($request->query['cursor']))$feedQuery['cursor']=$request->query['cursor'];$profilePosts=$app->api('feed',$feedQuery);$follow=$user?$app->api('social/users/'.$data['userId'].'/follow'):null;
+?>
+<section class="section"><div class="section-title"><h2>Bài viết<?= $follow?' · <span data-follower-count>'.(int)$follow['followerCount'].'</span> người theo dõi':' công khai' ?></h2><?php if(!$user): ?><a href="/auth/sign-in">Đăng nhập để theo dõi</a><?php elseif($user['id']!==$data['userId']): ?><button data-user-follow data-action="/social/users/<?= e($data['userId']) ?>/follow" data-method="<?= $follow['following']?'DELETE':'POST' ?>" aria-pressed="<?= $follow['following']?'true':'false' ?>"><?= $follow['following']?'Đang theo dõi · Bỏ theo dõi':'Theo dõi' ?></button><?php endif; ?></div>
+<div id="feed-posts" data-page-path="<?= e($path) ?>" data-limit="20"><?php foreach($profilePosts as $post):require APP_ROOT.'/views/partials/feed-post.php';endforeach; ?></div><p class="panel empty" id="feed-empty-filter" <?= $profilePosts?'hidden':'' ?>>Chưa có bài viết bạn có thể xem.</p><button type="button" class="ghost" data-feed-more data-cursor="<?= $profilePosts?e(end($profilePosts)['id']):'' ?>" <?= count($profilePosts)===20?'':'hidden' ?>>Xem thêm bài viết</button>
+</section>
+<?php $profileActivity=false; ?>

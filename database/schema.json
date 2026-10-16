@@ -1,0 +1,2108 @@
+{
+    "users": {
+        "model": "User",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "email": {
+                "column": "email",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "username": {
+                "column": "username",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "phone": {
+                "column": "phone",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "passwordHash": {
+                "column": "password_hash",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "role": {
+                "column": "role",
+                "type": "UserRole",
+                "nullable": false,
+                "default": null,
+                "values": [
+                    "CANDIDATE",
+                    "RECRUITER",
+                    "ADMIN"
+                ]
+            },
+            "isVerified": {
+                "column": "is_verified",
+                "type": "Boolean",
+                "nullable": false,
+                "default": "false",
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            },
+            "deletedAt": {
+                "column": "deleted_at",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "user_follows": {
+        "model": "UserFollow",
+        "fields": {
+            "followerId": {
+                "column": "follower_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "followedId": {
+                "column": "followed_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            }
+        },
+        "primary": [
+            "followerId",
+            "followedId"
+        ]
+    },
+    "password_recovery_requests": {
+        "model": "PasswordRecoveryRequest",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "email": {
+                "column": "email",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "phone": {
+                "column": "phone",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "status": {
+                "column": "status",
+                "type": "String",
+                "nullable": false,
+                "default": "PENDING",
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "user_profiles": {
+        "model": "UserProfile",
+        "fields": {
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "fullName": {
+                "column": "full_name",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "headline": {
+                "column": "headline",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "about": {
+                "column": "about",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "avatarUrl": {
+                "column": "avatar_url",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "coverUrl": {
+                "column": "cover_url",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "location": {
+                "column": "location",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "socialLinks": {
+                "column": "social_links",
+                "type": "Json",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "languages": {
+                "column": "languages",
+                "type": "Json",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "publicSlug": {
+                "column": "public_slug",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "profileCompleteness": {
+                "column": "profile_completeness",
+                "type": "Int",
+                "nullable": false,
+                "default": "0",
+                "values": null
+            }
+        },
+        "primary": [
+            "userId"
+        ]
+    },
+    "certifications": {
+        "model": "Certification",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "name": {
+                "column": "name",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "issuer": {
+                "column": "issuer",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "issueDate": {
+                "column": "issue_date",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "credentialUrl": {
+                "column": "credential_url",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "projects": {
+        "model": "Project",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "title": {
+                "column": "title",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "description": {
+                "column": "description",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "url": {
+                "column": "url",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "skills": {
+                "column": "skills",
+                "type": "Json",
+                "nullable": false,
+                "default": "[]",
+                "values": null
+            },
+            "startDate": {
+                "column": "start_date",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "endDate": {
+                "column": "end_date",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "work_experiences": {
+        "model": "WorkExperience",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "company": {
+                "column": "company",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "position": {
+                "column": "position",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "startDate": {
+                "column": "start_date",
+                "type": "DateTime",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "endDate": {
+                "column": "end_date",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "isCurrent": {
+                "column": "is_current",
+                "type": "Boolean",
+                "nullable": false,
+                "default": "false",
+                "values": null
+            },
+            "description": {
+                "column": "description",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "educations": {
+        "model": "Education",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "school": {
+                "column": "school",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "degree": {
+                "column": "degree",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "major": {
+                "column": "major",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "gpa": {
+                "column": "gpa",
+                "type": "Decimal",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "startYear": {
+                "column": "start_year",
+                "type": "Int",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "endYear": {
+                "column": "end_year",
+                "type": "Int",
+                "nullable": true,
+                "default": null,
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "skills": {
+        "model": "Skill",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "name": {
+                "column": "name",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "category": {
+                "column": "category",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "user_skills": {
+        "model": "UserSkill",
+        "fields": {
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "skillId": {
+                "column": "skill_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "level": {
+                "column": "level",
+                "type": "SkillLevel",
+                "nullable": false,
+                "default": null,
+                "values": [
+                    "BEGINNER",
+                    "INTERMEDIATE",
+                    "ADVANCED",
+                    "EXPERT"
+                ]
+            },
+            "yearsExp": {
+                "column": "years_exp",
+                "type": "Decimal",
+                "nullable": true,
+                "default": null,
+                "values": null
+            }
+        },
+        "primary": [
+            "userId",
+            "skillId"
+        ]
+    },
+    "skill_endorsements": {
+        "model": "SkillEndorsement",
+        "fields": {
+            "endorserId": {
+                "column": "endorser_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "skillId": {
+                "column": "skill_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            }
+        },
+        "primary": [
+            "endorserId",
+            "userId",
+            "skillId"
+        ]
+    },
+    "cv_files": {
+        "model": "CvFile",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "fileUrl": {
+                "column": "file_url",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "fileName": {
+                "column": "file_name",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "fileSize": {
+                "column": "file_size",
+                "type": "BigInt",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "isPrimary": {
+                "column": "is_primary",
+                "type": "Boolean",
+                "nullable": false,
+                "default": "false",
+                "values": null
+            },
+            "extractedText": {
+                "column": "extracted_text",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "companies": {
+        "model": "Company",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "name": {
+                "column": "name",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "slug": {
+                "column": "slug",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "logoUrl": {
+                "column": "logo_url",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "coverUrl": {
+                "column": "cover_url",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "website": {
+                "column": "website",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "industry": {
+                "column": "industry",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "sizeRange": {
+                "column": "size_range",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "foundedYear": {
+                "column": "founded_year",
+                "type": "Int",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "address": {
+                "column": "address",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "description": {
+                "column": "description",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "company_members": {
+        "model": "CompanyMember",
+        "fields": {
+            "companyId": {
+                "column": "company_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "role": {
+                "column": "role",
+                "type": "CompanyMemberRole",
+                "nullable": false,
+                "default": null,
+                "values": [
+                    "OWNER",
+                    "ADMIN",
+                    "RECRUITER"
+                ]
+            }
+        },
+        "primary": [
+            "companyId",
+            "userId"
+        ]
+    },
+    "jobs": {
+        "model": "Job",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "companyId": {
+                "column": "company_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "createdBy": {
+                "column": "created_by",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "title": {
+                "column": "title",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "description": {
+                "column": "description",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "jobType": {
+                "column": "job_type",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "level": {
+                "column": "level",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "experienceLevel": {
+                "column": "experience_level",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "category": {
+                "column": "category",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "isRemote": {
+                "column": "is_remote",
+                "type": "Boolean",
+                "nullable": false,
+                "default": "false",
+                "values": null
+            },
+            "minSalary": {
+                "column": "min_salary",
+                "type": "Int",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "maxSalary": {
+                "column": "max_salary",
+                "type": "Int",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "salaryCurrency": {
+                "column": "salary_currency",
+                "type": "String",
+                "nullable": false,
+                "default": "VND",
+                "values": null
+            },
+            "location": {
+                "column": "location",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "requiredSkills": {
+                "column": "required_skills",
+                "type": "Json",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "status": {
+                "column": "status",
+                "type": "JobStatus",
+                "nullable": false,
+                "default": "DRAFT",
+                "values": [
+                    "ACTIVE",
+                    "CLOSED",
+                    "DRAFT"
+                ]
+            },
+            "slug": {
+                "column": "slug",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "viewsCount": {
+                "column": "views_count",
+                "type": "Int",
+                "nullable": false,
+                "default": "0",
+                "values": null
+            },
+            "publishedAt": {
+                "column": "published_at",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "expiresAt": {
+                "column": "expires_at",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "external_jobs": {
+        "model": "ExternalJob",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "source": {
+                "column": "source",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "title": {
+                "column": "title",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "company": {
+                "column": "company",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "salary": {
+                "column": "salary",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "location": {
+                "column": "location",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "url": {
+                "column": "url",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "jd": {
+                "column": "jd",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "skills": {
+                "column": "skills",
+                "type": "Json",
+                "nullable": false,
+                "default": "[]",
+                "values": null
+            },
+            "isActive": {
+                "column": "is_active",
+                "type": "Boolean",
+                "nullable": false,
+                "default": "true",
+                "values": null
+            },
+            "crawledAt": {
+                "column": "crawled_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "applications": {
+        "model": "Application",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "jobId": {
+                "column": "job_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "candidateId": {
+                "column": "candidate_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "cvFileId": {
+                "column": "cv_file_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "coverLetter": {
+                "column": "cover_letter",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "status": {
+                "column": "status",
+                "type": "ApplicationStatus",
+                "nullable": false,
+                "default": "APPLIED",
+                "values": [
+                    "APPLIED",
+                    "AI_SCREENING",
+                    "HR_REVIEW",
+                    "INTERVIEW",
+                    "OFFER",
+                    "HIRED",
+                    "REJECTED",
+                    "WITHDRAWN"
+                ]
+            },
+            "appliedAt": {
+                "column": "applied_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "ai_screening_results": {
+        "model": "AiScreeningResult",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "applicationId": {
+                "column": "application_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "overallScore": {
+                "column": "overall_score",
+                "type": "Decimal",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "skillScore": {
+                "column": "skill_score",
+                "type": "Decimal",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "experienceScore": {
+                "column": "experience_score",
+                "type": "Decimal",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "educationScore": {
+                "column": "education_score",
+                "type": "Decimal",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "otherScore": {
+                "column": "other_score",
+                "type": "Decimal",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "grade": {
+                "column": "grade",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "matchedSkills": {
+                "column": "matched_skills",
+                "type": "Json",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "missingSkills": {
+                "column": "missing_skills",
+                "type": "Json",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "strengths": {
+                "column": "strengths",
+                "type": "Json",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "concerns": {
+                "column": "concerns",
+                "type": "Json",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "explanation": {
+                "column": "explanation",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "modelVersion": {
+                "column": "model_version",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "processingTimeMs": {
+                "column": "processing_time_ms",
+                "type": "Int",
+                "nullable": false,
+                "default": null,
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "offers": {
+        "model": "Offer",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "applicationId": {
+                "column": "application_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "salaryAmount": {
+                "column": "salary_amount",
+                "type": "Int",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "salaryCurrency": {
+                "column": "salary_currency",
+                "type": "String",
+                "nullable": false,
+                "default": "VND",
+                "values": null
+            },
+            "startDate": {
+                "column": "start_date",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "responseDeadline": {
+                "column": "response_deadline",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "note": {
+                "column": "note",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "offerLetterUrl": {
+                "column": "offer_letter_url",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "status": {
+                "column": "status",
+                "type": "OfferStatus",
+                "nullable": false,
+                "default": "PENDING",
+                "values": [
+                    "PENDING",
+                    "ACCEPTED",
+                    "DECLINED",
+                    "WITHDRAWN"
+                ]
+            },
+            "declineReason": {
+                "column": "decline_reason",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "createdBy": {
+                "column": "created_by",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "respondedAt": {
+                "column": "responded_at",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            },
+            "updatedAt": {
+                "column": "updated_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "updated",
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "application_status_history": {
+        "model": "ApplicationStatusHistory",
+        "fields": {
+            "applicationId": {
+                "column": "application_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "fromStatus": {
+                "column": "from_status",
+                "type": "ApplicationStatus",
+                "nullable": true,
+                "default": null,
+                "values": [
+                    "APPLIED",
+                    "AI_SCREENING",
+                    "HR_REVIEW",
+                    "INTERVIEW",
+                    "OFFER",
+                    "HIRED",
+                    "REJECTED",
+                    "WITHDRAWN"
+                ]
+            },
+            "toStatus": {
+                "column": "to_status",
+                "type": "ApplicationStatus",
+                "nullable": false,
+                "default": null,
+                "values": [
+                    "APPLIED",
+                    "AI_SCREENING",
+                    "HR_REVIEW",
+                    "INTERVIEW",
+                    "OFFER",
+                    "HIRED",
+                    "REJECTED",
+                    "WITHDRAWN"
+                ]
+            },
+            "changedBy": {
+                "column": "changed_by",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "note": {
+                "column": "note",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "changedAt": {
+                "column": "changed_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            }
+        },
+        "primary": [
+            "applicationId",
+            "changedAt",
+            "toStatus"
+        ]
+    },
+    "posts": {
+        "model": "Post",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "authorId": {
+                "column": "author_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "companyId": {
+                "column": "company_id",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "content": {
+                "column": "content",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "mediaUrls": {
+                "column": "media_urls",
+                "type": "Json",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "visibility": {
+                "column": "visibility",
+                "type": "PostVisibility",
+                "nullable": false,
+                "default": "PUBLIC",
+                "values": [
+                    "PUBLIC",
+                    "CONNECTIONS",
+                    "PRIVATE"
+                ]
+            },
+            "likeCount": {
+                "column": "like_count",
+                "type": "Int",
+                "nullable": false,
+                "default": "0",
+                "values": null
+            },
+            "commentCount": {
+                "column": "comment_count",
+                "type": "Int",
+                "nullable": false,
+                "default": "0",
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            },
+            "deletedAt": {
+                "column": "deleted_at",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "comments": {
+        "model": "Comment",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "postId": {
+                "column": "post_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "parentId": {
+                "column": "parent_id",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "authorId": {
+                "column": "author_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "content": {
+                "column": "content",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            },
+            "deletedAt": {
+                "column": "deleted_at",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "reactions": {
+        "model": "Reaction",
+        "fields": {
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "targetType": {
+                "column": "target_type",
+                "type": "ReactionTargetType",
+                "nullable": false,
+                "default": null,
+                "values": [
+                    "POST",
+                    "COMMENT"
+                ]
+            },
+            "targetId": {
+                "column": "target_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "reactionType": {
+                "column": "reaction_type",
+                "type": "ReactionType",
+                "nullable": false,
+                "default": "LIKE",
+                "values": [
+                    "LIKE",
+                    "LOVE",
+                    "HAHA",
+                    "WOW",
+                    "SAD",
+                    "ANGRY",
+                    "CELEBRATE",
+                    "SUPPORT",
+                    "INSIGHTFUL"
+                ]
+            }
+        },
+        "primary": [
+            "userId",
+            "targetType",
+            "targetId"
+        ]
+    },
+    "connections": {
+        "model": "Connection",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "requesterId": {
+                "column": "requester_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "addresseeId": {
+                "column": "addressee_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "status": {
+                "column": "status",
+                "type": "ConnectionStatus",
+                "nullable": false,
+                "default": "PENDING",
+                "values": [
+                    "PENDING",
+                    "ACCEPTED",
+                    "BLOCKED"
+                ]
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "conversations": {
+        "model": "Conversation",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "type": {
+                "column": "type",
+                "type": "ConversationType",
+                "nullable": false,
+                "default": "DIRECT",
+                "values": [
+                    "DIRECT",
+                    "GROUP"
+                ]
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "conversation_participants": {
+        "model": "ConversationParticipant",
+        "fields": {
+            "conversationId": {
+                "column": "conversation_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "lastReadAt": {
+                "column": "last_read_at",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            }
+        },
+        "primary": [
+            "conversationId",
+            "userId"
+        ]
+    },
+    "messages": {
+        "model": "Message",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "conversationId": {
+                "column": "conversation_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "senderId": {
+                "column": "sender_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "content": {
+                "column": "content",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "isRead": {
+                "column": "is_read",
+                "type": "Boolean",
+                "nullable": false,
+                "default": "false",
+                "values": null
+            },
+            "sentAt": {
+                "column": "sent_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            },
+            "deletedAt": {
+                "column": "deleted_at",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "notifications": {
+        "model": "Notification",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "type": {
+                "column": "type",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "title": {
+                "column": "title",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "body": {
+                "column": "body",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "data": {
+                "column": "data",
+                "type": "Json",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "isRead": {
+                "column": "is_read",
+                "type": "Boolean",
+                "nullable": false,
+                "default": "false",
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "saved_jobs": {
+        "model": "SavedJob",
+        "fields": {
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "jobId": {
+                "column": "job_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            }
+        },
+        "primary": [
+            "userId",
+            "jobId"
+        ]
+    },
+    "saved_external_jobs": {
+        "model": "SavedExternalJob",
+        "fields": {
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "externalJobId": {
+                "column": "external_job_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            }
+        },
+        "primary": [
+            "userId",
+            "externalJobId"
+        ]
+    },
+    "job_alerts": {
+        "model": "JobAlert",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "keyword": {
+                "column": "keyword",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "filters": {
+                "column": "filters",
+                "type": "Json",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "frequency": {
+                "column": "frequency",
+                "type": "AlertFrequency",
+                "nullable": false,
+                "default": "DAILY",
+                "values": [
+                    "DAILY",
+                    "WEEKLY",
+                    "INSTANT"
+                ]
+            },
+            "isActive": {
+                "column": "is_active",
+                "type": "Boolean",
+                "nullable": false,
+                "default": "true",
+                "values": null
+            },
+            "lastSentAt": {
+                "column": "last_sent_at",
+                "type": "DateTime",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "company_followers": {
+        "model": "CompanyFollower",
+        "fields": {
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "companyId": {
+                "column": "company_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            }
+        },
+        "primary": [
+            "userId",
+            "companyId"
+        ]
+    },
+    "generated_cvs": {
+        "model": "GeneratedCv",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "title": {
+                "column": "title",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "templateId": {
+                "column": "template_id",
+                "type": "String",
+                "nullable": false,
+                "default": "classic",
+                "values": null
+            },
+            "data": {
+                "column": "data",
+                "type": "Json",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "isPrimary": {
+                "column": "is_primary",
+                "type": "Boolean",
+                "nullable": false,
+                "default": "false",
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            },
+            "updatedAt": {
+                "column": "updated_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "updated",
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "moderation_reports": {
+        "model": "ModerationReport",
+        "fields": {
+            "id": {
+                "column": "id",
+                "type": "String",
+                "nullable": false,
+                "default": "uuid",
+                "values": null
+            },
+            "reporterId": {
+                "column": "reporter_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "targetType": {
+                "column": "target_type",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "targetId": {
+                "column": "target_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "reason": {
+                "column": "reason",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "details": {
+                "column": "details",
+                "type": "String",
+                "nullable": true,
+                "default": null,
+                "values": null
+            },
+            "status": {
+                "column": "status",
+                "type": "String",
+                "nullable": false,
+                "default": "PENDING",
+                "values": null
+            },
+            "createdAt": {
+                "column": "created_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "now",
+                "values": null
+            }
+        },
+        "primary": [
+            "id"
+        ]
+    },
+    "privacy_settings": {
+        "model": "PrivacySettings",
+        "fields": {
+            "userId": {
+                "column": "user_id",
+                "type": "String",
+                "nullable": false,
+                "default": null,
+                "values": null
+            },
+            "profileVisibility": {
+                "column": "profile_visibility",
+                "type": "String",
+                "nullable": false,
+                "default": "PUBLIC",
+                "values": null
+            },
+            "showActivity": {
+                "column": "show_activity",
+                "type": "Boolean",
+                "nullable": false,
+                "default": "true",
+                "values": null
+            },
+            "showConnections": {
+                "column": "show_connections",
+                "type": "Boolean",
+                "nullable": false,
+                "default": "true",
+                "values": null
+            },
+            "allowMessages": {
+                "column": "allow_messages",
+                "type": "String",
+                "nullable": false,
+                "default": "EVERYONE",
+                "values": null
+            },
+            "updatedAt": {
+                "column": "updated_at",
+                "type": "DateTime",
+                "nullable": false,
+                "default": "updated",
+                "values": null
+            }
+        },
+        "primary": [
+            "userId"
+        ]
+    }
+}
